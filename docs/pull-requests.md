@@ -10,6 +10,8 @@ Use a descriptive short-lived branch such as `codex/mutual-fund-import` and targ
 
 Keep conventional commits after each completed small feature. A PR may contain intermediate coherent commits, but its final scope must still represent one feature, fix, or documentation change. Use draft status while work or required verification is incomplete.
 
+After committing an approved change, push its feature branch and open a PR into `dev`, or update the branch's existing PR. This is part of the owner's standing workflow authorization. Report the PR link and validation results, then wait for review; pushing and opening a PR do not authorize merging it.
+
 ## Titles and descriptions
 
 Use `type(scope): concise description` for PR titles and the resulting squash commit. Examples:
@@ -66,7 +68,7 @@ CI must use minimal token permissions and keep production credentials away from 
 
 ## Approval and merging
 
-The owner must explicitly approve merging the reviewed change. Approval to implement or commit does not imply approval to push, create an external PR, merge, or deploy. An AI review can support review but does not replace the owner's decision.
+The owner must explicitly approve merging the reviewed change. The owner's standing instruction authorizes pushing the approved feature branch and opening or updating its PR after committing. It does not authorize merging or deployment. An AI review can support review but does not replace the owner's decision.
 
 When a distinct reviewer is available, require at least one approving review. GitHub authors cannot approve their own PRs, so a solo workflow must not depend on an impossible self-approval requirement. In that case, retain recorded self-review, applicable passing checks, and the owner's explicit merge authorization.
 
@@ -78,4 +80,4 @@ When configuring GitHub, protect `dev` and the selected deployment branch agains
 
 GitHub protection availability depends on repository visibility and account plan. Verify capabilities before claiming enforcement; document any gap and the manual approval process used until it is resolved. See [protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
 
-The template and this document do not configure repository settings, create CI workflows, publish a PR, or authorize implementation. After the approved documentation commit, wait for the next step.
+The template and this document do not configure repository settings or create CI workflows. The approved documentation workflow includes committing, pushing the branch, and opening or updating its PR. After publishing the PR, wait for review and approval of the next step; application implementation remains unstarted.

@@ -33,6 +33,7 @@ Document checks actually performed; do not claim planned checks passed.
 
 <!--
 Before requesting review: inspect the final diff and run applicable checks.
+After committing an approved change, push its branch and open or update its PR.
 Resolve actionable comments and repeat affected checks after changes.
 Merging requires the owner's explicit approval; deployment requires separate approval.
 -->

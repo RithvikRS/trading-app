@@ -33,6 +33,6 @@ The controls and workflows in these documents are requirements for future implem
 
 ## Working agreement
 
-For each approved feature: implement the agreed scope, run relevant checks, update documentation, create a conventional commit, report the outcome, and wait for approval of the next step. Use the [GitHub PR template](.github/pull_request_template.md) when preparing a pull request. Merging requires the owner's explicit approval; deployment requires separate approval. Real statements, personal identifiers, credentials, and database dumps must stay out of the repository.
+For each approved feature: implement the agreed scope, run relevant checks, update documentation, create a conventional commit, push the feature branch, open or update its PR, report the outcome, and wait for approval of the next step. Use the [GitHub PR template](.github/pull_request_template.md) when preparing a pull request. Merging requires the owner's explicit approval; deployment requires separate approval. Real statements, personal identifiers, credentials, and database dumps must stay out of the repository.
 
 Licensed under [Apache License 2.0](LICENSE).

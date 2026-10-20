@@ -1,6 +1,6 @@
 # Development workflow
 
-Deliver small, reviewable features with updated documentation and conventional commits. Step 1 is documentation only. Approval of a step authorizes its agreed work and commit; it does not authorize later stages, external publishing, or deployment.
+Deliver small, reviewable features with updated documentation and conventional commits. The owner's standing instruction includes pushing the approved feature branch and opening or updating its PR after committing. Approval of a step does not authorize later stages, merging, application publishing, or deployment.
 
 ## Feature cycle
 
@@ -11,11 +11,14 @@ Deliver small, reviewable features with updated documentation and conventional c
 5. Update the affected documentation, including changed assumptions, limitations, and recovery procedures.
 6. Review the diff for accidental personal data, secrets, generated files, and unrelated changes.
 7. Create a conventional commit containing the completed feature and its documentation.
-8. Report the commit, checks, result, and any limitations. Wait for approval before starting the next step.
+8. Push the feature branch to the configured repository and open or update its PR using the agreed template. Reuse an existing PR for the branch rather than creating a duplicate.
+9. Report the commit, PR link, checks, result, and any limitations. Wait for approval before starting the next step or merging.
 
-Use the current suitable checkout. When a new branch is needed, use the `codex/` prefix unless the user requests another name. Do not create unnecessary worktrees or rewrite existing history. Commit approval does not imply permission to push, merge, publish, or provision resources.
+Use the current suitable checkout. When a new branch is needed, use the `codex/` prefix unless the user requests another name. Do not create unnecessary worktrees or rewrite existing history. Push and PR creation are authorized as part of the approved workflow; merging, application publishing, and resource provisioning require separate authorization.
 
 Use the [pull request standard](pull-requests.md) for branch, review, and merge requirements. Keep one coherent feature per PR, retain small conventional commits during development, and squash merge the approved PR with a conventional message. The current integration target is `dev`. The owner's explicit merge approval and separate deployment approval are required.
+
+Keep GitHub authentication local to the development computer. On Windows, use Git Credential Manager with Windows Credential Manager as its credential store; do not add a GitHub connector to the Codex account for this workflow. Complete sign-in through the normal GitHub authorization flow. Never print tokens, include them in commands or remote URLs, or save them in repository files. Local credential-store configuration is machine configuration and must not contain credentials in tracked documentation.
 
 ## Commit convention
 
@@ -65,4 +68,4 @@ Record significant decisions with their rationale and consequences in the releva
 
 ## Current stopping point
 
-Step 1 planning documentation is complete. The approved follow-up covers the PR standard, GitHub PR template, and their conventional commit only. After that commit, stop and wait. The next proposed implementation step is an overview UI prototype using synthetic data, with its exact scope and acceptance criteria agreed before implementation. Backend scaffolding, dependency installation, provider access, and infrastructure provisioning remain unstarted. CI checks and GitHub protection settings are documented requirements, not configured controls.
+Step 1 planning documentation is complete. The approved follow-up covers the PR standard, GitHub PR template, conventional commits, branch push, and opening a PR into `dev`. After opening the PR, stop and wait for review and further approval. The next proposed implementation step is an overview UI prototype using synthetic data, with its exact scope and acceptance criteria agreed before implementation. Backend scaffolding, dependency installation, provider access, and infrastructure provisioning remain unstarted. CI checks and GitHub protection settings are documented requirements, not configured controls.
