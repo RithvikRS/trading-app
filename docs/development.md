@@ -15,6 +15,8 @@ Deliver small, reviewable features with updated documentation and conventional c
 
 Use the current suitable checkout. When a new branch is needed, use the `codex/` prefix unless the user requests another name. Do not create unnecessary worktrees or rewrite existing history. Commit approval does not imply permission to push, merge, publish, or provision resources.
 
+Use the [pull request standard](pull-requests.md) for branch, review, and merge requirements. Keep one coherent feature per PR, retain small conventional commits during development, and squash merge the approved PR with a conventional message. The current integration target is `dev`. The owner's explicit merge approval and separate deployment approval are required.
+
 ## Commit convention
 
 Use `type(scope): concise description`. Examples of future increments:
@@ -56,10 +58,11 @@ Dependency and secret checks, access controls, and secure storage must be establ
 - Update [security](security.md) when trust boundaries, permissions, data retention, or controls change.
 - Update [integrations](integrations.md) after provider verification; record scope, limits, and the date checked.
 - Update [operations](operations.md) with actual setup, backup, restoration, monitoring, and incident procedures as they are implemented.
+- Keep [the PR standard](pull-requests.md) and [GitHub PR template](../.github/pull_request_template.md) consistent when review or merge requirements change.
 - Keep [the README](../README.md) accurate about what works and how to run it. Do not present planned controls as implemented protections.
 
 Record significant decisions with their rationale and consequences in the relevant document. Add separate decision records only when the history becomes difficult to follow there. Never put private credentials, account details, or full incident payloads in documentation.
 
 ## Current stopping point
 
-After the Step 1 documentation commit, stop and wait. The next proposed step is an overview UI prototype using synthetic data, with its exact scope and acceptance criteria agreed before implementation. Backend scaffolding, dependency installation, provider access, and infrastructure provisioning remain unstarted.
+Step 1 planning documentation is complete. The approved follow-up covers the PR standard, GitHub PR template, and their conventional commit only. After that commit, stop and wait. The next proposed implementation step is an overview UI prototype using synthetic data, with its exact scope and acceptance criteria agreed before implementation. Backend scaffolding, dependency installation, provider access, and infrastructure provisioning remain unstarted. CI checks and GitHub protection settings are documented requirements, not configured controls.
