@@ -3,6 +3,8 @@ Keep one coherent change per PR and use a conventional title, for example:
 feat(imports): preview mutual fund transactions
 
 Follow docs/pull-requests.md. Keep details proportional to the change.
+Use dev as the source branch and main as the target branch.
+Focus on project behavior and evidence; omit authoring-tool credits.
 Use synthetic data in examples and screenshots. Never include credentials,
 personal statements, account identifiers, or unredacted financial logs.
 Document checks actually performed; do not claim planned checks passed.
@@ -33,7 +35,7 @@ Document checks actually performed; do not claim planned checks passed.
 
 <!--
 Before requesting review: inspect the final diff and run applicable checks.
-After committing an approved change, push its branch and open or update its PR.
+Commit approved changes on dev, push dev, and open or update its PR into main.
 Resolve actionable comments and repeat affected checks after changes.
 Merging requires the owner's explicit approval; deployment requires separate approval.
 -->

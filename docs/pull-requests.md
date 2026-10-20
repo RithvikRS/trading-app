@@ -6,15 +6,15 @@ Approved on 21 October 2026. Every PR should deliver one coherent change, provid
 
 Keep each PR small enough to understand and review in one sitting. Include the feature's relevant tests and documentation, and separate unrelated refactoring, formatting, or dependency upgrades. Split a larger stage into increments with useful acceptance criteria; a line-count target must not force an unsafe or incomplete change.
 
-Use a descriptive short-lived branch such as `codex/mutual-fund-import` and target `dev`, the current integration branch. Start from the appropriate current integration state and preserve existing local work. Select the deployment branch before configuring release automation; do not assume merging to `dev` deploys anything.
+Commit and push approved changes directly to `dev`, then open a PR with `dev` as the source and `main` as the target. These are the repository's existing lowercase branch names. Preserve existing local work and refresh remote state before starting. Keep `main` for reviewed changes; merging into it does not authorize or trigger deployment unless a separately approved release process is configured.
 
 Keep conventional commits after each completed small feature. A PR may contain intermediate coherent commits, but its final scope must still represent one feature, fix, or documentation change. Use draft status while work or required verification is incomplete.
 
-After committing an approved change, push its feature branch and open a PR into `dev`, or update the branch's existing PR. This is part of the owner's standing workflow authorization. Report the PR link and validation results, then wait for review; pushing and opening a PR do not authorize merging it.
+After committing an approved change on `dev`, push `dev` and open or update its PR into `main`. Reuse an existing open PR for this branch pair. Report the PR link and validation results, then wait for review; pushing and opening a PR do not authorize merging it. Since the source branch is shared across steps, complete the current review and merge before adding unrelated work.
 
 ## Titles and descriptions
 
-Use `type(scope): concise description` for PR titles and the resulting squash commit. Examples:
+Use `type(scope): concise description` for commits, PR titles, and the first line of the approved merge commit. Examples:
 
 ```text
 feat(imports): preview mutual fund transactions
@@ -25,6 +25,8 @@ docs(workflow): define pull request standard and template
 Choose `feat`, `fix`, `docs`, `refactor`, `test`, `ci`, `build`, `perf`, or `chore` according to the change. Mark breaking changes with `!` or the conventional breaking-change footer and explain the migration impact. See [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 Use the [PR template](../.github/pull_request_template.md). Lead with the concrete problem and the resulting behavior. Include a before/after example when it makes the result clearer. Describe the final change for a reviewer who has not seen the chat; remove obsolete scope and abandoned approaches unless they explain a relevant tradeoff.
+
+Keep documentation and PR text focused on the project, decisions, behavior, and validation. Omit authoring-tool credits and tool-specific operating instructions. Use the configured contributor identity for commits without adding generated attribution trailers.
 
 Keep each section proportional to risk. A simple copy correction can use a sentence per applicable section; an authentication or import change needs detailed evidence. State why security or migration effects are not applicable rather than leaving those sections blank. Link related work when available without requiring an issue for every small change.
 
@@ -68,16 +70,18 @@ CI must use minimal token permissions and keep production credentials away from 
 
 ## Approval and merging
 
-The owner must explicitly approve merging the reviewed change. The owner's standing instruction authorizes pushing the approved feature branch and opening or updating its PR after committing. It does not authorize merging or deployment. An AI review can support review but does not replace the owner's decision.
+The owner must explicitly approve merging the reviewed change into `main`. The standing workflow authorizes commits and pushes to `dev` and opening or updating its PR into `main`. It does not authorize merging or deployment. Review evidence supports the owner's decision but does not replace it.
 
 When a distinct reviewer is available, require at least one approving review. GitHub authors cannot approve their own PRs, so a solo workflow must not depend on an impossible self-approval requirement. In that case, retain recorded self-review, applicable passing checks, and the owner's explicit merge authorization.
 
-Merge only after the final revision has been reviewed, applicable checks pass, actionable conversations are resolved, and the security requirements are met. Use squash merge with a conventional message so one feature produces one clear integration-branch commit. Verify the merge result before reporting completion. Deployment remains a separate approval and acceptance step.
+Merge only after the final revision has been reviewed, applicable checks pass, actionable conversations are resolved, and the security requirements are met. Use a merge commit with a conventional title to preserve ancestry between the persistent `dev` and `main` branches; do not squash or rebase this branch pair. After the approved merge, fetch the remote state and fast-forward local `dev` to `origin/main`, then push `dev` before the next step. This keeps the branches aligned without rewriting history. If a fast-forward is not possible, inspect and resolve the divergence before proceeding. Verify the merge result before reporting completion. Deployment remains a separate approval and acceptance step.
 
 ## Repository protections
 
-When configuring GitHub, protect `dev` and the selected deployment branch against direct unreviewed changes, force pushes, and deletion. Require PRs, applicable passing checks, resolved conversations, and reviewer approval where the reviewer model supports it. Apply protections to administrators where supported; routine development must not rely on bypassing them. Require new review for material changes after approval.
+When configuring GitHub, protect `main` against direct changes, force pushes, and deletion. Require PRs, applicable passing checks, resolved conversations, and reviewer approval where the reviewer model supports it. Apply protections to administrators where supported; routine development must not rely on bypassing them. Require new review for material changes after approval.
+
+Restrict write access to `dev` and protect it against force pushes and deletion while allowing the approved direct-commit workflow. Run applicable local checks before pushing and configure checks on `dev` pushes during the approved CI step. Do not apply a PR-only rule to `dev` that contradicts this workflow.
 
 GitHub protection availability depends on repository visibility and account plan. Verify capabilities before claiming enforcement; document any gap and the manual approval process used until it is resolved. See [protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches).
 
-The template and this document do not configure repository settings or create CI workflows. The approved documentation workflow includes committing, pushing the branch, and opening or updating its PR. After publishing the PR, wait for review and approval of the next step; application implementation remains unstarted.
+The template and this document do not configure repository settings or create CI workflows. The approved documentation workflow includes committing and pushing to `dev` and opening or updating its PR into `main`. After publishing the PR, wait for review and approval of the next step; application implementation remains unstarted.

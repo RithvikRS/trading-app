@@ -58,7 +58,7 @@ Store uploads privately with opaque identifiers, authorized downloads, and no pu
 
 Escape imported text in the interface, sanitize any permitted rich content, use a restrictive content security policy, and prevent spreadsheet formula injection in exports. Allowlist connector destinations to avoid server-side request forgery. Do not execute instructions, scripts, or links found in imported content.
 
-Minimize logs and metrics: keep event type, result, timing, and pseudonymous identifiers; redact tokens, document contents, account numbers, and full provider payloads. Define retention for statements, financial records, audit events, and backups, including how deletion propagates and when retained backups expire. Do not send financial data to third-party analytics or AI services without a separately reviewed purpose and explicit authorization.
+Minimize logs and metrics: keep event type, result, timing, and pseudonymous identifiers; redact tokens, document contents, account numbers, and full provider payloads. Define retention for statements, financial records, audit events, and backups, including how deletion propagates and when retained backups expire. Do not send financial data to third-party analytics or external data-processing services without a separately reviewed purpose and explicit authorization.
 
 ## Delivery and operations
 
