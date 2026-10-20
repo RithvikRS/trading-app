@@ -4,7 +4,7 @@ A personal finance application for tracking Indian and US investments, Accenture
 
 ## Project status
 
-Step 1 planning documentation is complete. The PR standard and GitHub PR template were approved on 21 October 2026. Application implementation has not started. Each subsequent small step requires approval before work begins.
+Step 1 planning documentation, the PR standard, and GitHub PR template were merged into `main` in PR #2. The [Step 2 UI prototype proposal](docs/ui-prototype-plan.md) is ready for review; implementation of its first increment, Overview, is awaiting approval. Application implementation has not started.
 
 The agreed database setup is local PostgreSQL for development and Supabase PostgreSQL for deployment. The Python application will likely run on an Oracle Cloud AMD VM, with swap provisioned as a buffer after resource and storage checks.
 
@@ -22,6 +22,7 @@ The agreed database setup is local PostgreSQL for development and Supabase Postg
 | Document | Purpose |
 | --- | --- |
 | [Product plan](docs/plan.md) | Scope, UI direction, staged roadmap, and next approval boundary |
+| [UI prototype proposal](docs/ui-prototype-plan.md) | Visual direction, Overview scope, security boundaries, and acceptance criteria awaiting approval |
 | [Architecture](docs/architecture.md) | Components, database decisions, environments, and financial data rules |
 | [Security](docs/security.md) | Threat model, required controls, and release gates |
 | [Integrations](docs/integrations.md) | Provider options, access limitations, and verification requirements |

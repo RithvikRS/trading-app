@@ -57,6 +57,7 @@ Dependency and secret checks, access controls, and secure storage must be establ
 ## Documentation upkeep
 
 - Update [the product plan](plan.md) when scope, stage status, or acceptance criteria change.
+- Update [the UI prototype proposal](ui-prototype-plan.md) as each prototype increment is approved, implemented, and reviewed.
 - Update [architecture](architecture.md) for schema rules, financial definitions, and component decisions.
 - Update [security](security.md) when trust boundaries, permissions, data retention, or controls change.
 - Update [integrations](integrations.md) after provider verification; record scope, limits, and the date checked.
@@ -68,4 +69,4 @@ Record significant decisions with their rationale and consequences in the releva
 
 ## Current stopping point
 
-Step 1 planning documentation is complete. The approved follow-up covers the PR standard, GitHub PR template, conventional commits and pushes on `dev`, and a PR from `dev` to `main`. After opening the PR, stop and wait for review and further approval. The next proposed implementation step is an overview UI prototype using synthetic data, with its exact scope and acceptance criteria agreed before implementation. Backend scaffolding, dependency installation, provider access, and infrastructure provisioning remain unstarted. CI checks and GitHub protection settings are documented requirements, not configured controls.
+Step 1 planning documentation and the PR workflow were merged into `main` in PR #2. The [Step 2 UI prototype proposal](ui-prototype-plan.md) records visual direction, security boundaries, small increments, and acceptance criteria. Planning is authorized; Step 2A implementation awaits approval. Frontend/backend scaffolding, dependency installation, provider access, and infrastructure provisioning remain unstarted. CI checks and GitHub protection settings are documented requirements, not configured controls.
