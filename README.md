@@ -1,39 +1,56 @@
 # Trading app
 
-A personal finance application for tracking Indian and US investments, Accenture employee shares, and bank accounts in one place. Security is the highest priority, followed by financial accuracy, recoverability, and a clear, responsive interface.
+A personal finance workspace for Indian and US investments, employee shares, and everyday banking. Security comes first, followed by financial accuracy, recoverability, and a clear interface.
 
-## Project status
+## Current progress
 
-Step 1 planning documentation, the PR standard, and GitHub PR template were merged into `main` in PR #2. The [Step 2 UI prototype proposal](docs/ui-prototype-plan.md) is ready for review; implementation of its first increment, Overview, is awaiting approval. Application implementation has not started.
+The Overview prototype runs locally with fictional data. It includes responsive light and dark themes, INR/USD display, amount masking, allocation, dated value history, expandable accounts, activity, and loading, empty, partial/stale, and failed-load states.
 
-The agreed database setup is local PostgreSQL for development and Supabase PostgreSQL for deployment. The Python application will likely run on an Oracle Cloud AMD VM, with swap provisioned as a buffer after resource and storage checks.
+Sample accounts represent INDmoney, advisor-held funds, Accenture employee shares at UBS, and HDFC/SBI balances. No financial account is connected. Backend services, authentication, imports, databases, and deployment are still planned.
 
-## Planned coverage
+## Run locally
 
-- INDmoney Indian and US stocks, ETFs, and mutual funds.
-- Regular mutual funds purchased through a financial advisor.
-- Accenture employee stock purchase plan shares held with UBS.
-- HDFC and SBI balances, transactions, spending categories, cash flow, and budgets.
-- Automatic holdings imports where supported, plus independent price, NAV, and currency updates.
-- Personal access first; multiple users and trade execution are future stages.
+Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Open [the local prototype](http://127.0.0.1:5173). The server binds to loopback only. Use **Explore the demo** at the bottom to switch fixture states. Theme, currency, and amount masking are saved locally; financial records are not stored in browser storage.
+
+```sh
+npm run check       # tests, TypeScript checks, and production build
+npm run preview     # local production preview at http://127.0.0.1:4173
+```
+
+The FX rate is fixed and fictional. The history shows asset values, including cash-flow effects; it does not calculate investment returns. Amount masking provides visual privacy, not access control. Never put real records or credentials into the prototype.
+
+## Direction
+
+- Indian and US stocks, ETFs, and direct/regular mutual funds.
+- UBS Accenture ESPP lots, dividends, and cash movements.
+- HDFC/SBI transactions, categories, transfers, cash flow, and budgets.
+- Supported automatic imports, statement fallbacks, and separate holdings/price freshness.
+- Python API with local PostgreSQL for development and Supabase PostgreSQL for deployment.
+- Likely Oracle Cloud AMD hosting; resource, swap protection, and recovery checks precede hosted use.
+- Personal access first; multi-user access and trade execution are future extensions.
 
 ## Documentation
 
 | Document | Purpose |
 | --- | --- |
-| [Product plan](docs/plan.md) | Scope, UI direction, staged roadmap, and next approval boundary |
-| [UI prototype proposal](docs/ui-prototype-plan.md) | Visual direction, Overview scope, security boundaries, and acceptance criteria awaiting approval |
-| [Architecture](docs/architecture.md) | Components, database decisions, environments, and financial data rules |
-| [Security](docs/security.md) | Threat model, required controls, and release gates |
-| [Integrations](docs/integrations.md) | Provider options, access limitations, and verification requirements |
-| [Operations](docs/operations.md) | Deployment, resource limits, backup, recovery, and incident handling |
-| [Development workflow](docs/development.md) | Small approved changes, validation, documentation, and conventional commits |
-| [Pull request standard](docs/pull-requests.md) | Scope, review evidence, security checks, approvals, and merge policy |
+| [Product plan](docs/plan.md) | Scope and staged roadmap |
+| [UI prototype plan](docs/ui-prototype-plan.md) | Visual direction, increments, acceptance criteria |
+| [Prototype implementation](docs/ui-prototype.md) | Behavior, calculations, security boundaries, verification |
+| [Architecture](docs/architecture.md) | Components, database decisions, financial data rules |
+| [Security](docs/security.md) | Threat model, controls, release gates |
+| [Integrations](docs/integrations.md) | Provider options and verification |
+| [Operations](docs/operations.md) | Hosting, backups, recovery, incident handling |
+| [Development](docs/development.md) | Local commands, validation, conventional commits |
+| [Pull requests](docs/pull-requests.md) | Scope, evidence, merge policy |
 
-The controls and workflows in these documents are requirements for future implementation, not claims of protections already deployed. There are no application setup commands yet.
-
-## Working agreement
-
-For each approved feature: implement the agreed scope, run relevant checks, update documentation, create a conventional commit on `dev`, push `dev`, and open or update a PR from `dev` to `main`. Report the outcome and wait for approval of the next step. Use the [GitHub PR template](.github/pull_request_template.md) when preparing a pull request. Merging into `main` requires the owner's explicit approval; deployment requires separate approval. Real statements, personal identifiers, credentials, and database dumps must stay out of the repository.
+Completed features use conventional commits on `dev`, with pull requests into `main`. Real statements, identifiers, credentials, and database dumps stay outside the repository. Planned protections are not claims of controls already deployed.
 
 Licensed under [Apache License 2.0](LICENSE).

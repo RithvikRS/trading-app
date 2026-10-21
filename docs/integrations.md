@@ -12,7 +12,7 @@ Research baseline: 21 October 2026. Public documentation identifies possible int
 | UBS Accenture ESPP | Statements and available transaction exports | Export formats, purchase dates, fractional units, discounts, basis, dividends, withholding, fees, and transfers |
 | HDFC banking | Downloaded statements first; later evaluate automatic emailed statement ingestion | Representative format, account identifiers, transaction references, debit/credit signs, running balances, and delivery frequency |
 | SBI banking | Downloaded statements first; later evaluate automatic emailed statement ingestion | The same checks as HDFC, implemented as a separate parser |
-| Mutual fund NAVs | AMFI downloads or another approved source | Stable scheme mapping, publication dates, history, permitted usage, and failure behavior |
+| Mutual fund NAVs | AMFI downloads or another documented source | Stable scheme mapping, publication dates, history, permitted usage, and failure behavior |
 | Indian/US prices and FX | Official broker data or a suitable documented provider | Instruments, delayed versus live prices, historical coverage, adjusted prices, license, limits, and cost |
 
 ## INDmoney and INDstocks
@@ -33,7 +33,7 @@ NAV refreshes update valuation, not units owned. Units and cash flows change onl
 
 UBS identifies One Source as its corporate stock-plan portal and provides stock-plan statement support. Direct automatic access for this account is unverified, so statement/export import is the baseline. An ESPP purchase cost and any tax basis supplied by UBS must remain separately identified. See [UBS support](https://www.ubs.com/us/en/wealth-management/contact-us.html).
 
-SBI documents account-statement downloads; HDFC provides email-statement enrollment. Select parsers from representative sanitized exports before promising a format. If email ingestion is later approved, prefer a dedicated mailbox or narrow authorization and process only identified statement sources. A label or message filter alone does not reduce an OAuth token's mailbox permissions. Delivery may be monthly, so email ingestion cannot promise daily bank balances. See [SBI statements](https://sbi.bank.in/web/faq-s/retail-internet-banking) and [HDFC email statements](https://v.hdfcbank.com/content/dam/hdfc-aem-microsites/common-pdfs/pdf/email_statements.pdf).
+SBI documents account-statement downloads; HDFC provides email-statement enrollment. Select parsers from representative sanitized exports before promising a format. If email ingestion is later implemented, prefer a dedicated mailbox or narrow authorization and process only identified statement sources. A label or message filter alone does not reduce an OAuth token's mailbox permissions. Delivery may be monthly, so email ingestion cannot promise daily bank balances. See [SBI statements](https://sbi.bank.in/web/faq-s/retail-internet-banking) and [HDFC email statements](https://v.hdfcbank.com/content/dam/hdfc-aem-microsites/common-pdfs/pdf/email_statements.pdf).
 
 India's Account Aggregator framework has regulated participant requirements. A personal application is not assumed to qualify as a financial information user. Evaluate any eligible partner's terms, consent model, coverage, and cost before selecting that route. See [Sahamati FAQ](https://sahamati.org.in/faq/).
 
@@ -41,7 +41,7 @@ India's Account Aggregator framework has regulated participant requirements. A p
 
 For each provider, document authorization type, actual scopes, account identity, allowed destinations, token storage, renewal, revocation, history depth, source identifiers, rate limits, and expected freshness. Confirm permitted programmatic use. Do not base the initial design on reverse-engineered private endpoints or unattended credential scraping.
 
-Use sanitized fixtures and a small authorized read to verify assumptions during a separately approved connector step. Test expired authorization, revocation, timeout, rate limiting, malformed data, duplicate delivery, incomplete pages, pagination, and partial failure. Provider errors must not erase the last valid portfolio.
+Use sanitized fixtures and a small authorized read to verify assumptions during connector validation. Test expired authorization, revocation, timeout, rate limiting, malformed data, duplicate delivery, incomplete pages, pagination, and partial failure. Provider errors must not erase the last valid portfolio.
 
 Expose connected account, permission summary, last successful holdings import, last price update, statement coverage period, and actionable errors. Financial data fetched recently can still describe an old statement period; display both dates.
 

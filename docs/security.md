@@ -2,6 +2,8 @@
 
 Security is the highest project priority. These requirements cover confidentiality, integrity, and availability of financial data. They are planned controls; completion must be demonstrated before the relevant feature is used with personal data.
 
+The current Overview prototype uses fictional records, loopback-only servers, bundled assets, restrictive browser headers, and display-only preference storage. See its [implemented boundaries and limitations](ui-prototype.md#security-boundary). Authentication, database policies, secret scanning, and production hosting protections remain future work; no real data belongs in the prototype.
+
 ## Assets and trust boundaries
 
 Protect bank and investment records, statements, identifiers, session tokens, integration credentials, encryption keys, backups, and financial calculation history. A broker token may permit trading even when this app only displays holdings; record the provider's actual permissions.
@@ -31,7 +33,7 @@ Restrict the personal deployment through a private network or identity-aware gat
 
 ## Database access
 
-- Permit hosted database access only from approved application and administrative network addresses, covering the actual IPv4/IPv6 and pooler routes used.
+- Permit hosted database access only from explicitly allowed application and administrative network addresses, covering the actual IPv4/IPv6 and pooler routes used.
 - Enforce TLS and verify the server certificate and hostname. Connection failures must not trigger an unencrypted fallback.
 - Disable unused Supabase REST/GraphQL Data API access and keep financial tables in an unexposed schema. Review grants on new tables, functions, and sequences; do not rely on project defaults.
 - Give API and worker roles only necessary operations. They must not be schema owners, superusers, or roles that bypass row-level security. Separate migrations and backup privileges from runtime credentials.
@@ -70,7 +72,7 @@ Backups, restore exercises, monitoring, and incident handling are specified in [
 
 ## Release gates
 
-Synthetic local UI work may proceed after its own approval. Before handling real data, verify authentication, ownership checks, secret handling, private storage, and safe ingestion. Before hosted use, additionally verify:
+The local UI prototype uses fictional data only. Before handling real data, verify authentication, ownership checks, secret handling, private storage, and safe ingestion. Before hosted use, additionally verify:
 
 1. MFA, registration restrictions, session revocation, account recovery, and protected network entry work.
 2. Database network restrictions and certificate verification reject unauthorized or invalid connections.
