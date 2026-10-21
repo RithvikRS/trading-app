@@ -6,7 +6,7 @@ A personal finance workspace for Indian and US investments, employee shares, and
 
 The Overview and Investments prototype runs locally with fictional data. It includes responsive Indigo & Apricot light/dark themes, INR/USD display, amount masking, allocation, dated value history, expandable accounts, and activity. Investments adds 14 account-specific holdings with search, combined filters, sorting, native prices/NAVs, portfolio weights, and separate source dates. Each holding opens a detail view with source information, selected sample activity, fund identity, and UBS ESPP lots where applicable. Screens handle loading, empty, partial/stale, and failed-load states.
 
-Sample accounts represent INDmoney, advisor-held funds, Accenture employee shares at UBS, and HDFC/SBI balances. No financial account is connected. Banking activity is the next UI increment; backend services, authentication, imports, databases, and deployment are still planned.
+Sample accounts represent INDmoney, advisor-held funds, Accenture employee shares at UBS, and HDFC/SBI balances. No financial account is connected. The [banking prototype plan](docs/banking-prototype-plan.md) splits the next work into activity, transfer matching review, and category corrections. Banking implementation, backend services, authentication, imports, databases, and deployment are still planned.
 
 ## Run locally
 
