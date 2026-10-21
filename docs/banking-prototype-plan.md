@@ -1,6 +1,6 @@
 # Banking prototype plan
 
-Status: bank activity and transaction inspection (2C.1) are implemented. Transfer matching review (2C.2) and category corrections (2C.3) remain planned. The investment screens through Step 2B.2 are merged into `main`. See the [implementation notes](ui-prototype.md#banking-activity-and-inspection) for delivered behavior and evidence.
+Status: bank activity and transaction inspection (2C.1) are merged into `main`. Transfer matching review (2C.2) is implemented; category corrections (2C.3) remain planned. The investment screens through Step 2B.2 are merged into `main`. See the [implementation notes](ui-prototype.md#banking-activity-and-inspection) for delivered behavior and evidence.
 
 The screen should make three things clear: what moved, whether a movement belongs to another tracked account, and which classifications need attention. Security and financial integrity take priority over automation. All records and review actions use fictional data in memory.
 
@@ -9,7 +9,7 @@ The screen should make three things clear: what moved, whether a movement belong
 | Increment | Deliverable | Status | Conventional commit |
 | --- | --- | --- | --- |
 | 2C.1 | Bank activity, dated balances, filters, and transaction inspection | Implemented | `feat(banking): add searchable bank activity` |
-| 2C.2 | Explainable transfer candidates, pair review, and reversible matching | Planned | `feat(banking): add transfer matching review` |
+| 2C.2 | Explainable transfer candidates, pair review, and reversible matching | Implemented | `feat(banking): add transfer matching review` |
 | 2C.3 | Category suggestions, individual/bulk corrections, and undo | Planned | `feat(banking): add transaction category review` |
 
 Each increment delivers working behavior, meaningful tests, documentation, and light/dark desktop/mobile evidence through the existing `dev` to `main` workflow. Transfer and category editing become interactive only in their respective increments. Budgets, recurring detection, monthly cash-flow charts, and category trends belong to Step 2D. Import walkthroughs belong to Step 2E.
@@ -20,18 +20,18 @@ Retain Indigo & Apricot, the shared header/sidebar, currency and privacy control
 
 Desktop uses a semantic transaction table and a right-side inspection panel. On mobile, transactions become readable cards and inspection uses a full-height dialog. Keep primary actions reachable without horizontal scrolling, with at least 44 px primary touch targets where practical. Avoid a chart in this increment: activity and outstanding reviews are the main tasks.
 
-The activity toolbar contains search, date range, account selection, and an expandable filter area. Later increments add Transfers and Categories review views inside Banking, each with its own outstanding-item count. The separate top-level Activity destination remains planned; this increment covers bank records only.
+The activity toolbar contains search, date range, account selection, and an expandable filter area. Transfers provides a review view inside Banking with outstanding pair/record counts. Categories review remains planned. The separate top-level Activity destination remains planned; this increment covers bank records only.
 
 ## Step 2C.1: Bank activity
 
-Implemented with 28 fictional transactions, of which 26 are posted and two pending. Inspection uses a modal panel on the right on desktop and fills the viewport width on mobile. Source disclosures reconcile the entire supplied statement period independently of list filters. Initial pair/category evidence remains read-only; there is no candidate-matching engine or category editor yet.
+Implemented with 28 fictional transactions, of which 26 are posted and two pending. Inspection uses a modal panel on the right on desktop and fills the viewport width on mobile. Source disclosures reconcile the entire supplied statement period independently of list filters. Original records and source categories remain read-only. Transfer matching decisions are available in the separate Transfers view; a category editor remains planned.
 
 | Area | Planned behavior |
 | --- | --- |
 | Account cards | HDFC and SBI booked balance snapshots, source dates, currency, and coverage. Selecting a card filters activity; an All accounts choice clears that selection. Label balances as booked snapshots, without implying available funds. |
 | Activity summary | Credits, debits, and count for the selected accounts/date range, with pending items counted separately. Label credits/debits as money in/out including transfers, not income/spending. Balance cards do not change with date, search, or category filters. |
 | Search | Literal, case-insensitive matching of description, counterparty label, and friendly sample reference. Trim surrounding whitespace; never interpret a regular expression or markup. |
-| Filters | Account, inclusive booking-date range, debit/credit direction, posted/pending status, recorded category, and review status. Combine filters, show active chips, and provide clear-all. Default to all accounts and the full supplied period. |
+| Filters | Account, inclusive booking-date range, debit/credit direction, posted/pending status, effective category, and review status. Combine filters, show active chips, and provide clear-all. Default to all accounts and the full supplied period. Original source categories remain available in inspection. |
 | Results | Distinguish account/date-range summaries from the filtered result count and posted debit/credit subtotals. Search and classification filters must not silently redefine the account/date-range summaries. |
 | Rows/cards | Booking date, description/counterparty, account, debit or credit in the selected reporting currency with labeled original INR, category, and review/status label. Sorting supports date, amount, and description in both directions; amount compares absolute minor units, with direction shown separately and stable IDs breaking ties. |
 | Inspection | Original narration, friendly reference, posted/pending state, booking date, optional value date, reporting and original amount/direction, source period, and provenance. Separate source fields from derived classifications and review decisions. |
@@ -64,6 +64,8 @@ In partial mode, remove a known source row or period and mark coverage incomplet
 Arithmetic uses the existing exact minor-unit helpers. Source transactions and reconciliation arithmetic remain in INR. The global currency preference controls primary bank balances, movement totals, matching subtotals, rows, reconciliation displays, and inspector amounts using the dated fictional rate. Differing original INR amounts remain labeled alongside the equivalents; raw narration stays verbatim. This conversion is for display and is not historical transaction FX; it cannot affect matching or classifications. Rounded display rows may differ from a converted aggregate by a minor unit.
 
 ## Step 2C.2: Transfer matching review
+
+Implemented with one initial confirmed pair, one unique candidate, two competing candidates sharing a debit, and one unmatched posted record. All decisions are local and reversible. The [implementation notes](ui-prototype.md#transfer-matching-review) describe state behavior, invariants, and verification.
 
 Provide a review queue with Suggested, Ambiguous, Unmatched, Confirmed, and Dismissed views. Show the two candidate entries side by side on desktop and stacked on mobile, including account, direction, amount, booking date, reference evidence, and why they were proposed. Describe evidence directly; do not invent confidence percentages.
 

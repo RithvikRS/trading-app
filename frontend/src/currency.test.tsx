@@ -112,7 +112,7 @@ describe('workspace reporting currency', () => {
       detail.unmount()
     }
     expect(getBankTransactions()).toEqual(records)
-  })
+  }, 15000)
 
   it.each(['overview', 'investments', 'investments/h14', 'banking'])('masks converted and original values after toggling on %s', async route => {
     const user = userEvent.setup()

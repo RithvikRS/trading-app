@@ -1,7 +1,9 @@
 import { money, sum } from './money'
 import type { Money } from './money'
 import { getHoldings } from './holdings'
-import { bankNames, bankReview, getBankSnapshots, getBankTransactions, sampleTransfer } from './banking'
+import { bankNames, getBankSnapshots, getBankTransactions, sampleTransfer } from './banking'
+import { createTransferState, transferReviewStatus } from './transfers'
+import type { TransferState } from './transfers'
 export { money, sum, convert, formatMoney, axisLabel } from './money'
 export type { Currency, Money } from './money'
 export type DemoState = 'populated' | 'loading' | 'empty' | 'partial' | 'error'
@@ -80,17 +82,18 @@ export function shortDate(date: string): string {
   return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`))
 }
 
-export interface Activity { id: string; title: string; detail: string; date: string; kind: 'purchase' | 'dividend' | 'transfer' | 'spending'; value: Money }
+export interface Activity { id: string; title: string; detail: string; date: string; kind: 'purchase' | 'dividend' | 'transfer' | 'spending' | 'unresolved'; value: Money }
 const investmentActivity: readonly Activity[] = [
   { id: 'a1', title: 'Monthly fund investment', detail: 'INDmoney · Direct plan', date: '2026-10-20', kind: 'purchase', value: money('15000') },
   { id: 'a2', title: 'Dividend received', detail: 'UBS · Accenture shares', date: '2026-10-19', kind: 'dividend', value: money('42.50', 'USD') },
 ]
-export function getActivity(partial = false): Activity[] {
+export function getActivity(partial = false, review: TransferState = createTransferState()): Activity[] {
   const records = getBankTransactions(partial)
   const transfer = records.find(item => item.id === sampleTransfer.debitId)
+  const confirmed = transfer && transferReviewStatus(transfer, records, review) === 'confirmed'
   const grocery = records.find(item => item.id === 't14')
   return [...investmentActivity,
-    ...(transfer ? [{ id: transfer.id, title: 'Transfer between accounts', detail: `HDFC Bank → SBI · ${bankReview(transfer, records) === 'confirmed' ? 'Matched sample pair' : 'Pair needs review'}`, date: transfer.date, kind: 'transfer' as const, value: transfer.amount }] : []),
+    ...(transfer ? [{ id: transfer.id, title: confirmed ? 'Transfer between accounts' : 'Account movement needs review', detail: confirmed ? 'HDFC Bank → SBI · Confirmed pair' : 'HDFC Bank · Source transfer label, unreviewed', date: transfer.date, kind: confirmed ? 'transfer' as const : 'unresolved' as const, value: transfer.amount }] : []),
     ...(grocery ? [{ id: grocery.id, title: grocery.description, detail: 'HDFC Bank · Food & groceries', date: grocery.date, kind: 'spending' as const, value: grocery.amount }] : []),
   ]
 }

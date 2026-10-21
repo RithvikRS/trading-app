@@ -1,0 +1,90 @@
+@layer components {
+  .bank-workspace-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .bank-workspace-nav button, .transfer-tabs button { min-height: 44px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--muted); padding: 10px 16px; font-size: 12px; display: inline-flex; align-items: center; gap: 10px; }
+  .bank-workspace-nav button[aria-pressed="true"], .transfer-tabs button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent-strong); font-weight: 600; }
+  .bank-workspace-nav button span, .transfer-tabs button span { font-size: 11px; font-variant-numeric: tabular-nums; }
+  .bank-review-history { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; }
+  .bank-review-history p { color: var(--muted); font-size: 11px; line-height: 1.8; }
+  .bank-review-history strong { display: block; color: var(--text); font-weight: 550; }
+  .bank-review-history > div:last-child { display: flex; flex-wrap: wrap; gap: 8px; }
+  .bank-review-history button { min-height: 44px; }
+  .review-announcement { font-size: 12px; padding: 14px 18px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-strong); margin-bottom: 16px; line-height: 1.7; }
+  .review-announcement:empty { display: none; }
+  .review-announcement.error { color: var(--warning); background: var(--warning-soft); }
+  .transfer-heading { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; align-items: center; padding: 28px; }
+  .transfer-heading h2 { margin: 8px 0; font-size: 24px; letter-spacing: -.6px; font-weight: 550; }
+  #transfer-review-title:focus { outline: none; }
+  .transfer-heading p { color: var(--muted); font-size: 12px; }
+  .transfer-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 0 28px; border: 1px solid var(--border); border-radius: 12px; background: var(--border); overflow: hidden; }
+  .transfer-summary > div { padding: 20px; background: var(--surface-soft); min-width: 0; }
+  .transfer-summary > div:first-child { background: linear-gradient(115deg, var(--hero), var(--hero-end)); }
+  .transfer-summary span, .transfer-summary small { display: block; color: var(--muted); font-size: 10px; line-height: 1.7; }
+  .transfer-summary strong { display: block; font-size: 25px; letter-spacing: -.6px; font-weight: 550; margin: 8px 0; overflow-wrap: anywhere; }
+  .transfer-summary strong .amount, .transfer-summary strong .masked-amount { font: inherit; color: var(--text); }
+  .transfer-scope { display: flex; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 11px; line-height: 1.9; padding: 18px 28px 24px; }
+  .transfer-scope svg { margin-top: 3px; }
+  .transfer-tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 28px 20px; }
+  .transfer-queue-context { display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; border-block: 1px solid var(--border); color: var(--muted); font-size: 10px; line-height: 1.7; padding: 14px 28px; background: var(--surface-soft); }
+  .transfer-results { padding: 24px 28px; display: grid; gap: 20px; }
+  .transfer-pair { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .transfer-pair.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .transfer-pair-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--surface-soft); }
+  .transfer-pair h3 { margin: 0; font-size: 13px; font-weight: 550; }
+  .transfer-state { display: inline-flex; gap: 6px; align-items: center; color: var(--accent-strong); font-size: 10px; }
+  .transfer-legs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 18px; padding: 20px; }
+  .transfer-leg { min-width: 0; border: 1px solid var(--border); border-radius: 9px; padding: 18px; background: var(--surface); }
+  .transfer-leg-heading { display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; color: var(--muted); font-size: 10px; line-height: 1.8; }
+  .transfer-leg-heading > span { color: var(--accent-strong); display: inline-flex; gap: 6px; align-items: center; }
+  .transfer-leg-amount { display: block; margin: 14px 0 10px; font-size: 24px; font-weight: 550; letter-spacing: -.6px; overflow-wrap: anywhere; }
+  .transfer-leg p { font-size: 12px; font-weight: 500; line-height: 1.7; }
+  .transfer-leg > small { display: block; color: var(--muted); font-size: 10px; line-height: 1.8; margin-top: 5px; }
+  .transfer-outside { display: block; font-size: 10px; color: var(--warning); margin-top: 8px; }
+  .transfer-inspect { display: flex; gap: 8px; align-items: center; min-height: 44px; width: fit-content; font-size: 11px; color: var(--accent-strong); text-underline-offset: 3px; margin-top: 6px; border-radius: 4px; }
+  .transfer-connector { color: var(--accent); }
+  .transfer-evidence { padding: 0 20px 18px; display: flex; gap: 9px; color: var(--muted); font-size: 11px; line-height: 1.8; }
+  .transfer-evidence svg { margin-top: 3px; color: var(--accent-strong); }
+  .transfer-evidence strong { font-size: 11px; color: var(--text); font-weight: 550; }
+  .transfer-evidence p { margin-top: 4px; }
+  .transfer-actions { display: flex; gap: 10px; flex-wrap: wrap; padding: 16px 20px; border-top: 1px solid var(--border); }
+  .transfer-actions button, .transfer-confirm button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .transfer-confirm { padding: 20px; background: var(--accent-soft); border-top: 1px solid var(--accent-border); font-size: 12px; line-height: 1.8; }
+  .transfer-confirm p { color: var(--muted); margin: 8px 0 14px; }
+  .transfer-empty { text-align: center; padding: 30px 20px 40px; color: var(--muted); }
+  .transfer-empty svg { color: var(--accent); }
+  .transfer-empty h3 { margin: 16px 0 8px; color: var(--text); font-size: 16px; }
+  .transfer-empty p { font-size: 12px; line-height: 1.9; }
+  .transfer-unmatched { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; padding: 20px; }
+  .transfer-unmatched-note { color: var(--muted); font-size: 12px; line-height: 1.9; align-self: center; }
+  .transfer-unmatched-note h3 { margin: 12px 0 8px; color: var(--text); }
+  .transfer-incomplete { margin: 0 28px 24px; padding: 18px; color: var(--warning); background: var(--warning-soft); border: 1px solid var(--border); border-radius: 10px; font-size: 12px; line-height: 1.9; }
+  .transfer-incomplete p { margin: 8px 0 12px; }
+}
+@layer responsive {
+  @media (max-width: 1050px) {
+    .transfer-legs { gap: 10px; padding: 18px; }
+    .transfer-leg { padding: 14px; }
+    .transfer-summary > div { padding: 16px; }
+    .transfer-summary strong { font-size: 22px; }
+  }
+  @media (max-width: 680px) {
+    .transfer-heading { padding: 24px 18px; }
+    .transfer-heading h2 { font-size: 22px; }
+    .transfer-summary { margin-inline: 18px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .transfer-summary > div:first-child { grid-column: 1 / -1; }
+    .transfer-summary > div { padding: 18px; }
+    .transfer-summary strong { font-size: 22px; }
+    .transfer-tabs { padding-inline: 18px; gap: 6px; }
+    .transfer-tabs button { padding: 10px 12px; font-size: 11px; flex: 1 0 auto; }
+    .transfer-results, .transfer-scope { padding: 20px 18px; }
+    .transfer-queue-context { padding-inline: 18px; }
+    .transfer-legs, .transfer-unmatched { grid-template-columns: minmax(0, 1fr); }
+    .transfer-connector { transform: rotate(90deg); justify-self: center; }
+    .transfer-pair-heading, .transfer-actions, .transfer-confirm { padding: 16px; }
+    .transfer-actions button { flex: 1 0 auto; }
+    .transfer-evidence { padding: 0 16px 18px; }
+    .transfer-incomplete { margin-inline: 18px; }
+  }
+  @media (max-width: 360px) {
+    .transfer-summary { grid-template-columns: 1fr; }
+  }
+}
