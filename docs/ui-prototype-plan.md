@@ -1,86 +1,68 @@
-# Step 2: UI prototype proposal
+# UI prototype plan
 
-Proposed on 21 October 2026 after PR #2 was merged into `main`. Planning is authorized; implementation is awaiting approval. Approving Step 2A authorizes only the first increment below, including the minimum frontend setup needed to run it. Later increments require their own approval.
+The prototype establishes visual design and everyday interactions before connecting financial accounts. Step 2A implements the Overview and minimum frontend foundation; [implementation notes](ui-prototype.md) describe its behavior and verification. Later screens remain planned.
 
-## Purpose and scope
+## Scope and visual direction
 
-Review the application's visual design and everyday interactions before connecting financial accounts. The first deliverable is a polished, responsive Overview using synthetic data. It should answer three questions quickly: what assets are tracked, where they are held, and which data needs attention.
+The Overview answers three questions: what assets are tracked, where they are held, and which data needs attention. React, TypeScript, and Vite provide a reusable frontend foundation with a small, pinned dependency set.
 
-Use the agreed React, TypeScript, and Vite direction. Reuse the prototype's components and design tokens during later application work. Select maintained dependencies and lock exact versions during the approved setup; keep the initial dependency set small. This proposal does not install packages or introduce application code.
+Use the Indigo & Apricot palette: pale indigo backgrounds and warm apricot highlights in light mode, deeper indigo surfaces and bright apricot accents in dark mode. Keep readable type, tabular numbers, thin separators, and limited elevation. Allocation charts use four distinct hues, contrasting separators, and matching labeled legends. Follow the system theme initially and offer an explicit control. Bundle fonts and icons locally. Accompany meaningful color with text or icons.
 
-The prototype runs on localhost and contains fabricated fixtures only. Backend services, databases, authentication implementation, real statements, provider authorization, live quotes, trade execution, and deployment belong to later approved work. A visible demo label must make the simulated nature of the data clear.
+Desktop uses a narrow sidebar; mobile uses a compact header and navigation drawer. Keep a neutral working title. Favor useful charts and compact account rows, respect reduced motion, and preserve keyboard access.
 
-## Visual direction
+The prototype runs on loopback with fabricated fixtures. Backend services, databases, authentication, real statements, provider connections, live quotes, trading, and deployment are outside its scope. Keep a visible sample-data label on every screen size.
 
-Propose a calm financial workspace with a graphite dark theme, an equally considered warm-neutral light theme, and restrained teal accents. Follow the system theme initially and provide an explicit light/dark control. Reserve positive, negative, and warning colors for meaning, with text or icons alongside color.
+## Increments
 
-Use a readable sans-serif typeface, aligned tabular numerals, a consistent spacing scale, thin separators, and limited elevation. Give the main total and data freshness clear hierarchy. Prefer compact account rows and useful charts to decorative panels. Fonts, icons, and other assets must be local or bundled with an appropriate license.
-
-Desktop uses a narrow navigation sidebar and a flexible main canvas. Mobile uses a compact header and accessible navigation drawer, with content ordered by importance. Keep the working title neutral until an app name is selected. Motion should be brief and respect reduced-motion preferences.
-
-## Increment sequence
-
-| Increment | Deliverable | Approval boundary |
+| Increment | Deliverable | Status |
 | --- | --- | --- |
-| 2A | Frontend setup, shared visual foundations, responsive shell, and Overview | Proposed first implementation step; stop after its PR and review |
-| 2B | Investment holdings, search/filter/sort, and a holding detail panel | Separate approval after Overview review |
-| 2C | Bank balances and searchable activity, with sample transfer/category review | Separate approval; simulated changes only |
-| 2D | Budget and cash-flow prototype with sample monthly categories and recurring items | Separate approval; no financial persistence |
-| 2E | Import-review walkthrough and connection-status screens | Separate approval; bundled sample batches only, no upload or provider login |
+| 2A | Frontend foundation, responsive shell, Overview | Implemented locally |
+| 2B | Searchable/filterable/sortable holdings and holding details | Planned |
+| 2C | Banking activity, sample transfer matching, category review | Planned |
+| 2D | Budgets, cash flow, monthly categories, recurring items | Planned |
+| 2E | Import-review walkthrough and connection status with bundled samples | Planned |
 
-Steps 2B-2E describe the intended sequence, not permission to build all screens at once. Their detailed criteria will be refined after the preceding review. The shell may show future destinations with clear planned status, but must not present inactive destinations as working links.
+Refine each increment after reviewing the preceding screen. Future destinations may appear with planned status, but must not resemble working links. Import walkthroughs use fixtures without file inputs or provider sign-in.
 
-## Step 2A: Overview
+## Overview requirements
 
-| Area | Proposed content and behavior |
+| Area | Behavior |
 | --- | --- |
-| Header | Overview title, demo label, INR/USD display choice, hide/show amounts, and theme control |
-| Summary | Tracked assets, invested assets, and cash; clear reporting currency and valuation date |
-| Value history | A restrained line chart with 1M/3M/6M controls, dated values, keyboard-accessible details, and a tabular alternative |
-| Allocation | Asset-class distribution with readable labels, amounts, percentages, and an accessible list |
-| Accounts | Sample INDmoney, advisor-held funds, UBS employee shares, HDFC, and SBI summaries with separate holdings/balance and price freshness where relevant |
-| Attention | Actionable sample stale-data or incomplete-valuation messages, with a detail disclosure explaining affected coverage |
-| Recent activity | A short fabricated activity list, distinguishing purchases, dividends, transfers, and spending; full history follows later |
+| Header | Demo label, INR/USD, hide/show amounts, theme |
+| Summary | Assets, investments, cash, clear currency and snapshot date |
+| History | 1M/3M/6M ranges, dated values, keyboard exploration, table |
+| Allocation | Labeled classes, amounts, percentages, accessible list |
+| Accounts | INDmoney, advisor funds, UBS, HDFC, SBI; distinct holdings/balance and price dates |
+| Attention | Stale/incomplete data, affected accounts, explained coverage |
+| Activity | Purchases, dividends, transfers, spending; full history follows later |
 
-Use "Tracked assets", rather than "Net worth", because liabilities and full account coverage are not established. Invested assets include the tracked holdings; cash includes the explicitly represented bank and broker cash balances once each. Account totals, allocation, and summary values must agree for the same snapshot.
+Use **Tracked assets**, since liabilities and complete coverage are not established. Count bank and broker cash once. Account totals, allocation, and summary must reconcile. History describes value changes including cash flows and FX, not investment return. Return, tax, and trading calculations are outside this increment.
 
-The value-history chart describes changes in tracked asset value, not investment return. State that deposits, withdrawals, and FX movements can change it. Do not add an unexplained gain percentage, XIRR, tax calculation, or simulated trading control to this increment.
+Currency conversion uses a labeled, dated fictional rate. Preserve original-currency values and document minor-unit arithmetic and rounding. Changing a chart range does not alter the current summary.
 
-The currency control changes reporting values consistently using an explicitly labeled, dated demo FX rate. Original-currency amounts remain distinguishable. Fixture values use exact decimal strings or minor units, with a documented conversion/rounding approach; do not introduce a production accounting engine. Chart range controls affect the displayed history, not the current summary snapshot.
+## Interactions and states
 
-## Interaction and state coverage
+- Theme, currency, privacy, chart range, drawer, and disclosures support keyboard and pointer input.
+- Privacy hides absolute amounts in text, labels, tables, and accessible attributes. It is visual privacy, not encryption or authentication.
+- Demo controls select populated, loading, empty, partial/stale, and failed-load states without contacting providers.
+- Loading uses skeletons instead of false zeros. Empty explains missing sample accounts and offers a reset.
+- Missing prices remain unknown and are excluded from labeled known-value totals. Stale holdings retain their dates.
+- Failed loads retain the last usable view with a simulated local retry.
+- The drawer contains focus and returns it to its trigger on dismissal. Chart details are available without hover.
 
-- Theme, reporting currency, privacy mode, chart range, navigation drawer, and account/attention disclosures work with mouse, touch, and keyboard.
-- Privacy mode conceals absolute amounts in cards, activity, chart labels, tooltips, and accessible names. It is a visual privacy control, not authentication or encryption.
-- A clearly labeled demo-state control selects populated, loading, empty, partial/stale, and failed-load fixtures. These controls do not contact providers or pretend to refresh live accounts.
-- Loading uses stable skeletons and does not flash false zero balances. Empty state explains that no sample accounts are present and offers a reset to populated demo data.
-- Partial/stale state identifies affected accounts and dates. Unknown values remain unknown; any subtotal excluding unpriced holdings is labeled with its coverage.
-- Failed-load state gives a clear explanation and a local simulated retry. Preserve the last valid fixture view where appropriate.
-- Focus returns correctly when the navigation drawer or a disclosure closes. No essential information is available only on hover.
+Persist only display preferences. Financial fixtures remain bundled/in memory. Exclude uploads, credentials, account-connect actions, analytics, remote fonts, and external runtime requests.
 
-Persist only non-sensitive display preferences if needed. Keep fabricated account and activity state in memory or bundled fixtures. Do not add file inputs, credential forms, account-connect actions, analytics, remote fonts, or third-party requests to the running prototype. Bind both local development and preview servers to loopback, without a tunnel or public publishing.
+## Acceptance evidence
 
-## Acceptance and review evidence
-
-| Area | Evidence required for Step 2A |
+| Area | Target |
 | --- | --- |
-| Visual quality | Review screenshots at 1440 px desktop, 768 px tablet, and 390 px mobile widths in both themes; consistent typography, alignment, and spacing |
-| Responsive behavior | No clipped controls or page-wide horizontal scrolling at 320 px; readable content with enlarged text and a reflow check at 400% browser zoom |
-| Accessibility | Semantic landmarks and headings, named controls, visible focus, keyboard completion of all interactions, chart alternatives, and reduced-motion behavior |
-| Contrast and targets | At least 4.5:1 contrast for normal text and 3:1 for large text; aim for 44 by 44 CSS px primary touch targets and verify smaller controls against the applicable minimum |
-| Financial presentation | Known fixture totals reconcile; currency changes are consistent; transfers do not inflate spending; missing/stale data is labeled; asset-value changes are not labeled as returns |
-| Privacy | Hidden amounts do not leak through tooltips or accessible labels; no personal data, secrets, or external runtime requests |
-| Behavior | Demonstrate all five fixture states, theme/currency/privacy/range controls, local retry, and drawer focus behavior |
-| Engineering | Type checking and production build pass; use targeted tests for fixture reconciliation, currency presentation, privacy behavior, and material state transitions |
+| Visual quality | 1440 px desktop, 768 px tablet, 390 px mobile in both themes |
+| Reflow | No page-wide horizontal scroll at 320 px; enlarged text and 400% zoom |
+| Accessibility | Landmarks, named controls, visible focus, keyboard flows, chart alternatives, reduced motion |
+| Contrast/targets | 4.5:1 normal text, 3:1 large text; 44 px primary touch targets where practical |
+| Financial integrity | Reconciliation, consistent currency, transfers excluded from spending, accurate coverage/freshness |
+| Privacy | No hidden-amount leaks; synthetic records and local runtime assets |
+| Behavior | Five states, theme/currency/privacy/range controls, retry, drawer focus |
+| Engineering | Types, production build, meaningful tests, dependency/license review |
 
-Accessibility targets follow the relevant W3C guidance for [text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), [target size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html), and [reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html). These are acceptance targets, not a claim of completed conformance testing. A 44 px touch target is a usability goal; the cited minimum criterion uses 24 CSS px with defined exceptions.
-
-Choose checks according to behavior and risk. Do not add tests that only assert CSS classes or duplicate static markup. Review dependency advisories and licenses before accepting the initial dependency set, and record limitations alongside actual results.
-
-## Delivery and stopping point
-
-After Step 2A approval, build only the Overview increment. Keep the minimum setup and reusable shell within that feature's scope. Record coherent work in conventional commits such as `chore(frontend): initialize prototype tooling` and `feat(ui): add responsive overview prototype` as each part is completed and checked.
-
-Update this proposal's status, the product plan, README run instructions, and relevant development documentation. Commit and push on `dev`, open or update the `dev`-to-`main` PR with screenshots and validation evidence, and wait for review. Merging and implementation of Step 2B need separate approval.
-
-Current status: proposal documented; no frontend scaffolding, dependency installation, UI implementation, or infrastructure changes have begun.
+See W3C guidance for [contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), [target size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html), and [reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html). These targets are not a claim of full accessibility conformance. Record actual evidence and limits in the implementation notes.

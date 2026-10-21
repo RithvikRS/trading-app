@@ -1,6 +1,6 @@
 # Architecture
 
-Planning baseline: 21 October 2026. The database decision is approved: local PostgreSQL for development and Supabase PostgreSQL for deployment. Component choices below guide implementation; dependency versions will be selected and locked during the approved setup step.
+Planning baseline: 21 October 2026. Development uses local PostgreSQL; deployment uses Supabase PostgreSQL. The frontend prototype has locked dependency versions; the remaining components guide later implementation. Neither database is provisioned by the prototype.
 
 ## Components
 
@@ -26,7 +26,7 @@ flowchart LR
     API --> Files[Private statement storage]
     Jobs[Python worker] --> DB
     Jobs --> Files
-    Jobs --> Providers[Approved provider interfaces]
+    Jobs --> Providers[Supported provider interfaces]
     Backup[Restricted backup process] --> DB
     Backup --> Archive[Encrypted independent backup storage]
 ```

@@ -4,7 +4,7 @@ feat(imports): preview mutual fund transactions
 
 Follow docs/pull-requests.md. Keep details proportional to the change.
 Use dev as the source branch and main as the target branch.
-Focus on project behavior and evidence; omit authoring-tool credits.
+Focus on project behavior and evidence.
 Use synthetic data in examples and screenshots. Never include credentials,
 personal statements, account identifiers, or unredacted financial logs.
 Document checks actually performed; do not claim planned checks passed.
@@ -35,7 +35,7 @@ Document checks actually performed; do not claim planned checks passed.
 
 <!--
 Before requesting review: inspect the final diff and run applicable checks.
-Commit approved changes on dev, push dev, and open or update its PR into main.
+Commit completed changes on dev, push dev, and open or update its PR into main.
 Resolve actionable comments and repeat affected checks after changes.
-Merging requires the owner's explicit approval; deployment requires separate approval.
+Review the final revision before merging. Deployments follow the release process.
 -->

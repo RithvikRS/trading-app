@@ -1,72 +1,69 @@
-# Development workflow
+# Development
 
-Deliver small, reviewable features with updated documentation and conventional commits on `dev`. Push `dev` after each approved change and open or update a PR from `dev` to `main`. Approval of a step does not authorize later stages, merging into `main`, application publishing, or deployment.
+Deliver one coherent feature at a time, with meaningful checks, updated documentation, and conventional commits on `dev`. Open or update its pull request into `main` using the [PR standard](pull-requests.md).
+
+## Local frontend
+
+The prototype uses React, TypeScript, and Vite. Node 22.22.2+ is required by the selected toolchain; Node 22.23.2 and npm 12.0.2 were used for initial development. Direct dependencies have exact versions and `package-lock.json` locks the tree.
+
+From `frontend/`:
+
+| Command | Purpose |
+| --- | --- |
+| `npm ci` | Install locked dependencies |
+| `npm run dev` | Start at `http://127.0.0.1:5173` |
+| `npm run test` | Financial fixture, preference, component, structural accessibility checks |
+| `npm run test:watch` | Tests while editing |
+| `npm run typecheck` | TypeScript checks without emitting files |
+| `npm run build` | Type-check and build static output into `dist/` |
+| `npm run check` | Tests and production build |
+| `npm run preview` | Serve `dist/` at `http://127.0.0.1:4173` |
+| `npm audit` | Installed dependency advisories |
+
+The project `.npmrc` disables dependency lifecycle scripts. Keep that restriction unless a script has been inspected and a narrow build-time need documented. Both servers bind to loopback with strict ports; do not expose them to a LAN, tunnel, or public host. The backend and databases are not required for this prototype.
 
 ## Feature cycle
 
-1. Define one concrete change, its user-visible result, relevant security implications, and acceptance criteria.
-2. Obtain approval for that step. Reuse existing authorization within the approved scope.
-3. Inspect repository instructions and the current worktree; preserve unrelated user changes.
-4. Implement the change and run checks appropriate to its behavior and risk.
-5. Update the affected documentation, including changed assumptions, limitations, and recovery procedures.
-6. Review the diff for accidental personal data, secrets, generated files, and unrelated changes.
-7. Create a conventional commit on `dev` containing the completed feature and its documentation.
-8. Push `dev` to the configured repository and open or update its PR into `main` using the agreed template. Reuse an existing open `dev`-to-`main` PR rather than creating a duplicate.
-9. Report the commit, PR link, checks, result, and any limitations. Wait for approval before starting the next step or merging.
+1. Define the user-visible result, security implications, and acceptance criteria.
+2. Inspect the worktree and preserve unrelated changes. Refresh remote state and resolve divergence without force pushes or rewriting shared history.
+3. Implement, verify relevant behavior, and update documentation.
+4. Review the complete diff for defects, secrets, personal data, generated files, and unrelated work.
+5. Commit the completed feature and documentation on `dev`. Push `dev` and reuse its open PR into `main` when one exists.
+6. Record actual checks and evidence. Resolve findings and rerun affected checks.
 
-Use the existing `dev` branch and preserve unrelated local work. Refresh remote state before starting and resolve any divergence without force pushes or rewriting shared history. Do not create a separate branch for routine approved changes. Commits and pushes to `dev` and PR creation into `main` are authorized as part of the approved workflow; merging into `main`, application publishing, and resource provisioning require separate authorization.
+Use the two persistent branches rather than creating a branch per routine increment. Keep unrelated work out of a PR under review. Merge commits preserve shared ancestry; fetch and fast-forward `dev` to `origin/main` after a merge. Inspect divergence when fast-forwarding is impossible. Deployments have a separate release process.
 
-Use the [pull request standard](pull-requests.md) for review and merge requirements. Keep one coherent change per PR and retain small conventional commits. Use a merge commit when promoting `dev` into `main` so the two persistent branches retain shared ancestry. Do not add unrelated work to `dev` while its PR awaits review. The owner's explicit merge approval and separate deployment approval are required.
-
-Keep GitHub authentication local to the development computer. On Windows, use Git Credential Manager with Windows Credential Manager as its credential store. Do not connect the repository through a cloud account integration for this workflow. Complete sign-in through the normal GitHub authorization flow. Never print tokens, include them in commands or remote URLs, or save them in repository files. Local credential-store configuration is machine configuration and must not contain credentials in tracked documentation.
+Keep GitHub authentication local to the development computer. On Windows, use Git Credential Manager with Windows Credential Manager. Sign in through the normal GitHub flow; never print tokens, embed them in URLs, or save them in the repository. Credential-store configuration is local machine configuration.
 
 ## Commit convention
 
-Use `type(scope): concise description`. Examples of future increments:
+Use `type(scope): concise description`, for example:
 
 ```text
-docs(plan): define scope and implementation roadmap
-chore(backend): initialize Python API tooling
 feat(ui): add responsive portfolio overview
 feat(auth): require authentication for portfolio access
-feat(imports): preview mutual fund statement transactions
-feat(banking): import HDFC account transactions
 fix(imports): preserve repeated payments during deduplication
+docs(operations): describe backup restoration
 ```
 
-Keep each commit coherent and reviewable. A complete feature can include its meaningful tests and documentation in the same commit. Split unrelated capabilities rather than collecting an entire roadmap stage into one commit. Never include live statements, credentials, database dumps, or identifying fixtures.
+A feature can include its tests and documentation in one commit. Split unrelated capabilities into separate increments. Keep live statements, credentials, dumps, and identifying fixtures out of every commit.
 
 ## Validation
 
-Choose tool versions and commands during the approved setup step. Proposed tooling is Python formatting/linting and pytest for backend behavior, TypeScript checks and component tests for frontend behavior, and browser tests for important user flows.
-
-| Change | Required evidence |
+| Change | Evidence |
 | --- | --- |
-| Documentation | Review for consistency, accurate status, working local links, and clean whitespace |
-| Financial calculations | Known-result fixtures, precision/rounding cases, missing-history behavior, and reconciliation |
-| Imports | Duplicate/overlap cases, legitimate repeated transactions, malformed files, failure atomicity, and source attribution |
-| Authentication and authorization | Invalid/expired session rejection, ownership isolation, CSRF/session behavior, and privilege checks |
-| UI | Relevant interaction checks, keyboard/mobile review, readable states, and safe display of imported text |
-| Connectors | Sanitized contract fixtures, pagination, limits, expiration/revocation, retries, and idempotent writes |
-| Migrations and deployment | Migration/recovery validation, resource checks, database hardening, and a successful restore |
+| Documentation | Accurate status, consistent decisions, working local links, clean whitespace |
+| Calculations | Known results, precision/rounding, missing data, reconciliation |
+| UI | Interactions, keyboard/mobile review, contrast, states, safe rendering |
+| Imports | Duplicates/overlaps, repeated payments, malformed files, atomicity, provenance |
+| Authentication | Invalid/expired sessions, ownership isolation, CSRF, least privilege |
+| Connectors | Sanitized contracts, pagination, limits, revocation, retries, idempotency |
+| Migrations/deployment | Recovery, resource limits, database hardening, successful restore |
 
-Use tests for meaningful behavior and risks. Documentation-only changes do not require application tests or introducing a test framework. Run the checks relevant to the change and broaden them when failures or new concerns justify it.
+Use tests for meaningful behavior and risks. Documentation-only changes do not need unrelated application tests. Component tests do not replace visual, keyboard, or assistive-technology review. Advisories are a point-in-time check, not a security guarantee.
 
-Dependency and secret checks, access controls, and secure storage must be established before real-data development. Use a separate local database and synthetic data rather than the production Supabase project for routine tests.
+CI, automated secret scanning, and GitHub branch protections remain to be configured. Record local evidence honestly. Establish access controls, secret handling, and protected storage before introducing real data. Future database tests use a separate local instance with synthetic fixtures, never deployed Supabase.
 
 ## Documentation upkeep
 
-- Update [the product plan](plan.md) when scope, stage status, or acceptance criteria change.
-- Update [the UI prototype proposal](ui-prototype-plan.md) as each prototype increment is approved, implemented, and reviewed.
-- Update [architecture](architecture.md) for schema rules, financial definitions, and component decisions.
-- Update [security](security.md) when trust boundaries, permissions, data retention, or controls change.
-- Update [integrations](integrations.md) after provider verification; record scope, limits, and the date checked.
-- Update [operations](operations.md) with actual setup, backup, restoration, monitoring, and incident procedures as they are implemented.
-- Keep [the PR standard](pull-requests.md) and [GitHub PR template](../.github/pull_request_template.md) consistent when review or merge requirements change.
-- Keep [the README](../README.md) accurate about what works and how to run it. Do not present planned controls as implemented protections.
-
-Record significant decisions with their rationale and consequences in the relevant document. Add separate decision records only when the history becomes difficult to follow there. Never put private credentials, account details, or full incident payloads in documentation.
-
-## Current stopping point
-
-Step 1 planning documentation and the PR workflow were merged into `main` in PR #2. The [Step 2 UI prototype proposal](ui-prototype-plan.md) records visual direction, security boundaries, small increments, and acceptance criteria. Planning is authorized; Step 2A implementation awaits approval. Frontend/backend scaffolding, dependency installation, provider access, and infrastructure provisioning remain unstarted. CI checks and GitHub protection settings are documented requirements, not configured controls.
+Update the plan for scope/status, architecture for component/financial decisions, security for trust boundaries, integrations for verified provider behavior, and operations for actual recovery/deployment procedures. Keep README commands and the PR template accurate. Record significant decisions with their rationale; exclude credentials, account details, and full incident payloads.

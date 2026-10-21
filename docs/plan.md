@@ -1,8 +1,8 @@
 # Product plan
 
-Approved planning baseline: 21 October 2026.
+Planning baseline: 21 October 2026.
 
-Step 1 was merged into `main` in PR #2. The [Step 2 UI prototype proposal](ui-prototype-plan.md) defines the next approval boundary: Step 2A, the responsive Overview with synthetic data. Its implementation is not yet approved.
+Planning and the UI design direction are recorded in `main`. Step 2A implements the responsive Overview locally with synthetic data. See the [prototype plan](ui-prototype-plan.md) and [implementation notes](ui-prototype.md). Later screens remain planned.
 
 Build a personal finance application that provides a trustworthy view of investments and banking activity with as little manual maintenance as supported integrations allow. Security takes priority over convenience, cost optimization, and delivery speed. Financial accuracy and recoverability are part of that requirement.
 
@@ -50,12 +50,12 @@ Review a clickable prototype with synthetic data before connecting personal acco
 
 ## Roadmap
 
-Stages describe ordering, not permission to implement the entire stage. Propose a small feature with acceptance criteria before each approval. The integration feasibility review precedes production connector work and can change the order of imports.
+Deliver each stage through small features with concrete acceptance criteria. The integration feasibility review precedes production connector work and can change the order of imports.
 
 | Stage | Deliverable | Acceptance boundary |
 | --- | --- | --- |
 | 1 | Planning documentation | Scope, architecture, security, integrations, operations, and workflow recorded in a conventional commit |
-| 2 | UI prototype | [Overview first](ui-prototype-plan.md), then separately approved holdings, bank activity, budgets, and import/connection walkthroughs; synthetic data and reviewed interaction states |
+| 2 | UI prototype | [Overview first](ui-prototype-plan.md), followed by holdings, bank activity, budgets, and import/connection walkthroughs; synthetic data and reviewed interaction states |
 | 3 | Application foundation | Python API, frontend, local PostgreSQL, migrations, authentication, and ownership checks, split into small changes |
 | 4 | Portfolio foundation | Accounts, instruments, transaction history, snapshots, and reviewed import batches with deduplication |
 | 5 | First complete investment flow | One detailed mutual fund CAS format, reconciliation, NAV updates, and a working portfolio view |
@@ -79,4 +79,4 @@ Multiple users require enrollment, recovery, authorization, database policy, bac
 - Refresh cadence and any market-data budget; daily valuations are the starting proposal.
 - Backup destination, retention, recovery targets, and statement retention preferences.
 
-Step 2 planning authorizes the proposal and documentation updates only. Wait for explicit Step 2A approval before frontend scaffolding, adding dependencies, or building the Overview. Provider access, real data, databases, and deployment remain outside the prototype scope.
+The current prototype covers Overview only. Provider access, real data, databases, and deployment remain outside the prototype scope.
