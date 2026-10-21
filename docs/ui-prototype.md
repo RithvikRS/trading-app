@@ -1,6 +1,6 @@
 # Frontend prototype
 
-Step 2A provides the local Overview screen and frontend foundation. Steps 2B.1 and 2B.2 add investment holdings and details; Steps 2C.1–2C.3 add banking activity, inspection, transfer matching, and category corrections. Step 2D.1 adds monthly category budgets. All financial records, dates, and exchange rates are fictional. Overview, Investments, Banking, and Budgets are available through navigation; other destinations are visibly marked **Soon** and are not interactive links.
+Step 2A provides the local Overview screen and frontend foundation. Steps 2B.1 and 2B.2 add investment holdings and details; Steps 2C.1–2C.3 add banking activity, inspection, transfer matching, and category corrections. Step 2D.1 adds monthly category budgets; Step 2D.2 adds historical cash-flow trends. All financial records, dates, and exchange rates are fictional. Overview, Investments, Banking, and Budgets are available through navigation; other destinations are visibly marked **Soon** and are not interactive links.
 
 ## Behavior
 
@@ -106,7 +106,7 @@ Decisions survive app navigation and compatible partial/loading/error states. Lo
 
 ## Monthly category budgets
 
-`#/budgets` provides an October 2026 plan across both HDFC and SBI, with eight supplied INR limits and all ten expense categories. Full-month limits are compared with available posted activity through 20 October, 10:00 IST, without proration. Utilities and Health initially exceed their limits, Housing and Subscriptions exactly match, Health has an explicit zero target, and Bank fees/Other expense have no limit. Over-limit categories appear first, with stable taxonomy order otherwise. Cash flow and Recurring are labeled Planned; there is no historical month selector yet.
+`#/budgets` provides an October 2026 plan across both HDFC and SBI, with eight supplied INR limits and all ten expense categories. Full-month limits are compared with available posted activity through 20 October, 10:00 IST, without proration. Utilities and Health initially exceed their limits, Housing and Subscriptions exactly match, Health has an explicit zero target, and Bank fees/Other expense have no limit. Over-limit categories appear first, with stable taxonomy order otherwise. Cash flow provides August/September/October history in its own view; the monthly budget plan remains October across both banks. Recurring is labeled Planned.
 
 | Initial plan | INR |
 | --- | ---: |
@@ -181,7 +181,7 @@ Local verification on 21 October 2026:
 
 | Check | Result |
 | --- | --- |
-| `npm run check` | Passed: 217 tests across sixteen files, TypeScript checks, production build; subsequent affected checks are recorded under Step 2D.1 below |
+| `npm run check` | Passed: 243 tests across eighteen files, TypeScript checks, production build; subsequent affected checks are recorded under Step 2D.2 below |
 | Financial fixtures | Exact totals, allocation/account reconciliation, fractional valuation and rounding, missing values, duplicate-security identity, currency display, transfer exclusion, fixed weight denominator, lot-unit reconciliation, supplied purchase amounts and distinct unknown/zero fees |
 | Component behavior | Combined holdings filters, literal search, numeric/stable sorting, missing values last, all 14 direct detail links, converted acquisition displays and unchanged source records, currency/range, privacy including hidden DOM text and accessible attributes, originating-row focus, state transitions, retry, persisted preferences, blocked/malformed storage |
 | Banking accounting | HDFC/SBI opening/posted movement/closing reconciliation; unchanged Overview totals; pending exclusion; partial discrepancy without balance adjustment; repeated payments preserved; immutable source accessors |
@@ -299,7 +299,7 @@ Additional evidence: [bulk preview with an excluded credit in USD](screenshots/c
 
 ### Monthly budget verification and screenshots (Step 2D.1)
 
-The full `npm run check` run passed 217 tests across 16 files, TypeScript, and the production build. After tightening source-navigation focus and empty-to-partial recovery and adding a no-budgets regression, all 71 affected budget/banking/category/transfer component tests passed, followed by TypeScript and build. A display-rounding note and mobile spacing adjustment were followed by all 12 budget component tests, TypeScript, and production build. A subsequent CSS-only maximum-value wrapping fix passed TypeScript/build and browser reflow checks in INR and USD at 320 px. The current suite contains 218 tests; the added regression is included in those affected runs. No dependencies changed.
+The full `npm run check` run passed 217 tests across 16 files, TypeScript, and the production build. After tightening source-navigation focus and empty-to-partial recovery and adding a no-budgets regression, all 71 affected budget/banking/category/transfer component tests passed, followed by TypeScript and build. A display-rounding note and mobile spacing adjustment were followed by all 12 budget component tests, TypeScript, and production build. A subsequent CSS-only maximum-value wrapping fix passed TypeScript/build and browser reflow checks in INR and USD at 320 px. At this increment the suite contained 218 tests; the added regression is included in those affected runs. No dependencies changed.
 
 Production-browser review exercised invalid limit entry, save and undo, canonical INR editing while reporting USD, masked draft removal/restoration, source inspection and Escape return, purchase/refund category propagation, and retained planning data through partial/error/retry. Both themes fit at 1440, 768, 390, and 320 px without page-wide overflow. Expanded details and narrow editing/source dialogs were checked, including forward/reverse focus wrap. Measured non-gradient text contrast remained at least approximately 4.80:1 light and 5.93:1 dark; existing hero gradient tokens are unchanged. Structural axe checks passed for the workspace, editor, and expanded category. Actual 400% zoom, enlarged text, full screen-reader testing, and a runtime reduced-motion preference switch remain outstanding as described above.
 
@@ -313,6 +313,74 @@ The final build uses local script/style assets. Production response/security hea
 
 Additional evidence: [USD reporting with an INR limit editor](screenshots/budgets-editor-390-dark.jpg), [masked input and progress](screenshots/budgets-masked-editor-390-dark.jpg), [expense/refund source breakdown in USD](screenshots/budgets-detail-1440-light.jpg), and [retained limits during a partial-data load failure](screenshots/budgets-partial-error-390-dark.jpg). The [maximum-limit example at 320 px](screenshots/budgets-large-limit-320-light.jpg) verifies that large INR values wrap without horizontal overflow. All values are fictional. Tall viewport captures show the layout; reflow measurements used a 1000 px height.
 
+## Cash-flow trends
+
+The Cash flow view inside `#/budgets` covers August, September, and October 2026 for All accounts, HDFC, or SBI. August and September are full months; October stops at 20 October, 10:00 IST. These controls apply only to analytics; October budget limits still cover both accounts. Reload starts with Monthly budgets and default cash-flow controls. Recurring remains planned.
+
+Monthly charts have selectable, keyboard-operable month groups and an always-visible table. Daily charts have a visible zero baseline, negative-spending support, horizontal scrolling, keyboard-operable days, and a disclosure for the equivalent table. Select a month/day or source category to inspect its contributing records. The source list starts collapsed to keep reconciliation accessible. Day/category selection changes that list without redefining the month summary or reconciliation. Source inspection restores the selected view, account, month, day, category, scroll, and exact source link; if a correction removes the link, focus falls back to the source heading. A direct transaction reload opens Banking inspection.
+
+### Historical source evidence
+
+There is one authoritative collection of 58 fictional transactions: 15 August, 15 September, and the unchanged 28 October records. `getBankTransactions` defaults to the October period; an explicit `null` period supplies the full evidence for review, inspection, and period selectors. Banking's default activity and category filters still show October. Date filters expose historical records through the same inspector and category review model. Its balance cards remain explicitly dated October snapshots.
+
+The six independently supplied statements reconcile exactly before local review changes. Monetary values below are original INR; pending entries are excluded.
+
+| Statement | Opening | Posted credits | Posted debits | Closing |
+| --- | ---: | ---: | ---: | ---: |
+| HDFC August | 87,885.90 | 90,000.00 | 48,400.00 | 1,29,485.90 |
+| SBI August | 42,338.80 | 5,230.00 | 4,604.90 | 42,963.90 |
+| HDFC September | 1,29,485.90 | 96,500.00 | 48,700.00 | 1,77,285.90 |
+| SBI September | 42,963.90 | 240.00 | 5,004.90 | 38,199.00 |
+| HDFC October 1–20 | 1,77,285.90 | 95,800.00 | 86,665.90 | 1,86,420.00 |
+| SBI October 1–20 | 38,199.00 | 43,250.00 | 6,599.00 | 74,850.00 |
+
+August closings equal September openings, and September closings equal October openings. Statement reconciliation filters by its own account, owner, and period before summing posted movements; adding history cannot inflate October balances. The Overview tracked-asset baseline remains INR 50,86,080.
+
+August adds a supplied investment withdrawal to exercise investment credits. September's `t51` refund of INR 1,500 references August's `t33` purchase of INR 6,000. The credit offsets the purchase's current expense category in September only. A category correction to the purchase propagates to that refund; missing/ineligible evidence or clearing the purchase classification leaves the credit unresolved. The existing October purchase/refund evidence is unchanged. Source inspection and correction previews identify the relevant historical statement and linked purchase/refund.
+
+### Calculations and coverage
+
+| All-account metric, before review changes | August | September | October 1–20 |
+| --- | ---: | ---: | ---: |
+| Classified income | 90,230.00 | 95,240.00 | 95,250.00 |
+| Gross expenses | 41,004.90 | 38,704.90 | 36,764.90 |
+| Verified refunds | 0.00 | 1,500.00 | 800.00 |
+| Net classified spending | 41,004.90 | 37,204.90 | 35,964.90 |
+| Classified surplus | 49,225.10 | 58,035.10 | 59,285.10 |
+| Net bank movement | 42,225.10 | 43,035.10 | 45,785.10 |
+
+Every eligible posted entry occupies one effective role. Net bank movement equals classified income minus net spending, plus investment credits minus investment debits, plus confirmed transfer credits minus transfer debits, plus unresolved credits minus unresolved debits. Pending counts and amounts are separate. Classification changes alter the bridge's roles but do not alter source cash movement, statement balances, or assets. A single transfer leg remains in an account/day/month scope when its validated counterpart is outside it; pair validation uses the full collection. Refund-driven negative spending and classified deficits remain signed.
+
+Coverage comes from explicit account/date intervals, never the first/last transaction. Complete source intervals can contain known zero days; dates without supplied history or beyond 20 October remain gaps. A partially covered day without posted evidence shows Not supplied, including a pending-only day. Available amounts with incomplete coverage remain explicitly incomplete. Source completeness and classification completeness are separate: the populated October source period is complete, with six unresolved posted movements and two pending entries.
+
+Partial mode removes only October's SBI bill `t26`. Both historical months remain complete. SBI 1–18 October is complete; 19–20 October is an explicit missing/stale interval. Available October net spending becomes INR 33,764.90 and movement INR 47,985.10, while SBI's supplied closing stays INR 74,850 and statement-minus-calculated difference stays INR −2,200. No artificial adjustment fills this gap.
+
+Comparisons use the same first N calendar days and same account scope. October 1–20 compares with September 1–20; September 1–30 compares with August 1–30. Unsupported July history suppresses August comparisons. Both windows require complete source coverage and no unresolved posted classification; otherwise the view explains why changes are unavailable. A zero prior value has no percentage. Signed changes use current minus prior; percentages use the absolute prior amount. None of these metrics represents savings, disposable income, investment return, a forecast, or a projected balance.
+
+Original INR minor-unit arithmetic is exact. USD uses the existing dated fictional FX rate for display only, including chart axes, tables, comparison differences, sources, bridge, pending values, and statement details. It is not historical FX; independently rounded displayed figures can differ. Masking removes monetary values, percentages, chart geometry, and accessible financial values, retaining neutral chart placeholders and period/category labels. Masked amounts have an explicit accessible role. Filters, disclosures, selections, and review decisions remain in memory; only existing display preferences persist.
+
+Loading hides cash-flow totals. Partial/error/retry retain compatible controls and shared review decisions; errors keep the last usable snapshot. Empty resets cash-flow selections and disclosures, and restoring samples reinstates initial reviews and limits. Reload resets controls, budget edits, and reviews. No dependencies, external services, persistence, backend, real data, or trading capabilities were added.
+
+Implementation: `frontend/src/data/bankHistory.ts` supplies historical records and balances; `banking.ts` owns the combined collection and period-scoped statement reconciliation; `cashFlow.ts` defines coverage, effective roles, aggregation, and comparisons. `CashFlow.tsx` and `cash-flow.css` provide the view. Existing Banking/Budgets, review, money, display, and route helpers supply shared behavior.
+
+### Cash-flow verification and screenshots (Step 2D.2)
+
+The full `npm run check` run passed 243 tests across 18 files, TypeScript checking, and the production build. Subsequent source-disclosure, incomplete-day, and mobile-label refinements passed all 25 cash-flow data/component tests, TypeScript, and the production build. The data checks cover all six statement reconciliations, adjoining balances, known monthly results, every supplied day/account bridge, one-sided and cross-month transfers, refund-driven negative spending, cross-month purchase corrections/undo, missing evidence, pending exclusions, coverage gaps, matching-day comparisons, zero prior values, immutable sources, and unchanged October/Overview baselines.
+
+Component checks cover month/account/day/category selection, keyboard chart operation, table equivalents, source inspection and exact/fallback focus return, Back/Forward, historical direct routes and Banking filters, shared classification updates, INR/USD surfaces, masking of text/attributes/geometry, in-memory state, partial/error/retry/loading/empty/reload, and structural axe checks for normal/table/masked views. The shared masked-value element now has an explicit accessible role. Structural tests disable jsdom's color-contrast rule; its existing canvas-support warning does not replace browser contrast checks.
+
+Production-browser review exercised keyboard selection of the September refund day, the equal-day comparison in USD, historical source provenance, Escape and exact-link focus restoration, masking, partial SBI day gaps, retained account controls during load failure, retry, and the unchanged statement gap. Both themes fit at 1440, 768, 390, and 320 px without page-wide overflow. Daily charts intentionally scroll inside their own region; monthly charts fit the viewport, and tables provide all values. Measured non-gradient text contrast was at least approximately 4.80:1 light and 5.84:1 dark. Hero gradients reuse existing tokens. Actual 400% zoom, enlarged text, a runtime reduced-motion preference switch, and full screen-reader testing remain unverified; the available browser controls expose viewport sizing, not those settings.
+
+The production preview returned HTTP 200 with the existing restrictive CSP, frame denial, no-sniff, referrer, and permissions policies. Browser warning/error logs were empty. Assets remain local, no dependency inputs changed, and financial values, review decisions, and cash-flow controls do not enter storage or URLs.
+
+| Cash flow | Light | Dark |
+| --- | --- | --- |
+| Desktop, 1440 px | [Screenshot](screenshots/cashflow-1440-light.jpg) | [Screenshot](screenshots/cashflow-1440-dark.jpg) |
+| Tablet, 768 px | [Screenshot](screenshots/cashflow-768-light.jpg) | [Screenshot](screenshots/cashflow-768-dark.jpg) |
+| Mobile, 390 px | [Screenshot](screenshots/cashflow-390-light.jpg) | [Screenshot](screenshots/cashflow-390-dark.jpg) |
+
+Additional evidence: [September comparison and cross-month refund in USD](screenshots/cashflow-refund-1440-light.jpg), [masked charts](screenshots/cashflow-masked-390-dark.jpg), [retained SBI scope during partial-data load failure](screenshots/cashflow-partial-error-390-dark.jpg), and [single-account bridge and statement gap](screenshots/cashflow-gap-390-dark.jpg). All values and source records are fictional. Tall captures show context; 320 px reflow measurements used a 1000 px viewport height.
+
 ## Next increment
 
-Monthly category budgets (2D.1) are implemented. [Cash-flow trends (2D.2)](budgets-prototype-plan.md#step-2d2-cash-flow-trends) remain planned and require reconciled historical fixtures before multi-month charts. Recurring-expense review follows in 2D.3, then import/connection walkthroughs in Step 2E. Production data and security foundations remain separate work.
+Monthly category budgets (2D.1) and cash-flow trends (2D.2) are implemented. [Recurring-expense review (2D.3)](budgets-prototype-plan.md#step-2d3-recurring-commitments) remains planned, then import/connection walkthroughs in Step 2E. Production data and security foundations remain separate work.

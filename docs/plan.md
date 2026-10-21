@@ -2,7 +2,7 @@
 
 Planning baseline: 21 October 2026.
 
-Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. Banking activity/inspection, transfer matching, and category corrections through Step 2C.3 are also merged into `main`. See the [implementation notes](ui-prototype.md) for current behavior and verification. [Step 2D.1](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) adds monthly category budgets. Cash-flow trends (2D.2), recurring-expense review (2D.3), and later screens remain planned.
+Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. Banking activity/inspection, transfer matching, and category corrections through Step 2C.3 are also merged into `main`. See the [implementation notes](ui-prototype.md) for current behavior and verification. [Step 2D.1](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) adds monthly category budgets. Cash-flow trends (2D.2) are implemented. Recurring-expense review (2D.3) and later screens remain planned.
 
 Build a personal finance application that provides a trustworthy view of investments and banking activity with as little manual maintenance as supported integrations allow. Security takes priority over convenience, cost optimization, and delivery speed. Financial accuracy and recoverability are part of that requirement.
 
@@ -79,4 +79,4 @@ Multiple users require enrollment, recovery, authorization, database policy, bac
 - Refresh cadence and any market-data budget; daily valuations are the starting proposal.
 - Backup destination, retention, recovery targets, and statement retention preferences.
 
-The current prototype covers Overview, investment holdings/details, bank activity/inspection, transfer matching, and category corrections. Monthly category budgets are implemented; cash-flow trends remain planned. Provider access, real data, databases, and deployment remain outside the prototype scope.
+The current prototype covers Overview, investment holdings/details, bank activity/inspection, transfer matching, and category corrections. Monthly category budgets and reconciled cash-flow trends are implemented; recurring-expense review remains planned. Provider access, real data, databases, and deployment remain outside the prototype scope.

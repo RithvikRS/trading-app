@@ -1,6 +1,6 @@
 # Budgets and cash-flow prototype plan
 
-Status: monthly category budgets (2D.1) are implemented. Cash-flow trends (2D.2) and recurring commitments (2D.3) remain planned. Banking activity, transfer matching, and category corrections through Step 2C.3 are merged into `main`. See the [implementation notes](ui-prototype.md#monthly-category-budgets) and [banking contract](banking-prototype-plan.md).
+Status: monthly category budgets (2D.1) are implemented. Cash-flow trends (2D.2) are implemented; recurring commitments (2D.3) remain planned. Banking activity, transfer matching, and category corrections through Step 2C.3 are merged into `main`. See the [implementation notes](ui-prototype.md#monthly-category-budgets) and [banking contract](banking-prototype-plan.md).
 
 The Budgets workspace should answer three questions: how classified spending compares with monthly limits, how income and spending change over time, and which recurring expenses are expected next. Security, traceable calculations, and honest coverage take priority over automation. Continue using fictional HDFC/SBI records, the Indigo & Apricot themes, and the shared currency/privacy controls.
 
@@ -9,7 +9,7 @@ The Budgets workspace should answer three questions: how classified spending com
 | Increment | Deliverable | Status | Conventional commit |
 | --- | --- | --- | --- |
 | 2D.1 | Monthly category budgets, reversible limit editing, actual-spending breakdowns, and source inspection | Implemented | `feat(budgets): add monthly category budgets` |
-| 2D.2 | Reconciled historical fixtures, cash-flow trends, comparable-period analysis, and coverage breakdowns | Planned | `feat(budgets): add cash-flow trends` |
+| 2D.2 | Reconciled historical fixtures, cash-flow trends, comparable-period analysis, and coverage breakdowns | Implemented | `feat(budgets): add cash-flow trends` |
 | 2D.3 | Explainable recurring-expense suggestions, review decisions, and expected commitments | Planned | `feat(budgets): add recurring expense review` |
 
 Each increment includes its calculations, meaningful tests, documentation, and light/dark desktop/mobile evidence in a focused `dev` to `main` PR. Later views retain a planned label until their behavior exists. Step 2E remains the import/connection walkthrough.
@@ -33,7 +33,7 @@ Selections, expanded categories, filters, and scroll remain in memory across nav
 
 ## Step 2D.1: Monthly category budgets
 
-Implemented for October with eight supplied limits across ten expense categories, individual limit editing/removal, separate budget undo/reset, source-linked actuals, coverage messaging, and shared privacy/currency controls. Historical months and cash-flow/recurring views remain planned. The rules below define this increment's behavior; [implementation evidence](ui-prototype.md#monthly-category-budgets) records its actual checks and limits.
+Implemented for October with eight supplied limits across ten expense categories, individual limit editing/removal, separate budget undo/reset, source-linked actuals, coverage messaging, and shared privacy/currency controls. Historical months are available in Cash flow; recurring review remains planned. The rules below define this increment's behavior; [implementation evidence](ui-prototype.md#monthly-category-budgets) records its actual checks and limits.
 
 Start with October's existing 28 bank records and a small set of supplied monthly limits. Include under-limit, exactly-at-limit, over-limit, explicit-zero, and unset categories in the fixtures. Every actual comes from current effective classifications and verified refund evidence, never a separately maintained dashboard total.
 
@@ -41,7 +41,7 @@ Budgets belong to the sample owner and cover both tracked banks together. Use on
 
 Allow adding, editing, and removing a category limit. Removal restores Not set; zero means an explicit zero-spend target. Cancel makes no change; saving an unchanged value creates no history entry. Provide Undo budget change and Reset sample budgets with a clearly separate history from Banking's transaction-review history. Budget reset does not reset classifications, and Banking reset does not reset limits. Reload resets both local domains to their supplied fixtures.
 
-Limits are canonical INR minor units. The editor explicitly says INR even when reporting in USD, with a labeled display equivalent; changing reporting currency must never reinterpret the input. Accept a trimmed decimal string from 0 to 999999999.99, at most two fractional digits; reject empty input on Save, negative values, separators, exponent notation, non-finite values, and excess precision. Bound input length before parsing. Preserve the entered value and explain errors without rounding it silently. Removing a limit is a separate action. Initial editing is confined to October; historical month selection arrives with 2D.2.
+Limits are canonical INR minor units. The editor explicitly says INR even when reporting in USD, with a labeled display equivalent; changing reporting currency must never reinterpret the input. Accept a trimmed decimal string from 0 to 999999999.99, at most two fractional digits; reject empty input on Save, negative values, separators, exponent notation, non-finite values, and excess precision. Bound input length before parsing. Preserve the entered value and explain errors without rounding it silently. Removing a limit is a separate action. Limit editing is confined to October. Historical month selection in 2D.2 applies to Cash flow; historical budget limits are not invented or copied.
 
 | Calculation | Contract |
 | --- | --- |
@@ -60,6 +60,8 @@ Category corrections, transfer decisions, undo, and resets must update budget ac
 No rollover, automatic budget copying, household/shared budgets, goals, envelopes, prorated limits, predicted overspending, or safe-to-spend calculation is included.
 
 ## Step 2D.2: Cash-flow trends
+
+Implemented with one 58-record ledger, six independently supplied statement balances, explicit account/day coverage, three selectable months, daily charts/tables, category-filtered source inspection, and exact reconciliation. See [fixture totals and implementation evidence](ui-prototype.md#cash-flow-trends). The rules below define this increment’s contract.
 
 Add fictional August and September 2026 source records and per-account period coverage so three months of trends have actual ledger evidence. October remains month-to-date through the existing cutoff. Reconcile each complete historical account period from opening through posted movements to closing, and reconcile September closing to October opening. Preserve October's current record identities, source fields, 28-record default view, account snapshots, and Overview asset baseline.
 

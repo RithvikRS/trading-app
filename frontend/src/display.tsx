@@ -9,7 +9,7 @@ export const DisplayContext = createContext<Preferences>({ theme: 'light', curre
 
 export function PrivateValue({ children }: { children: ReactNode }) {
   const { hidden } = useContext(DisplayContext)
-  return hidden ? <span className="masked-amount" aria-label="Amount hidden"><span aria-hidden="true">••••••</span></span> : <>{children}</>
+  return hidden ? <span className="masked-amount" role="img" aria-label="Amount hidden"><span aria-hidden="true">••••••</span></span> : <>{children}</>
 }
 
 export function Amount({ value, original = false }: { value: Money | null; original?: boolean }) {

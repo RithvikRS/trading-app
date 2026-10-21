@@ -19,6 +19,7 @@ import Banking from './Banking'
 import Budgets from './Budgets'
 import { changeBudgets, createBudgetState } from './data/budgets'
 import type { BankCategory } from './data/banking'
+import { initialCashControls } from './data/cashFlow'
 import { defaultBankingControls, getBankTransactions } from './data/banking'
 import { changeTransfers, createTransferState, initialTransferControls } from './data/transfers'
 import type { TransferAction, TransferState } from './data/transfers'
@@ -191,6 +192,8 @@ export default function App() {
   const { screen, route, transactionOrigin, navigate, openHolding, openTransaction } = useScreen()
   const navScreen = screen === 'holding' ? 'investments' : screen === 'transaction' ? transactionOrigin : screen
   const screenLabel = screen === 'holding' ? 'Holding details' : screen === 'transaction' ? 'Transaction details' : screen === 'banking' ? 'Banking' : screen === 'budgets' ? 'Budgets' : screen === 'investments' ? 'Investments' : screen === 'overview' ? 'Overview' : 'Unavailable'
+  const [budgetTab, setBudgetTab] = useState<'monthly' | 'cash'>('monthly')
+  const [cashControls, setCashControls] = useState(initialCashControls)
   const [budgetState, setBudgetState] = useState(() => createBudgetState())
   const [budgetExpanded, setBudgetExpanded] = useState<BankCategory | null>(null)
   const [bankingControls, setBankingControls] = useState(defaultBankingControls)
@@ -222,7 +225,7 @@ export default function App() {
     if (retryTimer.current) clearTimeout(retryTimer.current)
     setRetrying(false)
     if (value === 'populated' || value === 'partial' || value === 'empty') setLastGoodState(value)
-    if (value === 'empty') { setBudgetState(createBudgetState(false)); setBudgetExpanded(null) }
+    if (value === 'empty') { setCashControls(initialCashControls); setBudgetState(createBudgetState(false)); setBudgetExpanded(null) }
     else if ((value === 'populated' || value === 'partial') && lastGoodState === 'empty') setBudgetState(createBudgetState())
     if (value === 'empty') { setTransferState(createTransferState(false)); setTransferControls(current => ({ ...current, selected: null })) }
     else if ((value === 'populated' || value === 'partial') && lastGoodState === 'empty') setTransferState(createTransferState())
@@ -231,7 +234,7 @@ export default function App() {
     setDemoState(value)
   }
   function reviewTransfer(action: TransferAction) {
-    const records = view === 'empty' || view === 'loading' ? [] : getBankTransactions(partial)
+    const records = view === 'empty' || view === 'loading' ? [] : getBankTransactions(partial, null)
     setTransferState(current => changeTransfers(current, action, records))
     setTransferControls(current => ({ ...current, selected: null }))
     setCategoryControls(current => ({ ...current, ids: [], preview: null }))
@@ -244,7 +247,7 @@ export default function App() {
   function navigateFromDrawer() { drawerNavigating.current = true; drawer.current?.close() }
   function finishDrawerClose() {
     if (drawerNavigating.current) {
-      if (!/^(holding|transaction|transfer|category|budget)-link-/.test(document.activeElement?.id ?? '')) document.getElementById('page-title')?.focus({ preventScroll: true })
+      if (!/^(holding|transaction|transfer|category|budget|cash)-link-/.test(document.activeElement?.id ?? '')) document.getElementById('page-title')?.focus({ preventScroll: true })
     }
     else menuButton.current?.focus()
     drawerNavigating.current = false
@@ -275,7 +278,7 @@ export default function App() {
           {demoState === 'error' && <div role="alert" className="notice error-notice"><AlertTriangle size={19} aria-hidden="true" /><div><strong>The latest snapshot couldn’t load.</strong><p>{lastGoodState === 'empty' ? 'The last demo view had no accounts.' : 'You’re still seeing the last available sample snapshot.'} This is a simulated error.</p></div><button className="outlined-button" onClick={retry} disabled={retrying}><RefreshCw size={14} className={retrying ? 'spinning' : ''} aria-hidden="true" />{retrying ? 'Retrying…' : 'Retry demo'}</button></div>}
           {screen === 'unavailable' ? <section className="empty-state"><span className="eyebrow">Local prototype · Sample data</span><h1 id="page-title" tabIndex={-1}>This view is unavailable.</h1><p>Overview, Investments, Banking, and Budgets are the available screens.</p><a className="primary-button" href="#/investments">Go to investments</a><a className="text-button" href="#/banking">Go to banking</a></section>
             : screen === 'banking' || (route.screen === 'transaction' && transactionOrigin === 'banking') ? <Banking view={view} categoryControls={categoryControls} onCategoryControls={setCategoryControls} transferState={transferState} transferControls={transferControls} onTransferControls={next => { if (next.view !== transferControls.view) setCategoryControls(current => ({ ...current, ids: [], preview: null })); setTransferControls(next) }} onTransferAction={reviewTransfer} controls={bankingControls} onChange={setBankingControls} filtersOpen={bankingFiltersOpen} onToggleFilters={() => setBankingFiltersOpen(open => !open)} onReset={() => changeState('populated')} onOpen={openTransaction} transactionId={route.screen === 'transaction' ? route.transactionId : undefined} onClose={() => navigate('banking')} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />
-            : screen === 'budgets' || (route.screen === 'transaction' && transactionOrigin === 'budgets') ? <Budgets view={view} state={budgetState} review={transferState} expanded={budgetExpanded} onExpand={setBudgetExpanded} onAction={action => setBudgetState(current => changeBudgets(current, action))} onReviewAction={reviewTransfer} onReset={() => changeState('populated')} onReview={() => { setCategoryControls({ ...initialCategoryControls }); setTransferControls(current => ({ ...current, view: 'categories', selected: null })); navigate('banking') }} onOpen={openTransaction} transactionId={route.screen === 'transaction' ? route.transactionId : undefined} onClose={() => navigate('budgets')} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />
+            : screen === 'budgets' || (route.screen === 'transaction' && transactionOrigin === 'budgets') ? <Budgets tab={budgetTab} onTab={setBudgetTab} cashControls={cashControls} onCashControls={setCashControls} view={view} state={budgetState} review={transferState} expanded={budgetExpanded} onExpand={setBudgetExpanded} onAction={action => setBudgetState(current => changeBudgets(current, action))} onReviewAction={reviewTransfer} onReset={() => changeState('populated')} onReview={() => { setCategoryControls({ ...initialCategoryControls }); setTransferControls(current => ({ ...current, view: 'categories', selected: null })); navigate('banking') }} onOpen={openTransaction} transactionId={route.screen === 'transaction' ? route.transactionId : undefined} onClose={() => navigate('budgets')} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />
             : route.screen === 'holding' ? <HoldingDetail holdingId={route.holdingId} view={view} onBack={() => navigate('investments')} onReset={() => changeState('populated')} />
             : screen === 'investments' ? <Investments view={view} controls={holdingsControls} onChange={setHoldingsControls} onReset={() => changeState('populated')} onOpen={openHolding} filtersOpen={holdingsFiltersOpen} onToggleFilters={() => setHoldingsFiltersOpen(open => !open)} />
             : view === 'loading' ? <LoadingState /> : view === 'empty' ? <EmptyState reset={() => changeState('populated')} /> : <>
