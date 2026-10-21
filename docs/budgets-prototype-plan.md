@@ -1,6 +1,6 @@
 # Budgets and cash-flow prototype plan
 
-Status: planned. Banking activity, transfer matching, and category corrections through Step 2C.3 are merged into `main`. This document defines Step 2D; it adds no working screens or calculations. See the [existing implementation](ui-prototype.md) and [banking contract](banking-prototype-plan.md).
+Status: monthly category budgets (2D.1) are implemented. Cash-flow trends (2D.2) and recurring commitments (2D.3) remain planned. Banking activity, transfer matching, and category corrections through Step 2C.3 are merged into `main`. See the [implementation notes](ui-prototype.md#monthly-category-budgets) and [banking contract](banking-prototype-plan.md).
 
 The Budgets workspace should answer three questions: how classified spending compares with monthly limits, how income and spending change over time, and which recurring expenses are expected next. Security, traceable calculations, and honest coverage take priority over automation. Continue using fictional HDFC/SBI records, the Indigo & Apricot themes, and the shared currency/privacy controls.
 
@@ -8,7 +8,7 @@ The Budgets workspace should answer three questions: how classified spending com
 
 | Increment | Deliverable | Status | Conventional commit |
 | --- | --- | --- | --- |
-| 2D.1 | Monthly category budgets, reversible limit editing, actual-spending breakdowns, and source inspection | Planned | `feat(budgets): add monthly category budgets` |
+| 2D.1 | Monthly category budgets, reversible limit editing, actual-spending breakdowns, and source inspection | Implemented | `feat(budgets): add monthly category budgets` |
 | 2D.2 | Reconciled historical fixtures, cash-flow trends, comparable-period analysis, and coverage breakdowns | Planned | `feat(budgets): add cash-flow trends` |
 | 2D.3 | Explainable recurring-expense suggestions, review decisions, and expected commitments | Planned | `feat(budgets): add recurring expense review` |
 
@@ -32,6 +32,8 @@ Use semantic rows on desktop and stacked cards on mobile. Prefer one primary act
 Selections, expanded categories, filters, and scroll remain in memory across navigation. Direct reload of Budgets uses default controls. Transaction inspection uses allowlisted opaque record IDs; a session-only origin restores the Budgets context on close or Back. Direct reload of a transaction route continues to work as ordinary Banking inspection. Do not place budget amounts, payees, search text, or review decisions in URLs.
 
 ## Step 2D.1: Monthly category budgets
+
+Implemented for October with eight supplied limits across ten expense categories, individual limit editing/removal, separate budget undo/reset, source-linked actuals, coverage messaging, and shared privacy/currency controls. Historical months and cash-flow/recurring views remain planned. The rules below define this increment's behavior; [implementation evidence](ui-prototype.md#monthly-category-budgets) records its actual checks and limits.
 
 Start with October's existing 28 bank records and a small set of supplied monthly limits. Include under-limit, exactly-at-limit, over-limit, explicit-zero, and unset categories in the fixtures. Every actual comes from current effective classifications and verified refund evidence, never a separately maintained dashboard total.
 

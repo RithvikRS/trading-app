@@ -16,6 +16,9 @@ import { Amount, DisplayContext, ReportingAmount } from './display'
 import Investments from './Investments'
 import HoldingDetail from './HoldingDetail'
 import Banking from './Banking'
+import Budgets from './Budgets'
+import { changeBudgets, createBudgetState } from './data/budgets'
+import type { BankCategory } from './data/banking'
 import { defaultBankingControls, getBankTransactions } from './data/banking'
 import { changeTransfers, createTransferState, initialTransferControls } from './data/transfers'
 import type { TransferAction, TransferState } from './data/transfers'
@@ -40,8 +43,8 @@ function Navigation({ screen, navigate, onNavigate }: { screen: Screen; navigate
     <p className="nav-label">Workspace</p>
     {navigation.map(({ label, icon: Icon }, index) => <div key={label}>
       {index === 4 && <p className="nav-label second-label">Manage</p>}
-      {index < 3
-        ? <a href={`#/${label.toLowerCase()}`} aria-current={screen === label.toLowerCase() ? 'page' : undefined} className={`nav-item ${screen === label.toLowerCase() ? 'active' : ''}`} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); navigate(label === 'Overview' ? 'overview' : label === 'Investments' ? 'investments' : 'banking'); onNavigate?.() }}><Icon size={19} aria-hidden="true" />{label}{screen === label.toLowerCase() && <span className="active-dot" />}</a>
+      {index < 4
+        ? <a href={`#/${label.toLowerCase()}`} aria-current={screen === label.toLowerCase() ? 'page' : undefined} className={`nav-item ${screen === label.toLowerCase() ? 'active' : ''}`} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); navigate(label === 'Overview' ? 'overview' : label === 'Investments' ? 'investments' : label === 'Banking' ? 'banking' : 'budgets'); onNavigate?.() }}><Icon size={19} aria-hidden="true" />{label}{screen === label.toLowerCase() && <span className="active-dot" />}</a>
         : <span className="nav-item planned" aria-label={`${label}, planned`}><Icon size={19} aria-hidden="true" />{label}<span className="soon">Soon</span></span>}
     </div>)}
   </nav>
@@ -185,9 +188,11 @@ function LoadingState() {
 }
 
 export default function App() {
-  const { screen, route, navigate, openHolding, openTransaction } = useScreen()
-  const navScreen = screen === 'holding' ? 'investments' : screen === 'transaction' ? 'banking' : screen
-  const screenLabel = screen === 'holding' ? 'Holding details' : screen === 'transaction' ? 'Transaction details' : screen === 'banking' ? 'Banking' : screen === 'investments' ? 'Investments' : screen === 'overview' ? 'Overview' : 'Unavailable'
+  const { screen, route, transactionOrigin, navigate, openHolding, openTransaction } = useScreen()
+  const navScreen = screen === 'holding' ? 'investments' : screen === 'transaction' ? transactionOrigin : screen
+  const screenLabel = screen === 'holding' ? 'Holding details' : screen === 'transaction' ? 'Transaction details' : screen === 'banking' ? 'Banking' : screen === 'budgets' ? 'Budgets' : screen === 'investments' ? 'Investments' : screen === 'overview' ? 'Overview' : 'Unavailable'
+  const [budgetState, setBudgetState] = useState(() => createBudgetState())
+  const [budgetExpanded, setBudgetExpanded] = useState<BankCategory | null>(null)
   const [bankingControls, setBankingControls] = useState(defaultBankingControls)
   const [transferState, setTransferState] = useState(() => createTransferState())
   const [transferControls, setTransferControls] = useState(initialTransferControls)
@@ -217,8 +222,10 @@ export default function App() {
     if (retryTimer.current) clearTimeout(retryTimer.current)
     setRetrying(false)
     if (value === 'populated' || value === 'partial' || value === 'empty') setLastGoodState(value)
+    if (value === 'empty') { setBudgetState(createBudgetState(false)); setBudgetExpanded(null) }
+    else if ((value === 'populated' || value === 'partial') && lastGoodState === 'empty') setBudgetState(createBudgetState())
     if (value === 'empty') { setTransferState(createTransferState(false)); setTransferControls(current => ({ ...current, selected: null })) }
-    else if (value === 'populated' && lastGoodState === 'empty') setTransferState(createTransferState())
+    else if ((value === 'populated' || value === 'partial') && lastGoodState === 'empty') setTransferState(createTransferState())
     if (value === 'partial' || value === 'loading') setTransferControls(current => ({ ...current, selected: null }))
     if (value !== 'error') setCategoryControls(current => ({ ...current, ids: [], preview: null }))
     setDemoState(value)
@@ -237,7 +244,7 @@ export default function App() {
   function navigateFromDrawer() { drawerNavigating.current = true; drawer.current?.close() }
   function finishDrawerClose() {
     if (drawerNavigating.current) {
-      if (!/^(holding|transaction|transfer|category)-link-/.test(document.activeElement?.id ?? '')) document.getElementById('page-title')?.focus({ preventScroll: true })
+      if (!/^(holding|transaction|transfer|category|budget)-link-/.test(document.activeElement?.id ?? '')) document.getElementById('page-title')?.focus({ preventScroll: true })
     }
     else menuButton.current?.focus()
     drawerNavigating.current = false
@@ -266,8 +273,9 @@ export default function App() {
         <main id="main-content" tabIndex={-1}>
           {screen === 'overview' && <div className="page-heading"><div><span className="eyebrow">Your overview <span className="mobile-demo">· Sample data</span></span><h1 id="page-title" tabIndex={-1}>Everything, in perspective<span>.</span></h1><p>A clear view of your investments and everyday cash.</p></div><div className="snapshot-label"><Clock3 size={14} aria-hidden="true" /><span>Snapshot as of<strong>{AS_OF}</strong></span></div></div>}
           {demoState === 'error' && <div role="alert" className="notice error-notice"><AlertTriangle size={19} aria-hidden="true" /><div><strong>The latest snapshot couldn’t load.</strong><p>{lastGoodState === 'empty' ? 'The last demo view had no accounts.' : 'You’re still seeing the last available sample snapshot.'} This is a simulated error.</p></div><button className="outlined-button" onClick={retry} disabled={retrying}><RefreshCw size={14} className={retrying ? 'spinning' : ''} aria-hidden="true" />{retrying ? 'Retrying…' : 'Retry demo'}</button></div>}
-          {screen === 'unavailable' ? <section className="empty-state"><span className="eyebrow">Local prototype · Sample data</span><h1 id="page-title" tabIndex={-1}>This view is unavailable.</h1><p>Overview, Investments, and Banking are the available screens.</p><a className="primary-button" href="#/investments">Go to investments</a><a className="text-button" href="#/banking">Go to banking</a></section>
-            : screen === 'banking' || route.screen === 'transaction' ? <Banking view={view} categoryControls={categoryControls} onCategoryControls={setCategoryControls} transferState={transferState} transferControls={transferControls} onTransferControls={next => { if (next.view !== transferControls.view) setCategoryControls(current => ({ ...current, ids: [], preview: null })); setTransferControls(next) }} onTransferAction={reviewTransfer} controls={bankingControls} onChange={setBankingControls} filtersOpen={bankingFiltersOpen} onToggleFilters={() => setBankingFiltersOpen(open => !open)} onReset={() => changeState('populated')} onOpen={openTransaction} transactionId={route.screen === 'transaction' ? route.transactionId : undefined} onClose={() => navigate('banking')} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />
+          {screen === 'unavailable' ? <section className="empty-state"><span className="eyebrow">Local prototype · Sample data</span><h1 id="page-title" tabIndex={-1}>This view is unavailable.</h1><p>Overview, Investments, Banking, and Budgets are the available screens.</p><a className="primary-button" href="#/investments">Go to investments</a><a className="text-button" href="#/banking">Go to banking</a></section>
+            : screen === 'banking' || (route.screen === 'transaction' && transactionOrigin === 'banking') ? <Banking view={view} categoryControls={categoryControls} onCategoryControls={setCategoryControls} transferState={transferState} transferControls={transferControls} onTransferControls={next => { if (next.view !== transferControls.view) setCategoryControls(current => ({ ...current, ids: [], preview: null })); setTransferControls(next) }} onTransferAction={reviewTransfer} controls={bankingControls} onChange={setBankingControls} filtersOpen={bankingFiltersOpen} onToggleFilters={() => setBankingFiltersOpen(open => !open)} onReset={() => changeState('populated')} onOpen={openTransaction} transactionId={route.screen === 'transaction' ? route.transactionId : undefined} onClose={() => navigate('banking')} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />
+            : screen === 'budgets' || (route.screen === 'transaction' && transactionOrigin === 'budgets') ? <Budgets view={view} state={budgetState} review={transferState} expanded={budgetExpanded} onExpand={setBudgetExpanded} onAction={action => setBudgetState(current => changeBudgets(current, action))} onReviewAction={reviewTransfer} onReset={() => changeState('populated')} onReview={() => { setCategoryControls({ ...initialCategoryControls }); setTransferControls(current => ({ ...current, view: 'categories', selected: null })); navigate('banking') }} onOpen={openTransaction} transactionId={route.screen === 'transaction' ? route.transactionId : undefined} onClose={() => navigate('budgets')} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />
             : route.screen === 'holding' ? <HoldingDetail holdingId={route.holdingId} view={view} onBack={() => navigate('investments')} onReset={() => changeState('populated')} />
             : screen === 'investments' ? <Investments view={view} controls={holdingsControls} onChange={setHoldingsControls} onReset={() => changeState('populated')} onOpen={openHolding} filtersOpen={holdingsFiltersOpen} onToggleFilters={() => setHoldingsFiltersOpen(open => !open)} />
             : view === 'loading' ? <LoadingState /> : view === 'empty' ? <EmptyState reset={() => changeState('populated')} /> : <>

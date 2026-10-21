@@ -1,6 +1,6 @@
 # UI prototype plan
 
-The prototype establishes visual design and everyday interactions before connecting financial accounts. Steps 2A, 2B.1, and 2B.2 provide the Overview, frontend foundation, investment holdings list, and holding details and are merged into `main`. Banking activity/inspection, transfer matching, and category corrections through Step 2C.3 are also merged into `main`. The [implementation notes](ui-prototype.md) describe these screens and their verification. [Step 2D](budgets-prototype-plan.md) and later screens remain planned.
+The prototype establishes visual design and everyday interactions before connecting financial accounts. Steps 2A, 2B.1, and 2B.2 provide the Overview, frontend foundation, investment holdings list, and holding details and are merged into `main`. Banking activity/inspection, transfer matching, and category corrections through Step 2C.3 are also merged into `main`. The [implementation notes](ui-prototype.md) describe these screens and their verification. [Step 2D.1](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) adds monthly category budgets; Steps 2D.2 onward remain planned.
 
 ## Scope and visual direction
 
@@ -22,7 +22,7 @@ The prototype runs on loopback with fabricated fixtures. Backend services, datab
 | 2C.1 | [Bank activity and transaction inspection](banking-prototype-plan.md#step-2c1-bank-activity) | Merged into main |
 | 2C.2 | [Transfer matching review](banking-prototype-plan.md#step-2c2-transfer-matching-review) | Merged into main |
 | 2C.3 | [Category review and corrections](banking-prototype-plan.md#step-2c3-category-review) | Merged into main |
-| 2D.1 | [Monthly category budgets](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) | Planned |
+| 2D.1 | [Monthly category budgets](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) | Implemented |
 | 2D.2 | [Cash-flow trends](budgets-prototype-plan.md#step-2d2-cash-flow-trends) | Planned |
 | 2D.3 | [Recurring commitments](budgets-prototype-plan.md#step-2d3-recurring-commitments) | Planned |
 | 2E | Import-review walkthrough and connection status with bundled samples | Planned |
@@ -172,4 +172,4 @@ The [banking prototype plan](banking-prototype-plan.md) defines three increments
 
 ## Step 2D: Budgets and cash flow
 
-The [budgets and cash-flow plan](budgets-prototype-plan.md) defines monthly category limits and actuals (2D.1), reconciled historical cash-flow trends (2D.2), and recurring-expense review (2D.3). It keeps planned amounts separate from recorded activity, preserves transfer/refund rules, and distinguishes source coverage from classification coverage. October remains month-to-date; prior months require reconciled source fixtures. All three increments are planned, with in-memory decisions and the existing security/privacy boundary.
+The [budgets and cash-flow plan](budgets-prototype-plan.md) defines monthly category limits and actuals (2D.1), reconciled historical cash-flow trends (2D.2), and recurring-expense review (2D.3). It keeps planned amounts separate from recorded activity, preserves transfer/refund rules, and distinguishes source coverage from classification coverage. October remains month-to-date; prior months require reconciled source fixtures. Monthly category budgets (2D.1) are implemented with in-memory limits and separate undo/reset. Cash-flow trends and recurring review remain planned; all inherit the existing security/privacy boundary.
