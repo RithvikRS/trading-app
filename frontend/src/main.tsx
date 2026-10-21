@@ -9,5 +9,6 @@ import './banking.css'
 import './transfers.css'
 import './categories.css'
 import './budgets.css'
+import './cash-flow.css'
 
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)

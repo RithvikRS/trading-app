@@ -7,28 +7,31 @@ import { budgetOverview, budgetStatus } from './data/budgets'
 import type { BudgetAction, BudgetState } from './data/budgets'
 import type { TransferAction, TransferState } from './data/transfers'
 import { recordDate } from './holdingPresentation'
+import CashFlow from './CashFlow'
+import type { CashControls } from './data/cashFlow'
 import BudgetEditor from './BudgetEditor'
 import TransactionInspector from './TransactionInspector'
 
 interface Props {
+  tab: 'monthly' | 'cash'; onTab: (tab: 'monthly' | 'cash') => void; cashControls: CashControls; onCashControls: (value: CashControls) => void
   view: 'populated' | 'partial' | 'empty' | 'loading'; state: BudgetState; review: TransferState
   expanded: BankCategory | null; onExpand: (value: BankCategory | null) => void
   onAction: (action: BudgetAction) => void; onReviewAction: (action: TransferAction) => void
   onReset: () => void; onReview: () => void; onOpen: (id: string) => void
   transactionId?: string; onClose: () => void; onTogglePrivacy: () => void
 }
-export default function Budgets({ view, state, review, expanded, onExpand, onAction, onReviewAction, onReset, onReview, onOpen, transactionId, onClose, onTogglePrivacy }: Props) {
+export default function Budgets({ tab, onTab, cashControls, onCashControls, view, state, review, expanded, onExpand, onAction, onReviewAction, onReset, onReview, onOpen, transactionId, onClose, onTogglePrivacy }: Props) {
   const { hidden, currency } = useContext(DisplayContext)
   const [editor, setEditor] = useState<BankCategory | null>(null)
   const unavailable = view === 'empty' || view === 'loading'
-  const records = unavailable ? [] : getBankTransactions(view === 'partial')
+  const records = unavailable ? [] : getBankTransactions(view === 'partial', null)
   const totals = budgetOverview(state, records, review, view === 'partial')
   const over = totals.remaining.minor < 0n
   useEffect(() => { if (unavailable) setEditor(null) }, [unavailable])
   return <>
-    <div className="page-heading"><div><span className="eyebrow">Your monthly plan <span className="mobile-demo">· Sample data</span></span><h1 id="page-title" tabIndex={-1}>Make room for what matters<span>.</span></h1><p>Category limits, grounded in your recorded spending.</p></div><div className="budget-month"><CalendarDays size={18} aria-hidden="true" /><div><strong>October 2026</strong><span>Full-month limits · HDFC & SBI</span></div></div></div>
-    <div className="budget-views" aria-label="Budget views"><span aria-current="page">Monthly budgets</span><span>Cash flow <small>Planned</small></span><span>Recurring <small>Planned</small></span></div>
-    {view === 'loading' ? <section className="holdings-loading" aria-busy="true" aria-label="Loading monthly budgets"><span className="sr-only" role="status">Loading sample budgets</span><div className="skeleton-panel"><div className="skeleton number" />{[0, 1, 2].map(row => <div key={row} className="skeleton holding-skeleton-row" />)}</div></section>
+    <div className="page-heading"><div><span className="eyebrow">Your monthly plan <span className="mobile-demo">· Sample data</span></span><h1 id="page-title" tabIndex={-1}>Make room for what matters<span>.</span></h1><p>{tab === 'cash' ? 'See where money comes from, where it goes, and what the records explain.' : 'Category limits, grounded in your recorded spending.'}</p></div>{tab === 'monthly' && <div className="budget-month"><CalendarDays size={18} aria-hidden="true" /><div><strong>October 2026</strong><span>Full-month limits · HDFC & SBI</span></div></div>}</div>
+    <div className="budget-views" aria-label="Budget views"><button aria-pressed={tab === 'monthly'} onClick={() => onTab('monthly')}>Monthly budgets</button><button aria-pressed={tab === 'cash'} onClick={() => onTab('cash')}>Cash flow</button><span>Recurring <small>Planned</small></span></div>
+    {tab === 'cash' ? <CashFlow view={view} records={records} review={review} controls={cashControls} onChange={onCashControls} onOpen={onOpen} onReset={onReset} /> : view === 'loading' ? <section className="holdings-loading" aria-busy="true" aria-label="Loading monthly budgets"><span className="sr-only" role="status">Loading sample budgets</span><div className="skeleton-panel"><div className="skeleton number" />{[0, 1, 2].map(row => <div key={row} className="skeleton holding-skeleton-row" />)}</div></section>
       : view === 'empty' ? <section className="empty-state"><PieChart size={36} aria-hidden="true" /><h2>No banking data loaded.</h2><p>Monthly budgets need source activity. Explore the fictional sample to start a plan.</p><button className="primary-button" onClick={onReset}>Explore sample budgets</button></section> : <>
         <section className="budget-summary" aria-label="Monthly budget summary">
           <div className="budget-summary-plan"><span>Planned category limits</span><strong>{totals.count ? <Amount value={totals.planned} /> : 'No budgets set'}</strong><small>{totals.count} of {totals.rows.length} categories · Full October limits</small></div>
@@ -72,6 +75,6 @@ export default function Budgets({ view, state, review, expanded, onExpand, onAct
         </section>
       </>}
     {editor && !unavailable && <BudgetEditor key={editor} category={editor} limit={state.limits[editor]} onAction={onAction} onClose={() => setEditor(null)} onTogglePrivacy={onTogglePrivacy} />}
-    {transactionId && <TransactionInspector key={transactionId} id={transactionId} records={records} snapshots={getBankSnapshots(view === 'partial')} review={review} onReviewAction={onReviewAction} loading={view === 'loading'} onClose={onClose} onTogglePrivacy={onTogglePrivacy} />}
+    {transactionId && <TransactionInspector key={transactionId} id={transactionId} records={records} snapshots={getBankSnapshots(view === 'partial', null)} review={review} onReviewAction={onReviewAction} loading={view === 'loading'} onClose={onClose} onTogglePrivacy={onTogglePrivacy} />}
   </>
 }

@@ -1,7 +1,7 @@
 import { useContext, useLayoutEffect } from 'react'
 import { ArrowUpRight, Check, Search, ShieldCheck, Tags, X } from 'lucide-react'
 import { Amount, DisplayContext, ReportingAmount } from './display'
-import { bankCategories, bankNames, bankScope, defaultBankingFilters, selectBankTransactions, validBankDates } from './data/banking'
+import { BANK_HISTORY, bankCategories, bankNames, bankScope, defaultBankingFilters, selectBankTransactions, validBankDates } from './data/banking'
 import type { BankTransaction } from './data/banking'
 import { categoryRestriction, categoryStatusLabels, categorySuggestion, classifiedSpending, expenseCategories, incomeCategories, initialCategoryControls, previewCategories, refundEvidence } from './data/categories'
 import type { CategoryControls, CategoryStatus, CategoryTarget } from './data/categories'
@@ -20,7 +20,7 @@ export default function CategoryReview({ records, state, controls, incomplete, o
   const selectable = visible.filter(item => !categoryRestriction(item, state))
   const scope = bankScope(records, controls.filters), totals = classifiedSpending(scope, records, state, classify)
   const validDates = validBankDates(controls.filters)
-  const outsidePeriod = controls.filters.from && controls.filters.from < defaultBankingFilters.from || controls.filters.to && controls.filters.to > defaultBankingFilters.to
+  const outsidePeriod = controls.filters.from && controls.filters.from < BANK_HISTORY.from || controls.filters.to && controls.filters.to > defaultBankingFilters.to
   function filter(key: keyof CategoryControls['filters'], value: string) { onControls({ ...controls, filters: { ...controls.filters, [key]: value }, ids: [], preview: null }) }
   function select(ids: string[]) { onControls({ ...controls, ids, preview: null }) }
   useLayoutEffect(() => { if (controls.preview) document.getElementById('category-bulk-preview')?.focus() }, [controls.preview])

@@ -1,7 +1,9 @@
+import { historicalSnapshots, historicalTransactions } from './bankHistory'
 import { money, sum } from './money'
 import type { Money } from './money'
 
 export const BANK_PERIOD = { from: '2026-10-01', to: '2026-10-20' }
+export const BANK_HISTORY = { from: '2026-08-01', to: BANK_PERIOD.to }
 export const BANK_SNAPSHOT = '2026-10-20T04:30:00Z'
 export type BankId = 'hdfc' | 'sbi'
 export const bankNames: Record<BankId, string> = { hdfc: 'HDFC Bank', sbi: 'SBI' }
@@ -21,11 +23,12 @@ export interface BankTransaction {
 }
 export interface BankSnapshot {
   accountId: BankId; sourceId: string; opening: Money; balance: Money | null; balanceDate: string
-  activityDate: string; complete: boolean
+  activityDate: string; complete: boolean; from: string; to: string
 }
 const snapshots: readonly BankSnapshot[] = [
-  { accountId: 'hdfc', sourceId: 'sample-hdfc-oct', opening: money('177285.90'), balance: money('186420'), balanceDate: BANK_SNAPSHOT, activityDate: BANK_SNAPSHOT, complete: true },
-  { accountId: 'sbi', sourceId: 'sample-sbi-oct', opening: money('38199'), balance: money('74850'), balanceDate: BANK_SNAPSHOT, activityDate: BANK_SNAPSHOT, complete: true },
+  ...historicalSnapshots,
+  { ...BANK_PERIOD, accountId: 'hdfc', sourceId: 'sample-hdfc-oct', opening: money('177285.90'), balance: money('186420'), balanceDate: BANK_SNAPSHOT, activityDate: BANK_SNAPSHOT, complete: true },
+  { ...BANK_PERIOD, accountId: 'sbi', sourceId: 'sample-sbi-oct', opening: money('38199'), balance: money('74850'), balanceDate: BANK_SNAPSHOT, activityDate: BANK_SNAPSHOT, complete: true },
 ]
 function transaction(id: string, accountId: BankId, date: string, direction: BankTransaction['direction'], amount: string, description: string, counterparty: string, sourceCategory: BankCategory, status: BankTransaction['status'] = 'posted', valueDate?: string): BankTransaction {
   const transferReference = ['t10', 't20'].includes(id) ? 'Sample transfer A' : ['t15', 't25'].includes(id) ? 'Sample transfer B' : undefined
@@ -34,6 +37,7 @@ function transaction(id: string, accountId: BankId, date: string, direction: Ban
     reference: `Sample reference ${id.slice(1)}` }
 }
 const transactions: readonly BankTransaction[] = [
+  ...historicalTransactions,
   transaction('t01', 'hdfc', '01', 'credit', '95000', 'Monthly salary', 'Sample employer', 'salary'),
   transaction('t02', 'hdfc', '02', 'debit', '22000', 'October rent', 'Sample home', 'housing'),
   transaction('t03', 'hdfc', '03', 'debit', '1850', 'Electricity bill', 'Sample utilities', 'utilities'),
@@ -67,13 +71,14 @@ const transactions: readonly BankTransaction[] = [
 // Initial fixture evidence. Interactive decisions live separately from source records.
 export const sampleTransfer = { id: 'sample-pair-a', debitId: 't15', creditId: 't25' } as const
 export const sampleRefund = { creditId: 't08', purchaseId: 't07' } as const
+export const sampleRefunds = [sampleRefund, { creditId: 't51', purchaseId: 't33' }] as const
 export function isBankTransactionId(id: string) { return transactions.some(item => item.id === id) }
-export function getBankTransactions(partial = false): BankTransaction[] {
-  return transactions.filter(item => !partial || item.id !== 't26').map(item => ({ ...item, amount: { ...item.amount } }))
+export function getBankTransactions(partial = false, period: { from: string; to: string } | null = BANK_PERIOD): BankTransaction[] {
+  return transactions.filter(item => (!period || (item.date >= period.from && item.date <= period.to)) && (!partial || item.id !== 't26')).map(item => ({ ...item, amount: { ...item.amount } }))
 }
-export function getBankSnapshots(partial = false): BankSnapshot[] {
-  return snapshots.map(item => ({ ...item, opening: { ...item.opening }, balance: item.balance ? { ...item.balance } : null,
-    ...(partial && item.accountId === 'sbi' ? { activityDate: '2026-10-19T04:30:00Z', complete: false } : {}) }))
+export function getBankSnapshots(partial = false, month: string | null = '2026-10'): BankSnapshot[] {
+  return snapshots.filter(item => !month || item.from.startsWith(month)).map(item => ({ ...item, opening: { ...item.opening }, balance: item.balance ? { ...item.balance } : null,
+    ...(partial && item.sourceId === 'sample-sbi-oct' ? { activityDate: '2026-10-19T04:30:00Z', complete: false } : {}) }))
 }
 export function bankReview(item: BankTransaction, records: readonly BankTransaction[]): BankReview {
   if (item.sourceCategory === 'transfer') return (item.id === sampleTransfer.debitId || item.id === sampleTransfer.creditId) && records.some(record => record.id === sampleTransfer.debitId) && records.some(record => record.id === sampleTransfer.creditId) ? 'confirmed' : 'needs-review'
@@ -86,7 +91,7 @@ export function bankTotals(records: readonly BankTransaction[]) {
     pendingCredits: sum(pending.filter(item => item.direction === 'credit').map(item => item.amount)), pendingDebits: sum(pending.filter(item => item.direction === 'debit').map(item => item.amount)) }
 }
 export function bankReconciliation(snapshot: BankSnapshot, records: readonly BankTransaction[]) {
-  const totals = bankTotals(records.filter(item => item.accountId === snapshot.accountId))
+  const totals = bankTotals(records.filter(item => item.accountId === snapshot.accountId && item.ownerId === bankOwners[snapshot.accountId] && item.date >= snapshot.from && item.date <= snapshot.to))
   const calculated: Money = { currency: 'INR', minor: snapshot.opening.minor + totals.credits.minor - totals.debits.minor }
   return { calculated, difference: snapshot.balance === null ? null : { ...calculated, minor: snapshot.balance.minor - calculated.minor } }
 }

@@ -1,4 +1,4 @@
-import { bankOwners, defaultBankingFilters, sampleRefund } from './banking'
+import { bankOwners, defaultBankingFilters, sampleRefunds } from './banking'
 import type { BankCategory, BankTransaction, BankingFilters } from './banking'
 import { sum } from './money'
 import type { Classification, TransferState } from './transfers'
@@ -38,8 +38,9 @@ export function underlyingClassification(item: BankTransaction, state: CategoryM
   return state.classifications[item.id] ?? { category: item.sourceCategory === 'transfer' ? 'unresolved' : item.sourceCategory, provenance: 'source' }
 }
 export function refundEvidence(item: BankTransaction, records: readonly BankTransaction[], state: CategoryModel) {
-  const purchase = records.find(record => record.id === sampleRefund.purchaseId)
-  if (item.id !== sampleRefund.creditId || item.sourceCategory !== 'refund' || item.direction !== 'credit' || item.status !== 'posted' || !knownOwner(item) || item.amount.minor <= 0n
+  const evidence = sampleRefunds.find(link => link.creditId === item.id)
+  const purchase = evidence && records.find(record => record.id === evidence.purchaseId)
+  if (!evidence || item.sourceCategory !== 'refund' || item.direction !== 'credit' || item.status !== 'posted' || !knownOwner(item) || item.amount.minor <= 0n
     || !purchase || purchase.status !== 'posted' || purchase.direction !== 'debit' || !knownOwner(purchase) || purchase.ownerId !== item.ownerId || purchase.accountId !== item.accountId
     || purchase.amount.currency !== item.amount.currency || purchase.amount.minor < item.amount.minor || paired(purchase, state) || paired(item, state)) return null
   const classification = underlyingClassification(purchase, state)

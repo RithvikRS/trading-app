@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Check, Tags, Undo2, X } from 'lucide-react'
 import { ReportingAmount } from './display'
-import { bankCategories, bankNames, sampleRefund } from './data/banking'
+import { bankCategories, bankNames, sampleRefunds } from './data/banking'
 import type { BankTransaction } from './data/banking'
 import { categoryOptions, categoryRestriction, categorySuggestion, previewCategories, refundEvidence } from './data/categories'
 import type { CategoryPreview, CategoryTarget } from './data/categories'
@@ -15,7 +15,8 @@ export function CorrectionPreview({ preview, records, id, onApply, onCancel }: {
     <ul className="category-preview-list">{preview.edits.map(edit => {
       const item = records.find(record => record.id === edit.id)
       if (!item) return <li key={edit.id}>Source record unavailable. Create a new preview before applying.</li>
-      const refund = item.id === sampleRefund.purchaseId && records.find(record => record.id === sampleRefund.creditId)
+      const evidence = sampleRefunds.find(link => link.purchaseId === item.id)
+      const refund = evidence && records.find(record => record.id === evidence.creditId)
       return <li key={edit.id}><div><strong>{item.description}</strong><span>{bankNames[item.accountId]} · {recordDate(item.date)} · <ReportingAmount value={item.amount} /></span></div><p className="category-change"><span>{bankCategories[edit.from.category]}</span><span aria-hidden="true"> → </span><span className="sr-only"> changes to </span><strong>{bankCategories[edit.after.category]}</strong></p><small>{edit.after.provenance === 'suggestion' ? 'Accept supplied suggestion' : edit.after.category === 'unresolved' ? 'Clear reviewed classification; leave unresolved' : 'Manual correction'}</small>{refund && <p className="category-linked-note">Linked refund: {refund.description}. {edit.after.category === 'unresolved' ? 'It will remain unresolved until the purchase is classified.' : `Its category will follow ${bankCategories[edit.after.category]}; refund evidence is revalidated before counting it.`} The original credit is unchanged.</p>}</li>
     })}</ul>
     {preview.excluded.length > 0 && <div className="category-exclusions"><h4>Excluded from this change</h4><ul>{preview.excluded.map(entry => <li key={entry.id}><strong>{records.find(item => item.id === entry.id)?.description ?? 'Unavailable record'}</strong><span>{entry.reason}</span></li>)}</ul></div>}
