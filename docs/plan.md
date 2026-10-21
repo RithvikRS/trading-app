@@ -2,7 +2,7 @@
 
 Planning baseline: 21 October 2026.
 
-Step 2A, the responsive Overview with synthetic data, is merged into `main`. Step 2B.1 adds the searchable, filterable investment holdings list and shared valuation fixtures. [Step 2B.2](ui-prototype-plan.md#holding-details-2b2), holding details, remains planned. See the [implementation notes](ui-prototype.md) for current behavior and verification. Later screens remain planned.
+Steps 2A and 2B.1, the responsive Overview and searchable holdings list, are merged into `main`. [Step 2B.2](ui-prototype-plan.md#holding-details-2b2) adds holding detail pages with source dates, selected sample activity, fund information, and illustrative UBS ESPP lots. See the [implementation notes](ui-prototype.md) for current behavior and verification. Step 2C and later screens remain planned.
 
 Build a personal finance application that provides a trustworthy view of investments and banking activity with as little manual maintenance as supported integrations allow. Security takes priority over convenience, cost optimization, and delivery speed. Financial accuracy and recoverability are part of that requirement.
 
@@ -79,4 +79,4 @@ Multiple users require enrollment, recovery, authorization, database policy, bac
 - Refresh cadence and any market-data budget; daily valuations are the starting proposal.
 - Backup destination, retention, recovery targets, and statement retention preferences.
 
-The current prototype covers Overview and the investment holdings list. Provider access, real data, databases, and deployment remain outside the prototype scope.
+The current prototype covers Overview, the investment holdings list, and holding details. Provider access, real data, databases, and deployment remain outside the prototype scope.

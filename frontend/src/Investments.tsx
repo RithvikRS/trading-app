@@ -1,5 +1,5 @@
-import { useContext, useId, useState } from 'react'
-import { ArrowDown, ArrowDownUp, ArrowUp, BarChart3, Check, Clock3, Filter, Layers3, Search, ShieldCheck, Wallet, X } from 'lucide-react'
+import { useContext, useId } from 'react'
+import { ArrowDown, ArrowDownUp, ArrowUp, ArrowUpRight, BarChart3, Check, Clock3, Filter, Layers3, Search, ShieldCheck, Wallet, X } from 'lucide-react'
 import { Amount, DisplayContext, PrivateValue } from './display'
 import { accounts, AS_OF } from './data/portfolio'
 import { convert, formatFixed } from './data/money'
@@ -7,19 +7,12 @@ import {
   defaultFilters, getHoldings, holdingStatus, holdingsTotal, holdingWeight, QUOTE_SCALE, selectHoldings, UNIT_SCALE,
 } from './data/holdings'
 import type { Holding, HoldingFilters, HoldingsControls, InstrumentType, SortField } from './data/holdings'
+import { accountName, sourceDate, sourceTimestamp, typeLabels } from './holdingPresentation'
 
 const types: { value: InstrumentType | ''; label: string }[] = [
   { value: '', label: 'All holdings' }, { value: 'stock', label: 'Stocks' }, { value: 'etf', label: 'ETFs' }, { value: 'fund', label: 'Mutual funds' },
 ]
-const typeLabels = { stock: 'Stock', etf: 'ETF', fund: 'Mutual fund' }
 const investmentAccounts = accounts.filter(account => account.kind === 'investment')
-function accountName(id: string) { return id === 'ind-in' ? 'INDmoney India' : accounts.find(account => account.id === id)?.name ?? 'Unknown account' }
-function sourceDate(date: string) {
-  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(date))
-}
-function sourceTimestamp(date: string) {
-  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata', hourCycle: 'h23' }).format(new Date(date)) + ' IST'
-}
 
 function HoldingIdentity({ holding }: { holding: Holding }) {
   const instrument = holding.instrument
@@ -43,10 +36,13 @@ function Freshness({ holding }: { holding: Holding }) {
   </div>
 }
 
-interface Props { view: 'populated' | 'partial' | 'loading' | 'empty'; controls: HoldingsControls; onChange: (controls: HoldingsControls) => void; onReset: () => void }
-export default function Investments({ view, controls, onChange, onReset }: Props) {
+interface Props {
+  view: 'populated' | 'partial' | 'loading' | 'empty'; controls: HoldingsControls
+  onChange: (controls: HoldingsControls) => void; onReset: () => void; onOpen: (id: string) => void
+  filtersOpen: boolean; onToggleFilters: () => void
+}
+export default function Investments({ view, controls, onChange, onReset, onOpen, filtersOpen, onToggleFilters }: Props) {
   const { currency, hidden } = useContext(DisplayContext)
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const filtersId = useId()
   const holdings = view === 'empty' ? [] : getHoldings(view === 'partial')
   const total = holdingsTotal(holdings)
@@ -92,7 +88,7 @@ export default function Investments({ view, controls, onChange, onReset }: Props
             <div className="holdings-toolbar">
               <label className="holdings-search"><Search size={17} aria-hidden="true" /><span className="sr-only">Search holdings</span><input type="search" placeholder="Search name, ticker or fund" maxLength={200} value={controls.filters.query} onChange={event => filter('query', event.target.value)} autoComplete="off" spellCheck={false} /></label>
               <label className="holding-select"><span>Account</span><select value={controls.filters.account} onChange={event => filter('account', event.target.value)}><option value="">All accounts</option>{investmentAccounts.map(account => <option value={account.id} key={account.id}>{accountName(account.id)}</option>)}</select></label>
-              <button className={`filter-toggle ${filtersOpen || extraFilterCount ? 'selected' : ''}`} aria-expanded={filtersOpen} aria-controls={filtersId} onClick={() => setFiltersOpen(!filtersOpen)}><Filter size={15} aria-hidden="true" />Filters{extraFilterCount > 0 && <span>{extraFilterCount}</span>}</button>
+              <button className={`filter-toggle ${filtersOpen || extraFilterCount ? 'selected' : ''}`} aria-expanded={filtersOpen} aria-controls={filtersId} onClick={onToggleFilters}><Filter size={15} aria-hidden="true" />Filters{extraFilterCount > 0 && <span>{extraFilterCount}</span>}</button>
             </div>
             <div className="holding-filter-grid" id={filtersId} hidden={!filtersOpen}>
               <label className="holding-select"><span>Market</span><select value={controls.filters.market} onChange={event => filter('market', event.target.value)}><option value="">All markets</option><option>India</option><option>US</option></select></label>
@@ -112,7 +108,7 @@ export default function Investments({ view, controls, onChange, onReset }: Props
               </tr></thead><tbody role="rowgroup">{selected.map(holding => {
                 const weight = holdingWeight(holding, total)
                 return <tr role="row" key={holding.id}>
-                  <th role="rowheader" scope="row" className="holding-name-cell"><HoldingIdentity holding={holding} /></th>
+                  <th role="rowheader" scope="row" className="holding-name-cell"><a className="holding-detail-link" id={`holding-link-${holding.id}`} href={`#/investments/${holding.id}`} aria-label={`View ${holding.instrument.name} at ${accountName(holding.accountId)}${holding.instrument.plan ? `, ${holding.instrument.plan}, ${holding.instrument.option}, ${holding.folio}` : ''}`} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); onOpen(holding.id) }}><HoldingIdentity holding={holding} /><ArrowUpRight size={14} aria-hidden="true" /></a></th>
                   <td role="cell" className="holding-account-cell"><span>{accountName(holding.accountId)}</span>{holding.employeePlan && <small className="espp-label">{holding.employeePlan}</small>}{holding.folio && <small>{holding.folio}</small>}</td>
                   <td role="cell" className="holding-units-cell"><span className="mobile-cell-label" aria-hidden="true">Units</span><PrivateValue><span className="holding-number">{formatFixed(holding.units, UNIT_SCALE)}</span></PrivateValue></td>
                   <td role="cell" className="holding-quote-cell"><span className="mobile-cell-label" aria-hidden="true">{holding.instrument.type === 'fund' ? 'NAV' : 'Price'}</span><PrivateValue>{holding.quote ? <span className="holding-number">{holding.instrument.currency === 'INR' ? '₹' : '$'}{formatFixed(holding.quote.amount, QUOTE_SCALE, 2)}</span> : <span aria-label="Price unavailable">—</span>}</PrivateValue><small>{holding.instrument.currency} · native</small></td>
