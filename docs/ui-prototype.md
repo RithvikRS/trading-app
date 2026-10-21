@@ -272,4 +272,4 @@ Additional evidence: [bulk preview with an excluded credit in USD](screenshots/c
 
 ## Next increment
 
-Step 2D adds budgets and cash-flow trends and remains planned. Import/connection walkthroughs follow in Step 2E. Production data and security foundations remain separate work.
+[Step 2D](budgets-prototype-plan.md) remains planned in three increments: monthly category budgets (2D.1), reconciled historical cash-flow trends (2D.2), and recurring-expense review (2D.3). Existing source classifications and refund/transfer rules will supply actuals; limits and expected commitments remain separate planning data. No Step 2D runtime behavior is implemented. Import/connection walkthroughs follow in Step 2E. Production data and security foundations remain separate work.

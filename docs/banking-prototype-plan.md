@@ -1,6 +1,6 @@
 # Banking prototype plan
 
-Status: bank activity and transaction inspection (2C.1) are merged into `main`. Transfer matching review (2C.2) is also merged into `main`; category corrections (2C.3) are implemented. The investment screens through Step 2B.2 are merged into `main`. See the [implementation notes](ui-prototype.md#banking-activity-and-inspection) for delivered behavior and evidence.
+Status: bank activity and transaction inspection (2C.1), transfer matching review (2C.2), and category corrections (2C.3) are merged into `main`. The investment screens through Step 2B.2 are also merged into `main`. See the [implementation notes](ui-prototype.md#banking-activity-and-inspection) for delivered behavior and evidence.
 
 The screen should make three things clear: what moved, whether a movement belongs to another tracked account, and which classifications need attention. Security and financial integrity take priority over automation. All records and review actions use fictional data in memory.
 
@@ -12,7 +12,7 @@ The screen should make three things clear: what moved, whether a movement belong
 | 2C.2 | Explainable transfer candidates, pair review, and reversible matching | Implemented | `feat(banking): add transfer matching review` |
 | 2C.3 | Category suggestions, individual/bulk corrections, and undo | Implemented | `feat(banking): add transaction category review` |
 
-Each increment delivers working behavior, meaningful tests, documentation, and light/dark desktop/mobile evidence through the existing `dev` to `main` workflow. Transfer and category editing become interactive only in their respective increments. Budgets, recurring detection, monthly cash-flow charts, and category trends belong to Step 2D. Import walkthroughs belong to Step 2E.
+Each increment delivers working behavior, meaningful tests, documentation, and light/dark desktop/mobile evidence through the existing `dev` to `main` workflow. Transfer and category editing become interactive only in their respective increments. Budgets, monthly cash-flow charts, and recurring-expense review belong to the [Step 2D plan](budgets-prototype-plan.md). Import walkthroughs belong to Step 2E.
 
 ## Shared visual direction
 

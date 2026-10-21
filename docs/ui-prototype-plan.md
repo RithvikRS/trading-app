@@ -1,6 +1,6 @@
 # UI prototype plan
 
-The prototype establishes visual design and everyday interactions before connecting financial accounts. Steps 2A, 2B.1, and 2B.2 provide the Overview, frontend foundation, investment holdings list, and holding details and are merged into `main`. Step 2C.1 implements bank activity and transaction inspection and is merged into `main`. Step 2C.2 implements transfer matching review and is merged into `main`. Step 2C.3 adds category review and corrections. The [implementation notes](ui-prototype.md) describe these screens and their verification. Step 2D and later screens remain planned.
+The prototype establishes visual design and everyday interactions before connecting financial accounts. Steps 2A, 2B.1, and 2B.2 provide the Overview, frontend foundation, investment holdings list, and holding details and are merged into `main`. Banking activity/inspection, transfer matching, and category corrections through Step 2C.3 are also merged into `main`. The [implementation notes](ui-prototype.md) describe these screens and their verification. [Step 2D](budgets-prototype-plan.md) and later screens remain planned.
 
 ## Scope and visual direction
 
@@ -19,10 +19,12 @@ The prototype runs on loopback with fabricated fixtures. Backend services, datab
 | 2A | Frontend foundation, responsive shell, Overview | Merged into main |
 | 2B.1 | [Investment holdings list](#holdings-list-2b1) | Merged into main |
 | 2B.2 | [Holding detail views](#holding-details-2b2) | Merged into main |
-| 2C.1 | [Bank activity and transaction inspection](banking-prototype-plan.md#step-2c1-bank-activity) | Implemented |
-| 2C.2 | [Transfer matching review](banking-prototype-plan.md#step-2c2-transfer-matching-review) | Implemented |
-| 2C.3 | [Category review and corrections](banking-prototype-plan.md#step-2c3-category-review) | Implemented |
-| 2D | Budgets, cash flow, monthly categories, recurring items | Planned |
+| 2C.1 | [Bank activity and transaction inspection](banking-prototype-plan.md#step-2c1-bank-activity) | Merged into main |
+| 2C.2 | [Transfer matching review](banking-prototype-plan.md#step-2c2-transfer-matching-review) | Merged into main |
+| 2C.3 | [Category review and corrections](banking-prototype-plan.md#step-2c3-category-review) | Merged into main |
+| 2D.1 | [Monthly category budgets](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) | Planned |
+| 2D.2 | [Cash-flow trends](budgets-prototype-plan.md#step-2d2-cash-flow-trends) | Planned |
+| 2D.3 | [Recurring commitments](budgets-prototype-plan.md#step-2d3-recurring-commitments) | Planned |
 | 2E | Import-review walkthrough and connection status with bundled samples | Planned |
 
 Refine each increment after reviewing the preceding screen. Future destinations may appear with planned status, but must not resemble working links. Import walkthroughs use fixtures without file inputs or provider sign-in.
@@ -167,3 +169,7 @@ Update the README and prototype implementation notes as each increment becomes a
 ## Step 2C: Banking
 
 The [banking prototype plan](banking-prototype-plan.md) defines three increments: searchable HDFC/SBI activity with transaction inspection, explainable transfer matching with reversible decisions, and category review with individual/bulk corrections. It specifies shared balance reconciliation, original-currency arithmetic, incomplete coverage, privacy, and acceptance evidence. Activity and inspection (2C.1), transfer matching review (2C.2), and category review (2C.3) are implemented. Step 2D retains budgets and cash-flow trends.
+
+## Step 2D: Budgets and cash flow
+
+The [budgets and cash-flow plan](budgets-prototype-plan.md) defines monthly category limits and actuals (2D.1), reconciled historical cash-flow trends (2D.2), and recurring-expense review (2D.3). It keeps planned amounts separate from recorded activity, preserves transfer/refund rules, and distinguishes source coverage from classification coverage. October remains month-to-date; prior months require reconciled source fixtures. All three increments are planned, with in-memory decisions and the existing security/privacy boundary.

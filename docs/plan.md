@@ -2,7 +2,7 @@
 
 Planning baseline: 21 October 2026.
 
-Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. Step 2C.1, covering HDFC/SBI activity and transaction inspection, is also merged into `main`. Step 2C.2, covering transfer matching review, is merged into `main`. Step 2C.3 adds category review and corrections with reversible in-memory decisions. See the [implementation notes](ui-prototype.md) for current behavior and verification. Step 2D budgets and cash-flow trends remain planned, as do later screens.
+Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. Banking activity/inspection, transfer matching, and category corrections through Step 2C.3 are also merged into `main`. See the [implementation notes](ui-prototype.md) for current behavior and verification. [Step 2D](budgets-prototype-plan.md) plans monthly budgets, cash-flow trends, and recurring-expense review as three focused increments. These and later screens remain planned.
 
 Build a personal finance application that provides a trustworthy view of investments and banking activity with as little manual maintenance as supported integrations allow. Security takes priority over convenience, cost optimization, and delivery speed. Financial accuracy and recoverability are part of that requirement.
 
@@ -79,4 +79,4 @@ Multiple users require enrollment, recovery, authorization, database policy, bac
 - Refresh cadence and any market-data budget; daily valuations are the starting proposal.
 - Backup destination, retention, recovery targets, and statement retention preferences.
 
-The current prototype covers Overview, investment holdings/details, and bank activity/inspection. Provider access, real data, databases, and deployment remain outside the prototype scope.
+The current prototype covers Overview, investment holdings/details, bank activity/inspection, transfer matching, and category corrections. Budgets and cash-flow screens remain planned. Provider access, real data, databases, and deployment remain outside the prototype scope.
