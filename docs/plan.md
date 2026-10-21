@@ -2,7 +2,7 @@
 
 Planning baseline: 21 October 2026.
 
-Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. See the [implementation notes](ui-prototype.md) for current behavior and verification. [Step 2C](banking-prototype-plan.md) is planned as bank activity and inspection, transfer matching review, and category corrections in three increments. Later screens remain planned.
+Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. Step 2C.1 adds HDFC/SBI activity and transaction inspection. See the [implementation notes](ui-prototype.md) for current behavior and verification. [Transfer matching review (2C.2) and category corrections (2C.3)](banking-prototype-plan.md) remain planned, as do later screens.
 
 Build a personal finance application that provides a trustworthy view of investments and banking activity with as little manual maintenance as supported integrations allow. Security takes priority over convenience, cost optimization, and delivery speed. Financial accuracy and recoverability are part of that requirement.
 
@@ -79,4 +79,4 @@ Multiple users require enrollment, recovery, authorization, database policy, bac
 - Refresh cadence and any market-data budget; daily valuations are the starting proposal.
 - Backup destination, retention, recovery targets, and statement retention preferences.
 
-The current prototype covers Overview, the investment holdings list, and holding details. Provider access, real data, databases, and deployment remain outside the prototype scope.
+The current prototype covers Overview, investment holdings/details, and bank activity/inspection. Provider access, real data, databases, and deployment remain outside the prototype scope.

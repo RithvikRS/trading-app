@@ -36,7 +36,7 @@ describe('Investments', () => {
     await user.click(screen.getByRole('button', { name: 'Clear all' }))
     expect(within(table()).getAllByRole('row')).toHaveLength(15)
   })
-  it('sorts through column controls and keeps native quotes when reporting currency changes', async () => {
+  it('sorts through column controls and converts quotes with labeled originals when reporting currency changes', async () => {
     const user = userEvent.setup()
     renderInvestments()
     await user.click(screen.getByRole('button', { name: 'Sort by value (inr)' }))
@@ -44,6 +44,7 @@ describe('Investments', () => {
     expect(screen.getByRole('button', { name: 'Sort by value (inr)' }).closest('th')?.getAttribute('aria-sort')).toBe('ascending')
     await user.type(screen.getByRole('searchbox'), 'USTM')
     expect(within(table()).getByText('$600.00')).toBeTruthy()
+    expect(within(table()).getByText('₹50,100.00')).toBeTruthy()
     expect(within(table()).getByText('₹4,13,325')).toBeTruthy()
     await user.selectOptions(screen.getByLabelText('Display currency'), 'USD')
     expect(within(table()).getByText('$600.00')).toBeTruthy()

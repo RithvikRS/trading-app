@@ -1,6 +1,7 @@
 import { money, sum } from './money'
 import type { Money } from './money'
 import { getHoldings } from './holdings'
+import { bankNames, bankReview, getBankSnapshots, getBankTransactions, sampleTransfer } from './banking'
 export { money, sum, convert, formatMoney, axisLabel } from './money'
 export type { Currency, Money } from './money'
 export type DemoState = 'populated' | 'loading' | 'empty' | 'partial' | 'error'
@@ -25,16 +26,13 @@ export const accounts: readonly Account[] = [
   { id: 'ind-us', name: 'INDmoney US', description: 'US stocks & ETFs', monogram: 'in', color: 'blue', kind: 'investment', holdingsDate: '20 Oct 2026, 09:00 IST', priceDate: '20 Oct 2026, 01:30 IST' },
   { id: 'advisor', name: 'Advisor funds', description: 'Regular mutual funds', monogram: 'mf', color: 'purple', kind: 'investment', holdingsDate: '18 Oct 2026, 10:00 IST', priceDate: AS_OF },
   { id: 'ubs', name: 'UBS', description: 'Accenture employee shares', monogram: 'ub', color: 'stone', kind: 'investment', holdingsDate: '20 Oct 2026, 09:00 IST', priceDate: '20 Oct 2026, 01:30 IST' },
-  { id: 'hdfc', name: 'HDFC Bank', description: 'Savings account', monogram: 'H', color: 'blue', kind: 'bank', holdingsDate: '20 Oct 2026, 10:00 IST' },
-  { id: 'sbi', name: 'SBI', description: 'Savings account', monogram: 'S', color: 'sky', kind: 'bank', holdingsDate: '20 Oct 2026, 10:00 IST' },
+  ...getBankSnapshots().map(snapshot => ({ id: snapshot.accountId, name: bankNames[snapshot.accountId], description: 'Savings account', monogram: snapshot.accountId === 'hdfc' ? 'H' : 'S', color: snapshot.accountId === 'hdfc' ? 'blue' : 'sky', kind: 'bank' as const, holdingsDate: new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata', hourCycle: 'h23' }).format(new Date(snapshot.balanceDate)) + ' IST' })),
 ]
 
 export interface Position { id: string; accountId: string; category: AssetClass; value: Money | null; label: string }
 const cashPositions: readonly Position[] = [
   { id: 'broker-in', accountId: 'ind-in', category: 'cash', label: 'Broker cash · INR', value: money('18500') },
   { id: 'broker-us', accountId: 'ind-us', category: 'cash', label: 'Broker cash · USD', value: money('120', 'USD') },
-  { id: 'hdfc-cash', accountId: 'hdfc', category: 'cash', label: 'Bank cash · HDFC', value: money('186420') },
-  { id: 'sbi-cash', accountId: 'sbi', category: 'cash', label: 'Bank cash · SBI', value: money('74850') },
 ]
 
 export function getPositions(partial = false): Position[] {
@@ -43,7 +41,8 @@ export function getPositions(partial = false): Position[] {
     category: holding.instrument.type === 'fund' ? 'funds' : holding.instrument.market === 'US' ? 'us' : 'india',
     label: `${holding.instrument.name}${holding.instrument.plan ? ` · ${holding.instrument.plan} · ${holding.instrument.option}` : ''}`,
   }))
-  return [...investments, ...cashPositions.map(position => ({ ...position }))]
+  const bankPositions: Position[] = getBankSnapshots(partial).map(snapshot => ({ id: `${snapshot.accountId}-cash`, accountId: snapshot.accountId, category: 'cash', label: `Bank cash · ${bankNames[snapshot.accountId]}`, value: snapshot.balance }))
+  return [...investments, ...cashPositions.map(position => ({ ...position })), ...bankPositions]
 }
 
 export const assetClasses: readonly { id: AssetClass; label: string; note: string }[] = [
@@ -82,12 +81,20 @@ export function shortDate(date: string): string {
 }
 
 export interface Activity { id: string; title: string; detail: string; date: string; kind: 'purchase' | 'dividend' | 'transfer' | 'spending'; value: Money }
-export const activity: readonly Activity[] = [
+const investmentActivity: readonly Activity[] = [
   { id: 'a1', title: 'Monthly fund investment', detail: 'INDmoney · Direct plan', date: '2026-10-20', kind: 'purchase', value: money('15000') },
   { id: 'a2', title: 'Dividend received', detail: 'UBS · Accenture shares', date: '2026-10-19', kind: 'dividend', value: money('42.50', 'USD') },
-  { id: 'a3', title: 'Transfer between accounts', detail: 'HDFC Bank → SBI · Matched pair', date: '2026-10-18', kind: 'transfer', value: money('25000') },
-  { id: 'a4', title: 'Everyday groceries', detail: 'HDFC Bank · Food & groceries', date: '2026-10-18', kind: 'spending', value: money('2450') },
 ]
+export function getActivity(partial = false): Activity[] {
+  const records = getBankTransactions(partial)
+  const transfer = records.find(item => item.id === sampleTransfer.debitId)
+  const grocery = records.find(item => item.id === 't14')
+  return [...investmentActivity,
+    ...(transfer ? [{ id: transfer.id, title: 'Transfer between accounts', detail: `HDFC Bank → SBI · ${bankReview(transfer, records) === 'confirmed' ? 'Matched sample pair' : 'Pair needs review'}`, date: transfer.date, kind: 'transfer' as const, value: transfer.amount }] : []),
+    ...(grocery ? [{ id: grocery.id, title: grocery.description, detail: 'HDFC Bank · Food & groceries', date: grocery.date, kind: 'spending' as const, value: grocery.amount }] : []),
+  ]
+}
+export const activity: readonly Activity[] = getActivity()
 
 export function spendingTotal(items: readonly Activity[]): Money {
   return sum(items.filter(item => item.kind === 'spending').map(item => item.value))

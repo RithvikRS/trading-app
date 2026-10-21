@@ -1,6 +1,6 @@
 # UI prototype plan
 
-The prototype establishes visual design and everyday interactions before connecting financial accounts. Steps 2A, 2B.1, and 2B.2 provide the Overview, frontend foundation, investment holdings list, and holding details and are merged into `main`. The [implementation notes](ui-prototype.md) describe these screens and their verification. [Step 2C](banking-prototype-plan.md) and later screens remain planned.
+The prototype establishes visual design and everyday interactions before connecting financial accounts. Steps 2A, 2B.1, and 2B.2 provide the Overview, frontend foundation, investment holdings list, and holding details and are merged into `main`. Step 2C.1 implements bank activity and transaction inspection. The [implementation notes](ui-prototype.md) describe these screens and their verification. [Steps 2C.2 and 2C.3](banking-prototype-plan.md) and later screens remain planned.
 
 ## Scope and visual direction
 
@@ -19,7 +19,7 @@ The prototype runs on loopback with fabricated fixtures. Backend services, datab
 | 2A | Frontend foundation, responsive shell, Overview | Merged into main |
 | 2B.1 | [Investment holdings list](#holdings-list-2b1) | Merged into main |
 | 2B.2 | [Holding detail views](#holding-details-2b2) | Merged into main |
-| 2C.1 | [Bank activity and transaction inspection](banking-prototype-plan.md#step-2c1-bank-activity) | Planned |
+| 2C.1 | [Bank activity and transaction inspection](banking-prototype-plan.md#step-2c1-bank-activity) | Implemented |
 | 2C.2 | [Transfer matching review](banking-prototype-plan.md#step-2c2-transfer-matching-review) | Planned |
 | 2C.3 | [Category review and corrections](banking-prototype-plan.md#step-2c3-category-review) | Planned |
 | 2D | Budgets, cash flow, monthly categories, recurring items | Planned |
@@ -41,7 +41,7 @@ Refine each increment after reviewing the preceding screen. Future destinations 
 
 Use **Tracked assets**, since liabilities and complete coverage are not established. Count bank and broker cash once. Account totals, allocation, and summary must reconcile. History describes value changes including cash flows and FX, not investment return. Return, tax, and trading calculations are outside this increment.
 
-Currency conversion uses a labeled, dated fictional rate. Preserve original-currency values and document minor-unit arithmetic and rounding. Changing a chart range does not alter the current summary.
+Currency conversion uses a labeled, dated fictional rate. Apply the selected currency to primary monetary displays across every implemented screen; retain labeled original amounts and document minor-unit arithmetic and rounding. Historical conversions are display equivalents, not historical FX or tax basis. Changing a chart range does not alter the current summary.
 
 ## Interactions and states
 
@@ -97,8 +97,8 @@ Use a full-width working area with a compact summary, search/filter toolbar, and
 | Search | Case-insensitive literal search across instrument name, ticker, and fund name; trim surrounding whitespace. Do not interpret input as a regular expression. |
 | Filters | Instrument type (stock, ETF, mutual fund), market (India/US), account, native currency, direct/regular fund plan, and data status. Filters combine; active filters and a clear-all action stay visible. |
 | Market meaning | Use explicit instrument market metadata; do not infer market from currency or represent an ETF's listing market as its underlying geographic exposure. |
-| Desktop columns | Instrument and plan/type, account, units, native price/NAV, value in the selected reporting currency, portfolio weight, and freshness. |
-| Mobile cards | Name/plan, account, reporting value, weight, and freshness first; units and native price/NAV remain available without horizontal page scrolling. |
+| Desktop columns | Instrument and plan/type, account, units, price/NAV and value in the selected reporting currency with labeled original quotes, portfolio weight, and freshness. |
+| Mobile cards | Name/plan, account, reporting value, weight, and freshness first; units and reporting/original price/NAV remain available without horizontal page scrolling. |
 | Sorting | Value descending initially; name, value, weight, and source-date sorting with explicit direction. Sort numbers and timestamps, not formatted strings. Unknown values remain last in either direction; ties use a stable identifier. |
 | Filter results | Show matching count and matching valued subtotal separately from the overall investment summary. Preserve filters when changing currency/theme or visiting details. |
 | Portfolio weight | Percentage of all currently valued investment holdings, excluding cash. Filtering never changes the denominator. Unknown holdings show an unavailable weight; partial coverage is labeled. |
@@ -117,10 +117,10 @@ Selecting a holding opens a dedicated detail page. A two-column desktop layout p
 | Section | Planned content |
 | --- | --- |
 | Identity | Name, ticker or sample scheme identifier, instrument type, market, native currency, account, and applicable fund plan/option. |
-| Position | Units, native price/NAV, native value, reporting-currency value, investment weight, and explicit missing-value labels. |
+| Position | Units, reporting price/NAV with labeled original quote, native value, reporting-currency value, investment weight, and explicit missing-value labels. |
 | Source and freshness | Separate holdings date, price/NAV date, and dated fictional FX rate. Explain stale or incomplete coverage beside the affected fields. |
 | Fund information | Direct/regular and growth/distribution distinctions, friendly sample folio label, units, and NAV date. |
-| Sample activity | A small dated list of relevant purchases/dividends/fees with original currency and clear event labels. Mark it as selected sample activity rather than a complete ledger. |
+| Sample activity | A small dated list of relevant purchases/dividends/fees with reporting-currency display, labeled original amounts, and clear event labels. Mark it as selected sample activity rather than a complete ledger. |
 | UBS ESPP lots | Illustrative purchase dates, remaining units, purchase price, and fees when supplied. Open-lot units reconcile to the sample holding; acquisition details are not presented as a tax-basis calculation. |
 
 Display source-supplied acquisition amounts only when the fixture contains them. Unknown cost or tax basis stays unknown. Do not derive purchase cost from today's market value or turn current FX into historical acquisition FX. P&L, daily gains, realized returns, XIRR/TWR, tax calculations, forecasts, and per-holding performance charts remain outside this increment.
@@ -133,7 +133,7 @@ Preserve the existing baseline: full investment value **INR 47,96,290**, cash **
 
 Represent fractional units and native prices/NAVs with exact scaled integers, with explicit fixture scales of up to eight decimal places for units and six for quotes. Multiply exactly, then round native valuation to currency minor units using the existing half-away-from-zero rule before applying the dated demo FX conversion. Keep accounting arithmetic separate from chart coordinates and displayed percentages. Test the rounding boundaries; do not use binary floating point to derive financial totals.
 
-INR remains the canonical aggregate currency for this prototype. Changing the display currency does not change holdings, native quotes, or canonical totals. Explain any minor-unit display reconciliation difference caused by converting independently rounded rows. No production import, valuation, or cost-basis engine is introduced.
+INR remains the canonical aggregate currency for this prototype. Changing the display currency does not change holdings, source quotes, or canonical totals; it changes their display equivalents. Explain any minor-unit display reconciliation difference caused by converting independently rounded rows. No production import, valuation, or cost-basis engine is introduced.
 
 ### States, privacy, and navigation
 
@@ -166,4 +166,4 @@ Update the README and prototype implementation notes as each increment becomes a
 
 ## Step 2C: Banking
 
-The [banking prototype plan](banking-prototype-plan.md) defines three increments: searchable HDFC/SBI activity with transaction inspection, explainable transfer matching with reversible decisions, and category review with individual/bulk corrections. It specifies shared balance reconciliation, original-currency arithmetic, incomplete coverage, privacy, and acceptance evidence. All three increments remain planned; Step 2D retains budgets and cash-flow trends.
+The [banking prototype plan](banking-prototype-plan.md) defines three increments: searchable HDFC/SBI activity with transaction inspection, explainable transfer matching with reversible decisions, and category review with individual/bulk corrections. It specifies shared balance reconciliation, original-currency arithmetic, incomplete coverage, privacy, and acceptance evidence. Activity and inspection (2C.1) are implemented; matching (2C.2) and category review (2C.3) remain planned. Step 2D retains budgets and cash-flow trends.

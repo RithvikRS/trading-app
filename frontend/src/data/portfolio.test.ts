@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { accounts, activity, assetClasses, convert, formatMoney, getAccountValue, getPositions, getSummary, history, money, spendingTotal, sum } from './portfolio'
+import { convertScaled } from './money'
 
 describe('fictional portfolio accounting', () => {
   it('reconciles assets, allocation and account totals without counting cash twice', () => {
@@ -47,5 +48,12 @@ describe('minor-unit money and fictional FX', () => {
     expect(formatMoney(money('1248650'))).toBe('₹12,48,650')
     expect(formatMoney(money('42.50', 'USD'))).toBe('$42.50')
     expect(() => formatMoney({ minor: BigInt(Number.MAX_SAFE_INTEGER) + 1n, currency: 'INR' })).toThrow()
+  })
+  it('converts quotes at their six-decimal scale without rounding them to cents first', () => {
+    expect(convertScaled(2750000000n, 'INR', 'USD')).toBe(32934132n)
+    expect(convertScaled(1234567n, 'USD', 'INR')).toBe(103086345n)
+    expect(convertScaled(-1n, 'USD', 'INR')).toBe(-84n)
+    expect(convertScaled(0n, 'INR', 'USD')).toBe(0n)
+    expect(convertScaled(1234567n, 'USD', 'USD')).toBe(1234567n)
   })
 })

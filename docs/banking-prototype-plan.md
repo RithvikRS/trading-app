@@ -1,16 +1,16 @@
 # Banking prototype plan
 
-Status: planned. Step 2C extends the local prototype with HDFC and SBI activity, transfer review, and category corrections. The investment screens through Step 2B.2 are merged into `main`.
+Status: bank activity and transaction inspection (2C.1) are implemented. Transfer matching review (2C.2) and category corrections (2C.3) remain planned. The investment screens through Step 2B.2 are merged into `main`. See the [implementation notes](ui-prototype.md#banking-activity-and-inspection) for delivered behavior and evidence.
 
 The screen should make three things clear: what moved, whether a movement belongs to another tracked account, and which classifications need attention. Security and financial integrity take priority over automation. All records and review actions use fictional data in memory.
 
 ## Delivery increments
 
-| Increment | Deliverable | Conventional commit |
-| --- | --- | --- |
-| 2C.1 | Bank activity, dated balances, filters, and transaction inspection | `feat(banking): add searchable bank activity` |
-| 2C.2 | Explainable transfer candidates, pair review, and reversible matching | `feat(banking): add transfer matching review` |
-| 2C.3 | Category suggestions, individual/bulk corrections, and undo | `feat(banking): add transaction category review` |
+| Increment | Deliverable | Status | Conventional commit |
+| --- | --- | --- | --- |
+| 2C.1 | Bank activity, dated balances, filters, and transaction inspection | Implemented | `feat(banking): add searchable bank activity` |
+| 2C.2 | Explainable transfer candidates, pair review, and reversible matching | Planned | `feat(banking): add transfer matching review` |
+| 2C.3 | Category suggestions, individual/bulk corrections, and undo | Planned | `feat(banking): add transaction category review` |
 
 Each increment delivers working behavior, meaningful tests, documentation, and light/dark desktop/mobile evidence through the existing `dev` to `main` workflow. Transfer and category editing become interactive only in their respective increments. Budgets, recurring detection, monthly cash-flow charts, and category trends belong to Step 2D. Import walkthroughs belong to Step 2E.
 
@@ -24,6 +24,8 @@ The activity toolbar contains search, date range, account selection, and an expa
 
 ## Step 2C.1: Bank activity
 
+Implemented with 28 fictional transactions, of which 26 are posted and two pending. Inspection uses a modal panel on the right on desktop and fills the viewport width on mobile. Source disclosures reconcile the entire supplied statement period independently of list filters. Initial pair/category evidence remains read-only; there is no candidate-matching engine or category editor yet.
+
 | Area | Planned behavior |
 | --- | --- |
 | Account cards | HDFC and SBI booked balance snapshots, source dates, currency, and coverage. Selecting a card filters activity; an All accounts choice clears that selection. Label balances as booked snapshots, without implying available funds. |
@@ -31,8 +33,8 @@ The activity toolbar contains search, date range, account selection, and an expa
 | Search | Literal, case-insensitive matching of description, counterparty label, and friendly sample reference. Trim surrounding whitespace; never interpret a regular expression or markup. |
 | Filters | Account, inclusive booking-date range, debit/credit direction, posted/pending status, recorded category, and review status. Combine filters, show active chips, and provide clear-all. Default to all accounts and the full supplied period. |
 | Results | Distinguish account/date-range summaries from the filtered result count and posted debit/credit subtotals. Search and classification filters must not silently redefine the account/date-range summaries. |
-| Rows/cards | Booking date, description/counterparty, account, original INR debit or credit, category, and review/status label. Sorting supports date, amount, and description in both directions; amount compares absolute minor units, with direction shown separately and stable IDs breaking ties. |
-| Inspection | Original narration, friendly reference, posted/pending state, booking date, optional value date, native amount/direction, source period, and provenance. Separate source fields from derived classifications and review decisions. |
+| Rows/cards | Booking date, description/counterparty, account, debit or credit in the selected reporting currency with labeled original INR, category, and review/status label. Sorting supports date, amount, and description in both directions; amount compares absolute minor units, with direction shown separately and stable IDs breaking ties. |
+| Inspection | Original narration, friendly reference, posted/pending state, booking date, optional value date, reporting and original amount/direction, source period, and provenance. Separate source fields from derived classifications and review decisions. |
 | Coverage | Explain stale snapshots, missing activity, unknown balances, and pending records individually. Do not infer that a fresh balance establishes complete transaction coverage. |
 
 Use `#/banking` and `#/banking/<transaction-id>` with allowlisted opaque fixture IDs. A direct transaction route opens the Banking screen with its inspector; reload retains the destination but resets temporary controls. Unknown or malformed identifiers use an unavailable view without echoing raw URL content.
@@ -59,7 +61,7 @@ Bank snapshots and transactions should share account/source identity with Overvi
 
 In partial mode, remove a known source row or period and mark coverage incomplete while retaining the independently supplied balance snapshot. Show the reconciliation difference as a review issue, never fill the gap with an invented transaction or opening-balance adjustment. Unknown balances stay unknown if such a fixture is supplied. Filtered or incomplete activity cannot establish a current balance; do not synthesize running balances from it.
 
-Arithmetic uses the existing exact minor-unit helpers. Original transactions and reconciliation remain in INR. The global USD preference may show an explicitly labeled reporting equivalent using the dated fictional rate, while the original INR remains available in inspection. This conversion is for display and is not historical transaction FX; it cannot affect matching or classifications. Rounded display rows may differ from a converted aggregate by a minor unit.
+Arithmetic uses the existing exact minor-unit helpers. Source transactions and reconciliation arithmetic remain in INR. The global currency preference controls primary bank balances, movement totals, matching subtotals, rows, reconciliation displays, and inspector amounts using the dated fictional rate. Differing original INR amounts remain labeled alongside the equivalents; raw narration stays verbatim. This conversion is for display and is not historical transaction FX; it cannot affect matching or classifications. Rounded display rows may differ from a converted aggregate by a minor unit.
 
 ## Step 2C.2: Transfer matching review
 

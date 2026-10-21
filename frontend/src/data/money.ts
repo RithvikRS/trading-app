@@ -24,12 +24,16 @@ export function divideRounded(numerator: bigint, denominator: bigint): bigint {
   return ((absolute + denominator / 2n) / denominator) * (numerator < 0n ? -1n : 1n)
 }
 
+// Keep the caller's scale: cents/paise for money, six decimal places for quotes.
+export function convertScaled(value: bigint, from: Currency, to: Currency): bigint {
+  if (from === to) return value
+  return to === 'INR'
+    ? divideRounded(value * INR_PER_USD_NUMERATOR, INR_PER_USD_DENOMINATOR)
+    : divideRounded(value * INR_PER_USD_DENOMINATOR, INR_PER_USD_NUMERATOR)
+}
+
 export function convert(value: Money, currency: Currency): Money {
-  if (value.currency === currency) return value
-  const minor = currency === 'INR'
-    ? divideRounded(value.minor * INR_PER_USD_NUMERATOR, INR_PER_USD_DENOMINATOR)
-    : divideRounded(value.minor * INR_PER_USD_DENOMINATOR, INR_PER_USD_NUMERATOR)
-  return { minor, currency }
+  return { minor: convertScaled(value.minor, value.currency, currency), currency }
 }
 
 export function sum(values: readonly Money[], currency: Currency = 'INR'): Money {

@@ -4,9 +4,9 @@ A personal finance workspace for Indian and US investments, employee shares, and
 
 ## Current progress
 
-The Overview and Investments prototype runs locally with fictional data. It includes responsive Indigo & Apricot light/dark themes, INR/USD display, amount masking, allocation, dated value history, expandable accounts, and activity. Investments adds 14 account-specific holdings with search, combined filters, sorting, native prices/NAVs, portfolio weights, and separate source dates. Each holding opens a detail view with source information, selected sample activity, fund identity, and UBS ESPP lots where applicable. Screens handle loading, empty, partial/stale, and failed-load states.
+The Overview and Investments prototype runs locally with fictional data. It includes responsive Indigo & Apricot light/dark themes, INR/USD display, amount masking, allocation, dated value history, expandable accounts, and activity. Investments adds 14 account-specific holdings with search, combined filters, sorting, reporting-currency prices/NAVs with labeled originals, portfolio weights, and separate source dates. Each holding opens a detail view with source information, selected sample activity, fund identity, and UBS ESPP lots where applicable. Screens handle loading, empty, partial/stale, and failed-load states.
 
-Sample accounts represent INDmoney, advisor-held funds, Accenture employee shares at UBS, and HDFC/SBI balances. No financial account is connected. The [banking prototype plan](docs/banking-prototype-plan.md) splits the next work into activity, transfer matching review, and category corrections. Banking implementation, backend services, authentication, imports, databases, and deployment are still planned.
+Banking adds HDFC/SBI booked balance snapshots, 28 fictional transactions, combined activity filters, statement reconciliation, and an inspector for original transaction records. It distinguishes posted/pending entries, incomplete coverage, and read-only classification evidence. The INR/USD control applies across summaries, charts, expanded accounts, prices/NAVs, holding activity, ESPP lots, banking rows, reconciliation, and inspection. Converted records use dated demo FX for display only; original source amounts remain labeled. No financial account is connected. Transfer matching review and category corrections remain [planned](docs/banking-prototype-plan.md), along with backend services, authentication, imports, databases, and deployment.
 
 ## Run locally
 
@@ -18,7 +18,7 @@ npm ci
 npm run dev
 ```
 
-Open [the local prototype](http://127.0.0.1:5173), [Investments](http://127.0.0.1:5173/#/investments), or the [sample UBS holding](http://127.0.0.1:5173/#/investments/h14). The server binds to loopback only. Use **Explore the demo** at the bottom to switch fixture states. Theme, currency, and amount masking are saved locally; financial records and search/filter state are not stored in browser storage. Masking also hides units, quotes, purchase amounts, fees, and activity values.
+Open [the local prototype](http://127.0.0.1:5173), [Investments](http://127.0.0.1:5173/#/investments), [Banking](http://127.0.0.1:5173/#/banking), or a [sample transaction](http://127.0.0.1:5173/#/banking/t08). The server binds to loopback only. Use **Explore the demo** at the bottom to switch fixture states. Theme, currency, and amount masking are saved locally; financial records and search/filter state are not stored in browser storage. Masking also hides units, quotes, purchase amounts, fees, bank activity values, and raw narration/reference in transaction inspection.
 
 ```sh
 npm run check       # tests, TypeScript checks, and production build

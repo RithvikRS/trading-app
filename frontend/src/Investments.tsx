@@ -1,10 +1,10 @@
 import { useContext, useId } from 'react'
 import { ArrowDown, ArrowDownUp, ArrowUp, ArrowUpRight, BarChart3, Check, Clock3, Filter, Layers3, Search, ShieldCheck, Wallet, X } from 'lucide-react'
-import { Amount, DisplayContext, PrivateValue } from './display'
+import { Amount, DisplayContext, PrivateValue, QuoteValue } from './display'
 import { accounts, AS_OF } from './data/portfolio'
 import { convert, formatFixed } from './data/money'
 import {
-  defaultFilters, getHoldings, holdingStatus, holdingsTotal, holdingWeight, QUOTE_SCALE, selectHoldings, UNIT_SCALE,
+  defaultFilters, getHoldings, holdingStatus, holdingsTotal, holdingWeight, selectHoldings, UNIT_SCALE,
 } from './data/holdings'
 import type { Holding, HoldingFilters, HoldingsControls, InstrumentType, SortField } from './data/holdings'
 import { accountName, sourceDate, sourceTimestamp, typeLabels } from './holdingPresentation'
@@ -103,7 +103,7 @@ export default function Investments({ view, controls, onChange, onReset, onOpen,
             {activeFilters.length > 0 && <div className="active-holding-filters" aria-label="Active filters">{activeFilters.map(([key, value]) => <button key={key} onClick={() => filter(key as keyof HoldingFilters, '')} aria-label={`Remove ${filterLabel(key, value)} filter`}>{filterLabel(key, value)}<X size={12} aria-hidden="true" /></button>)}<button className="clear-filters" onClick={reset}>Clear all</button></div>}
             <div className="holdings-result-bar"><span role="status" aria-live="polite" aria-atomic="true">Showing <strong>{selected.length}</strong> of {holdings.length} holdings{matchingMissing ? ` · ${matchingMissing} unpriced` : ''}</span><span>{matchingMissing ? 'Matching known value' : 'Matching value'} <strong><Amount value={subtotal} /></strong></span></div>
             {selected.length === 0 ? <div className="holdings-no-results"><Search size={28} aria-hidden="true" /><h3>No holdings match these filters.</h3><p>Try another name or clear your filters to see the full portfolio.</p><button className="text-button" onClick={reset}>Clear all filters</button></div> :
-              <table className="holdings-table" role="table"><caption className="sr-only">Investment holdings. Values in {currency}; native quotes keep their original currency. Weights use all valued investments, excluding cash.</caption><thead role="rowgroup"><tr role="row">
+              <table className="holdings-table" role="table"><caption className="sr-only">Investment holdings. Values and quotes in {currency}; original quotes are labeled separately. Weights use all valued investments, excluding cash.</caption><thead role="rowgroup"><tr role="row">
                 {sortHeading('name', 'Instrument', 'holding-name-cell')}<th scope="col" role="columnheader" className="holding-account-cell">Account</th><th scope="col" role="columnheader" className="holding-units-cell">Units</th><th scope="col" role="columnheader" className="holding-quote-cell">Price / NAV</th>{sortHeading('value', `Value (${currency})`, 'holding-value-cell')}{sortHeading('weight', 'Weight', 'holding-weight-cell')}{sortHeading('date', 'Source dates', 'holding-date-cell')}
               </tr></thead><tbody role="rowgroup">{selected.map(holding => {
                 const weight = holdingWeight(holding, total)
@@ -111,13 +111,13 @@ export default function Investments({ view, controls, onChange, onReset, onOpen,
                   <th role="rowheader" scope="row" className="holding-name-cell"><a className="holding-detail-link" id={`holding-link-${holding.id}`} href={`#/investments/${holding.id}`} aria-label={`View ${holding.instrument.name} at ${accountName(holding.accountId)}${holding.instrument.plan ? `, ${holding.instrument.plan}, ${holding.instrument.option}, ${holding.folio}` : ''}`} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); onOpen(holding.id) }}><HoldingIdentity holding={holding} /><ArrowUpRight size={14} aria-hidden="true" /></a></th>
                   <td role="cell" className="holding-account-cell"><span>{accountName(holding.accountId)}</span>{holding.employeePlan && <small className="espp-label">{holding.employeePlan}</small>}{holding.folio && <small>{holding.folio}</small>}</td>
                   <td role="cell" className="holding-units-cell"><span className="mobile-cell-label" aria-hidden="true">Units</span><PrivateValue><span className="holding-number">{formatFixed(holding.units, UNIT_SCALE)}</span></PrivateValue></td>
-                  <td role="cell" className="holding-quote-cell"><span className="mobile-cell-label" aria-hidden="true">{holding.instrument.type === 'fund' ? 'NAV' : 'Price'}</span><PrivateValue>{holding.quote ? <span className="holding-number">{holding.instrument.currency === 'INR' ? '₹' : '$'}{formatFixed(holding.quote.amount, QUOTE_SCALE, 2)}</span> : <span aria-label="Price unavailable">—</span>}</PrivateValue><small>{holding.instrument.currency} · native</small></td>
+                  <td role="cell" className="holding-quote-cell"><span className="mobile-cell-label" aria-hidden="true">{holding.instrument.type === 'fund' ? 'NAV' : 'Price'}</span><PrivateValue>{holding.quote ? <QuoteValue value={holding.quote.amount} currency={holding.instrument.currency} /> : <span aria-label="Price unavailable">—</span>}</PrivateValue><small>{currency} · {holding.instrument.currency === currency ? 'Source quote' : 'Display equivalent'}</small></td>
                   <td role="cell" className="holding-value-cell"><span className="mobile-cell-label" aria-hidden="true">Value · {currency}</span><Amount value={holding.value ? convert(holding.value, 'INR') : null} />{holding.value === null && <small>Excluded from total</small>}</td>
                   <td role="cell" className="holding-weight-cell"><span className="mobile-cell-label" aria-hidden="true">Portfolio weight</span><span>{weight === null ? '—' : `${weight.toFixed(1)}%`}</span><div className="weight-track" aria-hidden="true"><span style={{ width: `${weight ?? 0}%` }} /></div></td>
                   <td role="cell" className="holding-date-cell"><Freshness holding={holding} /></td>
                 </tr>
               })}</tbody></table>}
-            <div className="holdings-footnote"><ShieldCheck size={14} aria-hidden="true" /><p>Weights use {missing ? 'known' : 'all valued'} investments, excluding cash, and stay fixed when you filter. {hidden ? 'Amounts, units and quotes are hidden.' : 'Native quotes retain their currency. Rounded reporting values may differ from the total by a minor unit.'} All records and prices are fictional.</p></div>
+            <div className="holdings-footnote"><ShieldCheck size={14} aria-hidden="true" /><p>Weights use {missing ? 'known' : 'all valued'} investments, excluding cash, and stay fixed when you filter. {hidden ? 'Amounts, units and quotes are hidden.' : 'Values and quotes follow the display currency using dated demo FX. Original quotes are labeled separately. Rounded reporting values may differ from the total by a minor unit.'} All records and prices are fictional.</p></div>
           </section>
         </>}
   </>

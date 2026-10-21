@@ -94,15 +94,17 @@ describe('holding details', () => {
     await waitFor(() => expect(screen.queryByRole('alert')).toBeNull())
     expect(region('Current position').textContent).toContain('Value unavailable')
   })
-  it('labels stale holdings separately from the quote and retains native historical amounts across currency changes', async () => {
+  it('converts historical display amounts without changing originals and labels stale holdings separately', async () => {
     const user = userEvent.setup()
     renderRoute()
-    const originalLots = region('Employee purchase lots').textContent
-    const originalActivity = region('Selected activity').textContent
+    expect(region('Employee purchase lots').textContent).toContain('₹1,63,994')
+    expect(region('Employee purchase lots').textContent).toContain('Original USD · $1,964.00')
+    expect(region('Selected activity').textContent).toContain('₹2,585.16')
     await user.selectOptions(screen.getByLabelText('Display currency'), 'USD')
     expect(region('Current position').textContent).toContain('$7,200.00')
-    expect(region('Employee purchase lots').textContent).toBe(originalLots)
-    expect(region('Selected activity').textContent).toBe(originalActivity)
+    expect(region('Employee purchase lots').textContent).toContain('Purchase amount · USD$1,964.00')
+    expect(region('Selected activity').textContent).toContain('$30.96')
+    expect(region('Employee purchase lots').textContent).not.toContain('₹')
     await user.selectOptions(screen.getByLabelText('Demo state'), 'partial')
     expect(region('Source & freshness').textContent).toContain('17 Oct 2026, 09:00 IST')
     expect(region('Source & freshness').textContent).toContain('20 Oct 2026, 01:30 IST')
