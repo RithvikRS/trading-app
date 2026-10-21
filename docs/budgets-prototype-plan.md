@@ -1,6 +1,6 @@
 # Budgets and cash-flow prototype plan
 
-Status: monthly category budgets (2D.1) are implemented. Cash-flow trends (2D.2) are implemented; recurring commitments (2D.3) remain planned. Banking activity, transfer matching, and category corrections through Step 2C.3 are merged into `main`. See the [implementation notes](ui-prototype.md#monthly-category-budgets) and [banking contract](banking-prototype-plan.md).
+Status: monthly category budgets (2D.1) are implemented. Cash-flow trends (2D.2) and recurring commitments (2D.3) are implemented. Banking activity, transfer matching, and category corrections through Step 2C.3 are merged into `main`. See the [implementation notes](ui-prototype.md#monthly-category-budgets) and [banking contract](banking-prototype-plan.md).
 
 The Budgets workspace should answer three questions: how classified spending compares with monthly limits, how income and spending change over time, and which recurring expenses are expected next. Security, traceable calculations, and honest coverage take priority over automation. Continue using fictional HDFC/SBI records, the Indigo & Apricot themes, and the shared currency/privacy controls.
 
@@ -10,7 +10,7 @@ The Budgets workspace should answer three questions: how classified spending com
 | --- | --- | --- | --- |
 | 2D.1 | Monthly category budgets, reversible limit editing, actual-spending breakdowns, and source inspection | Implemented | `feat(budgets): add monthly category budgets` |
 | 2D.2 | Reconciled historical fixtures, cash-flow trends, comparable-period analysis, and coverage breakdowns | Implemented | `feat(budgets): add cash-flow trends` |
-| 2D.3 | Explainable recurring-expense suggestions, review decisions, and expected commitments | Planned | `feat(budgets): add recurring expense review` |
+| 2D.3 | Explainable recurring-expense suggestions, review decisions, and expected commitments | Implemented | `feat(budgets): add recurring expense review` |
 
 Each increment includes its calculations, meaningful tests, documentation, and light/dark desktop/mobile evidence in a focused `dev` to `main` PR. Later views retain a planned label until their behavior exists. Step 2E remains the import/connection walkthrough.
 
@@ -33,7 +33,7 @@ Selections, expanded categories, filters, and scroll remain in memory across nav
 
 ## Step 2D.1: Monthly category budgets
 
-Implemented for October with eight supplied limits across ten expense categories, individual limit editing/removal, separate budget undo/reset, source-linked actuals, coverage messaging, and shared privacy/currency controls. Historical months are available in Cash flow; recurring review remains planned. The rules below define this increment's behavior; [implementation evidence](ui-prototype.md#monthly-category-budgets) records its actual checks and limits.
+Implemented for October with eight supplied limits across ten expense categories, individual limit editing/removal, separate budget undo/reset, source-linked actuals, coverage messaging, and shared privacy/currency controls. Historical months are available in Cash flow and Recurring; recurring review has its own decisions and history. The rules below define this increment's behavior; [implementation evidence](ui-prototype.md#monthly-category-budgets) records its actual checks and limits.
 
 Start with October's existing 28 bank records and a small set of supplied monthly limits. Include under-limit, exactly-at-limit, over-limit, explicit-zero, and unset categories in the fixtures. Every actual comes from current effective classifications and verified refund evidence, never a separately maintained dashboard total.
 
@@ -109,6 +109,8 @@ Initial posted bank credits/debits are INR 1,39,050 / 93,264.90. Opening balance
 Use distinct, high-contrast income and spending series with a visible zero baseline, negative-spending support, dates, and a legend. The adjacent table exposes all figures and coverage without inspecting a chart. Clicking a month/day/category reveals contributing source records while preserving the overall scope summary. Classification changes update charts, tables, budget actuals, and coverage together. Do not add forecasts, savings rates, investment-return calculations, live FX, or a projected bank balance.
 
 ## Step 2D.3: Recurring commitments
+
+Implemented with seven supplied patterns over the existing ledger, independent reversible review decisions, source inspection, and separate fixed/range commitments. No transactions or balances were added or changed. See [recurring evidence and verification](ui-prototype.md#recurring-expense-review). The rules below define this increment’s contract.
 
 Use a small set of supplied monthly expense patterns supported by the historical fixtures: fixed rent/subscription, a variable utility bill, an ambiguous payment, and a missing-source example. Each suggestion identifies the same known owner/account, stable fictional payee, expense role, interval, observed dates/amounts, and supporting source IDs. At least two distinct monthly occurrences support a suggestion; repeated same-day café payments do not establish recurrence. Evidence suggests a pattern, not a contractual obligation. No external enrichment or learned model is introduced.
 

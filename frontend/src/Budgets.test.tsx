@@ -28,7 +28,7 @@ describe('monthly budget workspace', () => {
     expect(summary().textContent).toContain('₹38,199'); expect(summary().textContent).toContain('₹35,959'); expect(summary().textContent).toContain('₹2,240')
     expect(document.body.textContent).toContain('Both statements cover 1–20 October')
     expect(screen.getByRole('button', { name: 'Cash flow' })).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'Recurring' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Recurring' }).getAttribute('aria-pressed')).toBe('false')
   })
   it('validates editing without coercion, cancels unchanged, saves zero, removes, undoes and resets', async () => {
     const user = userEvent.setup(); open()

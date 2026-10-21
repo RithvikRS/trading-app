@@ -1,0 +1,69 @@
+@layer components {
+  .recurring-workspace .amount { white-space: normal; overflow-wrap: anywhere; }
+  .recurring-workspace .holding-select select { min-height: 44px; }
+  .recurring-upcoming, .recurring-patterns { margin-top: 22px; overflow: clip; }
+  .recurring-upcoming > ul > li { border-top: 1px solid var(--border); padding: 18px 24px; display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 16px; align-items: center; }
+  .recurring-upcoming li > strong { font-size: 20px; font-weight: 550; text-align: right; }
+  .recurring-upcoming li > div > strong { font-size: 13px; font-weight: 550; }
+  .recurring-upcoming small, .recurring-row small, .recurring-sources small { display: block; color: var(--muted); font-size: 10px; margin-top: 6px; line-height: 1.7; }
+  .recurring-date { background: var(--accent-soft); color: var(--accent-strong); border: 1px solid var(--accent-border); border-radius: 9px; padding: 9px 0; text-align: center; }
+  .recurring-upcoming .recurring-date strong { display: block; font-size: 21px; }
+  .recurring-date span { font-size: 9px; letter-spacing: 1px; }
+  .recurring-empty { padding: 20px 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; line-height: 1.9; }
+  .recurring-filter { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding: 0 24px 20px; }
+  .recurring-filter > span { color: var(--muted); font-size: 10px; padding-bottom: 8px; }
+  .recurring-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr); gap: 22px; padding: 18px 24px; align-items: center; border-top: 1px solid var(--border); }
+  .recurring-rows > .expanded { background: var(--surface-soft); }
+  .recurring-disclosure { text-align: left; display: flex; align-items: center; gap: 12px; min-width: 0; min-height: 44px; }
+  .recurring-disclosure > span:nth-child(2) { flex: 1; min-width: 0; }
+  .recurring-disclosure strong { font-size: 13px; font-weight: 550; }
+  .recurring-disclosure .rotated { transform: rotate(180deg); }
+  .recurring-icon { width: 38px; height: 38px; flex-shrink: 0; display: grid; place-items: center; color: var(--accent-strong); background: var(--accent-soft); border-radius: 10px; }
+  .recurring-badge { display: block; margin-top: 8px; color: var(--muted); font-size: 10px; line-height: 1.7; }
+  .recurring-row .warning-text { color: var(--warning); }
+  .recurring-observed > strong { display: block; font-size: 17px; font-weight: 550; margin-top: 6px; }
+  .recurring-occurrence > strong { font-size: 11px; font-weight: 550; line-height: 1.8; }
+  .recurring-detail { padding: 4px 24px 24px; }
+  .recurring-detail > p { color: var(--muted); font-size: 12px; line-height: 1.9; }
+  .recurring-detail dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding: 20px 0; }
+  .recurring-detail dt { color: var(--muted); font-size: 10px; }
+  .recurring-detail dd { font-size: 12px; line-height: 1.8; margin-top: 6px; }
+  .recurring-detail h3 { font-size: 13px; font-weight: 550; margin: 20px 0 8px; }
+  .recurring-issues { border-left: 3px solid var(--warning); padding: 12px 16px; font-size: 11px; line-height: 1.9; background: var(--surface); }
+  .recurring-issues strong { color: var(--warning); }
+  .recurring-issues ul { list-style: disc; padding-left: 16px; margin-block: 8px; }
+  .recurring-issues p { color: var(--muted); }
+  .recurring-sources { margin-top: 12px; }
+  .recurring-sources li { display: flex; justify-content: space-between; align-items: center; gap: 24px; border-top: 1px solid var(--border); padding: 12px 0; }
+  .recurring-sources a { display: flex; align-items: center; gap: 12px; min-height: 44px; text-decoration: none; }
+  .recurring-sources strong { font-size: 12px; font-weight: 550; }
+  .recurring-sources li > span { font-size: 14px; text-align: right; }
+  .recurring-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; }
+  .recurring-actions button { min-height: 44px; }
+  .recurring-actions > span { font-size: 10px; color: var(--muted); }
+  #recurring-title:focus, #recurring-patterns-title:focus { outline: none; }
+}
+@layer responsive {
+  @media (max-width: 1100px) {
+    .recurring-row { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 10px 18px; }
+    .recurring-disclosure { grid-row: span 2; }
+    .recurring-occurrence { grid-column: 2; }
+  }
+  @media (max-width: 600px) {
+    .recurring-row { padding: 18px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .recurring-disclosure { grid-column: 1 / -1; grid-row: auto; margin-bottom: 4px; }
+    .recurring-observed > strong { font-size: 16px; }
+    .recurring-detail { padding: 0 18px 20px; }
+    .recurring-detail dl { grid-template-columns: 1fr; gap: 14px; }
+    .recurring-filter { padding-inline: 18px; }
+    .recurring-upcoming > ul > li { padding-inline: 18px; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; }
+    .recurring-upcoming li > strong { grid-column: 2; font-size: 18px; text-align: left; }
+    .recurring-empty { padding-inline: 18px; }
+    .recurring-sources li { flex-wrap: wrap; gap: 8px; }
+    .recurring-sources li > span { text-align: left; }
+  }
+  @media (max-width: 360px) {
+    .recurring-row { grid-template-columns: minmax(0, 1fr); }
+    .recurring-occurrence { grid-column: 1; }
+  }
+}
