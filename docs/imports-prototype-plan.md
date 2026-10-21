@@ -1,6 +1,6 @@
 # Import review and connection status prototype plan
 
-Status: Step 2D is merged into `main`. Steps 2E.1–2E.4 below are planned; no import or connection UI is implemented by this document. See the [current prototype](ui-prototype.md), [integration research](integrations.md), and [security requirements](security.md).
+Status: Step 2E.1 is implemented with six source inspectors and isolated connection-status simulations. Steps 2E.2–2E.4 remain planned. See the [current prototype](ui-prototype.md), [integration research](integrations.md), and [security requirements](security.md).
 
 The next screens should explain where records come from, what periods they cover, what an incoming batch would change, and why some records need review. Security and financial accuracy take priority over automation. Continue the Indigo & Apricot themes, shared INR/USD and privacy controls, visible sample labels, and loopback-only runtime.
 
@@ -8,7 +8,7 @@ The next screens should explain where records come from, what periods they cover
 
 | Increment | Deliverable | Status | Conventional commit |
 | --- | --- | --- | --- |
-| 2E.1 | Connections workspace, source coverage/details, and simulated status/recovery walkthroughs | Planned | `feat(connections): add source status walkthrough` |
+| 2E.1 | Connections workspace, source coverage/details, and simulated status/recovery walkthroughs | Implemented | `feat(connections): add source status walkthrough` |
 | 2E.2 | Bank sample catalog, batch previews, issue summaries, and original/normalized row inspection | Planned | `feat(imports): add bank statement review previews` |
 | 2E.3 | Reversible bank review decisions, duplicate/conflict handling, reconciliation, and sample review completion | Planned | `feat(imports): add reversible sample review decisions` |
 | 2E.4 | Investment review examples for INDmoney, mutual-fund overlap, and UBS employee shares | Planned | `feat(imports): add investment statement walkthroughs` |
@@ -34,6 +34,8 @@ Desktop uses a compact source/status summary, a filterable review list, and a fo
 Only existing display preferences persist. Routes contain opaque allowlisted IDs, never filenames, account/folio identifiers, searches, amounts, permissions, or review decisions. Filters and navigation context stay in memory.
 
 ## Step 2E.1: Connections and source coverage
+
+Implemented at `#/connections`. [Implementation notes](ui-prototype.md#connections-and-source-coverage-step-2e1) document fixed outcomes, source dates, recovery transitions, and verification.
 
 Show six source groups matching the existing sample accounts: INDmoney India, INDmoney US, advisor mutual funds, UBS Accenture ESPP, HDFC, and SBI. Distinguish the institution/source group from its individual account and data stream; holdings, activity, cash, prices/NAVs, and FX may have different sources and dates.
 
