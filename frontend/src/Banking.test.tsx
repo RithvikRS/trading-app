@@ -113,7 +113,8 @@ describe('banking activity and inspection', () => {
     expect(panel.textContent).toContain('₹1,299')
     expect(panel.textContent).toContain('$15.56')
     expect(panel.textContent).toContain('Pending record. Excluded')
-    expect(panel.textContent).toContain('Reporting equivalent only')
+    expect(panel.querySelector('.inspector-amount > strong')?.textContent).toBe('$15.56')
+    expect(panel.textContent).toContain('Display only, not transaction-date FX')
     expect(panel.textContent).toContain('Value dateNot supplied')
   })
   it('masks source narration and every amount even in the background DOM and accessible attributes', async () => {

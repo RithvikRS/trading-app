@@ -12,7 +12,7 @@ import {
 } from './data/portfolio'
 import type { Account, Currency, DemoState, Position } from './data/portfolio'
 import { readPreferences, savePreferences } from './preferences'
-import { Amount, DisplayContext } from './display'
+import { Amount, DisplayContext, ReportingAmount } from './display'
 import Investments from './Investments'
 import HoldingDetail from './HoldingDetail'
 import Banking from './Banking'
@@ -138,7 +138,7 @@ function AccountRow({ account, positions, partial }: { account: Account; positio
     </button>
     <div id={detailId} hidden={!open} className="account-detail">
       <dl><div><dt>{account.kind === 'bank' ? 'Balance snapshot' : 'Holdings snapshot'}</dt><dd>{stale ? '17 Oct 2026, 09:00 IST · stale' : account.holdingsDate}</dd></div>{account.priceDate && <div><dt>Price snapshot</dt><dd>{missing ? 'Unavailable for 20 Oct 2026' : account.priceDate}</dd></div>}</dl>
-      <ul>{rows.map(item => <li key={item.id}><span>{item.label}{item.value?.currency === 'USD' && ' (original USD)'}</span><strong><Amount value={item.value} original /></strong></li>)}</ul>
+      <ul>{rows.map(item => <li key={item.id}><span>{item.label}</span><strong><ReportingAmount value={item.value} /></strong></li>)}</ul>
       <p>Fictional snapshot. No live account is connected.{missing && ' This holding is excluded from valued assets until a price is available.'}</p>
     </div>
   </li>
@@ -152,14 +152,13 @@ function AccountsPanel({ positions, partial }: { positions: Position[]; partial:
 }
 
 function RecentActivity({ partial }: { partial: boolean }) {
-  const { currency } = useContext(DisplayContext)
   const icons = { purchase: Plus, dividend: ArrowDownLeft, transfer: ArrowDownUp, spending: ArrowUpRight }
   const labels = { purchase: 'Investment', dividend: 'Income', transfer: 'Internal transfer', spending: 'Spending' }
   return <Panel title="Recent activity" subtitle="The small moves behind the big picture" className="activity-panel" action={<span className="quiet-badge">Sample</span>}>
     <ul className="activity-list">{getActivity(partial).map(item => { const Icon = icons[item.kind]; return <li key={item.id}>
       <span className={`activity-icon ${item.kind}`}><Icon size={17} aria-hidden="true" /></span>
       <div className="activity-copy"><strong>{item.title}</strong><span>{item.detail}</span><small>{shortDate(item.date)} · {labels[item.kind]}</small></div>
-      <div className={`activity-value ${item.kind === 'dividend' ? 'positive' : ''}`}><Amount value={item.value} />{item.value.currency !== currency && <small><Amount value={item.value} original /></small>}</div>
+      <div className={`activity-value ${item.kind === 'dividend' ? 'positive' : ''}`}><ReportingAmount value={item.value} /></div>
     </li> })}</ul>
     <p className="panel-footer"><ArrowDownUp size={14} aria-hidden="true" /><span>Internal transfers are excluded from income and spending.</span></p>
   </Panel>
