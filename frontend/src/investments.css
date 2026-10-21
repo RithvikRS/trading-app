@@ -1,0 +1,139 @@
+@layer components {
+  :root { --control-border: #858ba2; }
+  :root[data-theme='dark'] { --control-border: #7b88a7; }
+  #page-title:focus { outline: none; }
+  .nav-item:not(.planned):not(.active):hover { background: var(--surface-soft); }
+  .investment-summary { grid-template-columns: 1.3fr 1fr 1fr; }
+  .investment-coverage { display: flex; align-items: center; gap: 9px; font-size: 11px; color: var(--muted); padding: 20px 3px 24px; }
+  .investment-coverage > svg { color: var(--accent); flex-shrink: 0; }
+  .investment-coverage.has-warning { color: var(--warning); }
+  .investment-coverage.has-warning > svg { color: inherit; }
+  .holdings-panel { overflow: hidden; }
+  .holdings-panel-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 23px 24px 0; }
+  .holdings-panel-title h2 { font-size: 15px; font-weight: 600; letter-spacing: -.3px; }
+  .holdings-panel-title p { color: var(--muted); font-size: 11px; margin-top: 4px; }
+  .holdings-toolbar { display: flex; gap: 12px; align-items: flex-end; padding: 22px 24px 16px; }
+  .holdings-search { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; height: 44px; padding: 0 12px; background: var(--surface-soft); border: 1px solid var(--control-border); border-radius: 8px; color: var(--muted); }
+  .holdings-search:focus-within { outline: 3px solid var(--focus); outline-offset: 3px; }
+  .holdings-search input { width: 100%; min-width: 0; height: 42px; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 12px; }
+  .holdings-search input::placeholder { color: var(--muted); opacity: 1; }
+  .holding-select { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .holding-select > span { color: var(--muted); font-size: 11px; }
+  .holding-select select { background: var(--surface); border: 1px solid var(--control-border); border-radius: 7px; min-height: 44px; padding: 8px 28px 8px 11px; width: 100%; min-width: 0; font-size: 12px; }
+  .holdings-toolbar > .holding-select { width: 180px; }
+  .filter-toggle { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px; font-size: 12px; border: 1px solid var(--control-border); border-radius: 7px; }
+  .filter-toggle.selected { color: var(--accent-strong); background: var(--accent-soft); }
+  .filter-toggle > span { font-size: 11px; font-weight: 650; }
+  .holding-filter-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0 24px 16px; padding: 17px; background: var(--surface-soft); border: 1px solid var(--border); border-radius: 9px; }
+  .holding-filter-grid p { grid-column: 1 / -1; font-size: 11px; color: var(--muted); }
+  .holding-type-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 0 24px 16px; }
+  .holding-types { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+  .holding-types button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 9px 12px; font-size: 12px; color: var(--muted); border-radius: 7px; }
+  .holding-types button[aria-pressed='true'] { color: var(--accent-strong); background: var(--accent-soft); font-weight: 600; }
+  .holding-types button:hover { color: var(--accent-strong); }
+  .holding-types button > span { font-size: 10px; opacity: .9; }
+  .holding-sort { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
+  .holding-sort select { min-height: 44px; max-width: 200px; background: var(--surface); color: var(--text); border: 1px solid var(--control-border); border-radius: 7px; font-size: 11px; padding: 8px; }
+  .active-holding-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding: 0 24px 16px; }
+  .active-holding-filters button { display: flex; align-items: center; gap: 8px; min-height: 32px; max-width: 100%; overflow-wrap: anywhere; text-align: left; border: 1px solid var(--accent-border); border-radius: 6px; background: var(--accent-soft); color: var(--accent-strong); font-size: 11px; padding: 5px 9px; }
+  .active-holding-filters .clear-filters { border-color: transparent; background: none; text-decoration: underline; text-underline-offset: 3px; }
+  .holdings-result-bar { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 13px 24px; color: var(--muted); background: var(--surface-soft); border-top: 1px solid var(--border); font-size: 11px; }
+  .holdings-result-bar strong { color: var(--text); font-weight: 550; }
+  .holdings-result-bar > span:last-child strong { margin-left: 8px; }
+  .holdings-table { table-layout: fixed; }
+  .holdings-table th, .holdings-table td { padding: 16px 12px; font-size: 12px; vertical-align: middle; text-align: left; }
+  .holdings-table thead th { padding-top: 5px; padding-bottom: 5px; font-size: 10px; color: var(--muted); font-weight: 500; }
+  .holdings-table thead button { display: inline-flex; align-items: center; gap: 5px; text-align: inherit; padding: 3px 0; min-height: 40px; }
+  .holdings-table th[aria-sort='ascending'], .holdings-table th[aria-sort='descending'] { color: var(--accent-strong); }
+  .holdings-table .holding-name-cell { width: 26%; padding-left: 24px; }
+  .holdings-table .holding-account-cell { width: 13%; }
+  .holdings-table .holding-units-cell { width: 9%; text-align: right; }
+  .holdings-table .holding-quote-cell { width: 12%; text-align: right; }
+  .holdings-table .holding-value-cell { width: 15%; text-align: right; font-weight: 550; }
+  .holdings-table .holding-weight-cell { width: 9%; text-align: right; }
+  .holdings-table .holding-date-cell { width: 16%; padding-right: 24px; }
+  .holdings-table td small { display: block; color: var(--muted); font-size: 10px; font-weight: 400; margin-top: 4px; }
+  .holding-identity { display: flex; align-items: center; gap: 11px; }
+  .holding-identity > div { min-width: 0; }
+  .holding-identity strong { display: block; font-size: 12px; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+  .holding-identity div > span, .holding-identity small { display: block; font-size: 10px; font-weight: 400; color: var(--muted); margin-top: 3px; overflow-wrap: anywhere; }
+  .holding-identity small { color: var(--accent-strong); }
+  .holding-mark { flex-shrink: 0; width: 32px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-strong); font-size: 10px; font-weight: 650; }
+  .holding-mark.etf { background: var(--surface-soft); color: var(--text); border-bottom: 3px solid var(--allocation-funds); }
+  .holding-mark.fund { background: var(--surface-soft); color: var(--text); border-bottom: 3px solid var(--allocation-india); }
+  .holding-account-cell > span { display: block; font-size: 11px; }
+  .holdings-table .espp-label { display: inline-block; color: var(--accent-strong); background: var(--accent-soft); border-radius: 4px; padding: 2px 5px; font-size: 9px; }
+  .holding-number { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .weight-track { height: 3px; background: var(--border); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .weight-track > span { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+  .holding-freshness { display: flex; flex-direction: column; gap: 3px; color: var(--muted); font-size: 10px; }
+  .holding-status { display: flex; align-items: center; gap: 4px; font-size: 10px; margin-bottom: 2px; }
+  .holding-status:not(.warning-text) { color: var(--accent-strong); }
+  .mobile-cell-label, .mobile-column-title { display: none; }
+  .holdings-footnote { display: flex; align-items: flex-start; gap: 8px; padding: 17px 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; line-height: 1.8; }
+  .holdings-footnote > svg { margin-top: 3px; }
+  .holdings-no-results { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 56px 24px; text-align: center; }
+  .holdings-no-results > svg { color: var(--accent); }
+  .holdings-no-results h3 { font-size: 16px; font-weight: 550; margin: 7px 0 0; }
+  .holdings-no-results p { font-size: 12px; color: var(--muted); max-width: 340px; }
+  .holdings-no-results button { font-size: 12px; }
+  .holding-skeleton-row { height: 55px; width: 100%; margin: 18px 0; }
+}
+
+@layer responsive {
+  @media (max-width: 1250px) {
+    .holdings-table, .holdings-table tbody { display: block; }
+    .holdings-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .holdings-table thead button { display: none; }
+    .mobile-column-title { display: inline; }
+    .holdings-table tbody { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 18px 24px; }
+    .holdings-table tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: 10px; padding: 18px; gap: 15px 14px; }
+    .holdings-table tbody th, .holdings-table tbody td { display: block; width: auto; padding: 0; border: 0; text-align: left; min-width: 0; }
+    .holdings-table .holding-name-cell { grid-column: 1 / -1; grid-row: 1; }
+    .holdings-table .holding-account-cell { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: -4px; }
+    .holdings-table .holding-account-cell small { margin: 0; }
+    .holdings-table .holding-value-cell { grid-column: 1; grid-row: 3; font-size: 16px; letter-spacing: -.3px; }
+    .holdings-table .holding-value-cell .amount { white-space: normal; overflow-wrap: anywhere; }
+    .holdings-table .holding-weight-cell { grid-column: 2; grid-row: 3; font-size: 13px; }
+    .holdings-table .holding-units-cell { grid-column: 1; grid-row: 4; }
+    .holdings-table .holding-quote-cell { grid-column: 2; grid-row: 4; }
+    .holdings-table .holding-date-cell { grid-column: 1 / -1; grid-row: 5; padding-top: 12px; border-top: 1px solid var(--border); }
+    .holding-identity strong { font-size: 13px; }
+    .holding-freshness { flex-direction: row; flex-wrap: wrap; gap: 6px 12px; }
+    .holding-status { width: 100%; margin: 0; }
+    .weight-track { max-width: 90px; }
+    .mobile-cell-label { display: block; color: var(--muted); font-size: 10px; font-weight: 400; letter-spacing: 0; margin-bottom: 5px; }
+  }
+  @media (max-width: 680px) {
+    .investment-summary { grid-template-columns: 1fr 1fr; }
+    .investment-summary .summary-primary { grid-column: 1 / -1; }
+    .investment-summary .summary-secondary .metric-amount { margin-top: 12px; margin-bottom: 8px; }
+    .investment-coverage { align-items: flex-start; line-height: 1.8; padding: 18px 2px; }
+    .investment-coverage > svg { margin-top: 2px; }
+    .holdings-panel-title { padding: 20px 16px 0; }
+    .holdings-panel-title .quiet-badge { display: none; }
+    .holdings-toolbar { flex-wrap: wrap; padding: 20px 16px 16px; gap: 12px; }
+    .holdings-search { flex-basis: 100%; }
+    .holdings-toolbar > .holding-select { flex: 1; width: auto; }
+    .holding-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 16px 16px; padding: 12px; }
+    .holding-filter-grid select { font-size: 11px; padding-right: 16px; padding-left: 5px; }
+    .holding-type-row { padding: 0 16px 16px; gap: 14px; }
+    .holding-types { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+    .holding-types button { justify-content: flex-start; font-size: 11px; }
+    .holding-sort { width: 100%; justify-content: space-between; }
+    .holding-sort select { max-width: none; flex: 1; }
+    .active-holding-filters { padding: 0 16px 14px; }
+    .holdings-result-bar { padding: 12px 16px; gap: 8px; }
+    .holdings-result-bar > span { width: 100%; }
+    .holdings-table tbody { grid-template-columns: 1fr; padding: 14px; gap: 12px; }
+    .holdings-table tbody tr { padding: 16px; }
+    .holdings-footnote { padding: 15px 16px; }
+  }
+  @media (max-width: 360px) {
+    .holding-filter-grid { grid-template-columns: 1fr; }
+    .holdings-table tbody { padding: 10px; }
+    .holdings-table tbody tr { padding: 13px; }
+    .holding-identity strong { font-size: 12px; }
+    .holdings-table .holding-value-cell { font-size: 14px; }
+  }
+}

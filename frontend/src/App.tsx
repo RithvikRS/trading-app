@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import type { KeyboardEvent, ReactNode } from 'react'
 import {
   ArrowDownLeft, ArrowDownUp, ArrowRight, ArrowUpRight, BarChart3, Check, ChevronDown, ChevronRight,
@@ -10,18 +10,13 @@ import {
   accounts, activity, assetClasses, AS_OF, axisLabel, FX_DATE, formatMoney, getAccountValue,
   getPositions, getSummary, history, shortDate, sum,
 } from './data/portfolio'
-import type { Account, Currency, DemoState, Money, Position } from './data/portfolio'
+import type { Account, Currency, DemoState, Position } from './data/portfolio'
 import { readPreferences, savePreferences } from './preferences'
-import type { Preferences } from './preferences'
-
-const DisplayContext = createContext<Preferences>({ theme: 'light', currency: 'INR', hidden: false })
-
-function Amount({ value, original = false }: { value: Money | null; original?: boolean }) {
-  const { currency, hidden } = useContext(DisplayContext)
-  if (hidden) return <span className="masked-amount" aria-label="Amount hidden"><span aria-hidden="true">••••••</span></span>
-  if (value === null) return <span className="unavailable" aria-label="Value unavailable">—</span>
-  return <span className="amount">{formatMoney(value, original ? value.currency : currency)}</span>
-}
+import { Amount, DisplayContext } from './display'
+import Investments from './Investments'
+import { defaultControls } from './data/holdings'
+import { useScreen } from './routes'
+import type { Screen } from './routes'
 
 const navigation = [
   { label: 'Overview', icon: LayoutDashboard }, { label: 'Investments', icon: BarChart3 },
@@ -33,20 +28,21 @@ function Brand() {
   return <div className="brand"><span className="brand-mark" aria-hidden="true"><BarChart3 size={22} strokeWidth={2.4} /></span><span>Portfolio<span className="brand-dot">.</span></span></div>
 }
 
-function Navigation({ onOverview }: { onOverview?: () => void }) {
+type Navigate = ReturnType<typeof useScreen>['navigate']
+function Navigation({ screen, navigate, onNavigate }: { screen: Screen; navigate: Navigate; onNavigate?: () => void }) {
   return <nav aria-label="Main navigation" className="navigation">
     <p className="nav-label">Workspace</p>
     {navigation.map(({ label, icon: Icon }, index) => <div key={label}>
       {index === 4 && <p className="nav-label second-label">Manage</p>}
-      {index === 0
-        ? <a href="#overview" aria-current="page" className="nav-item active" onClick={onOverview}><Icon size={19} aria-hidden="true" />{label}<span className="active-dot" /></a>
+      {index < 2
+        ? <a href={`#/${label.toLowerCase()}`} aria-current={screen === label.toLowerCase() ? 'page' : undefined} className={`nav-item ${screen === label.toLowerCase() ? 'active' : ''}`} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); navigate(label === 'Overview' ? 'overview' : 'investments'); onNavigate?.() }}><Icon size={19} aria-hidden="true" />{label}{screen === label.toLowerCase() && <span className="active-dot" />}</a>
         : <span className="nav-item planned" aria-label={`${label}, planned`}><Icon size={19} aria-hidden="true" />{label}<span className="soon">Soon</span></span>}
     </div>)}
   </nav>
 }
 
-function Sidebar() {
-  return <aside className="sidebar"><Brand /><Navigation />
+function Sidebar({ screen, navigate }: { screen: Screen; navigate: Navigate }) {
+  return <aside className="sidebar"><Brand /><Navigation screen={screen} navigate={navigate} />
     <div className="sidebar-note"><div className="note-icon"><ShieldCheck size={20} aria-hidden="true" /></div><strong>A private perspective.</strong><p>Your financial picture,<br />all in one place.</p><span className="local-label"><span className="status-dot" />Local demo</span></div>
     <div className="sidebar-bottom"><span className="avatar">P</span><div><strong>Personal workspace</strong><span>Sample portfolio</span></div></div>
   </aside>
@@ -184,6 +180,9 @@ function LoadingState() {
 }
 
 export default function App() {
+  const { screen, navigate } = useScreen()
+  const screenLabel = screen === 'investments' ? 'Investments' : screen === 'overview' ? 'Overview' : 'Unavailable'
+  const [holdingsControls, setHoldingsControls] = useState(defaultControls)
   const [preferences, setPreferences] = useState(readPreferences)
   const [demoState, setDemoState] = useState<DemoState>('populated')
   const [lastGoodState, setLastGoodState] = useState<'populated' | 'partial' | 'empty'>('populated')
@@ -191,6 +190,7 @@ export default function App() {
   const [attentionOpen, setAttentionOpen] = useState(false)
   const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const drawer = useRef<HTMLDialogElement>(null)
+  const drawerNavigating = useRef(false)
   const menuButton = useRef<HTMLButtonElement>(null)
   const attentionId = useId()
   const view = demoState === 'error' ? lastGoodState : demoState
@@ -198,6 +198,7 @@ export default function App() {
   const positions = getPositions(partial)
 
   useLayoutEffect(() => { document.documentElement.dataset.theme = preferences.theme; savePreferences(preferences) }, [preferences])
+  useEffect(() => { document.title = `Portfolio · ${screenLabel}` }, [screenLabel])
   useEffect(() => () => { if (retryTimer.current) clearTimeout(retryTimer.current) }, [])
 
   function changeState(value: DemoState) {
@@ -210,7 +211,13 @@ export default function App() {
     setRetrying(true)
     retryTimer.current = setTimeout(() => { setDemoState(lastGoodState); setRetrying(false) }, 650)
   }
-  function closeDrawer() { drawer.current?.close(); menuButton.current?.focus() }
+  function closeDrawer() { drawerNavigating.current = false; drawer.current?.close(); menuButton.current?.focus() }
+  function navigateFromDrawer() { drawerNavigating.current = true; drawer.current?.close() }
+  function finishDrawerClose() {
+    if (drawerNavigating.current) document.getElementById('page-title')?.focus({ preventScroll: true })
+    else menuButton.current?.focus()
+    drawerNavigating.current = false
+  }
   function containDrawerFocus(event: KeyboardEvent<HTMLDialogElement>) {
     if (event.key !== 'Tab') return
     const controls = drawer.current?.querySelectorAll<HTMLElement>('button, a[href]')
@@ -221,21 +228,23 @@ export default function App() {
   }
 
   return <DisplayContext.Provider value={preferences}>
-    <a href="#overview" className="skip-link">Skip to overview</a>
-    <div className="app-layout"><Sidebar />
+    <a href="#main-content" className="skip-link" onClick={event => { event.preventDefault(); document.getElementById('main-content')?.focus() }}>Skip to {screenLabel.toLowerCase()}</a>
+    <div className="app-layout"><Sidebar screen={screen} navigate={navigate} />
       <div className="main-shell">
         <header className="topbar">
-          <div className="topbar-left"><button ref={menuButton} className="icon-button menu-toggle" aria-label="Open navigation" onClick={() => drawer.current?.showModal()}><Menu size={21} aria-hidden="true" /></button><span className="breadcrumb"><span>Workspace</span><ChevronRight size={14} aria-hidden="true" /><strong>Overview</strong></span></div>
+          <div className="topbar-left"><button ref={menuButton} className="icon-button menu-toggle" aria-label="Open navigation" onClick={() => drawer.current?.showModal()}><Menu size={21} aria-hidden="true" /></button><span className="breadcrumb"><span>Workspace</span><ChevronRight size={14} aria-hidden="true" /><strong>{screenLabel}</strong></span></div>
           <div className="header-controls"><span className="demo-badge"><FlaskConical size={13} aria-hidden="true" />Sample data</span><span className="control-divider" />
             <label className="currency-select"><Globe2 size={15} aria-hidden="true" /><span className="sr-only">Display currency</span><select value={preferences.currency} onChange={event => setPreferences({ ...preferences, currency: event.target.value as Currency })}><option value="INR">INR</option><option value="USD">USD</option></select></label>
             <button className="icon-button" aria-label={preferences.hidden ? 'Show amounts' : 'Hide amounts'} aria-pressed={preferences.hidden} title={preferences.hidden ? 'Show amounts' : 'Hide amounts'} onClick={() => setPreferences({ ...preferences, hidden: !preferences.hidden })}>{preferences.hidden ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}</button>
             <button className="icon-button" aria-label={preferences.theme === 'light' ? 'Use dark theme' : 'Use light theme'} title={preferences.theme === 'light' ? 'Use dark theme' : 'Use light theme'} onClick={() => setPreferences({ ...preferences, theme: preferences.theme === 'light' ? 'dark' : 'light' })}>{preferences.theme === 'light' ? <Moon size={18} aria-hidden="true" /> : <Sun size={18} aria-hidden="true" />}</button>
           </div>
         </header>
-        <main id="overview" tabIndex={-1}>
-          <div className="page-heading"><div><span className="eyebrow">Your overview <span className="mobile-demo">· Sample data</span></span><h1>Everything, in perspective<span>.</span></h1><p>A clear view of your investments and everyday cash.</p></div><div className="snapshot-label"><Clock3 size={14} aria-hidden="true" /><span>Snapshot as of<strong>{AS_OF}</strong></span></div></div>
+        <main id="main-content" tabIndex={-1}>
+          {screen === 'overview' && <div className="page-heading"><div><span className="eyebrow">Your overview <span className="mobile-demo">· Sample data</span></span><h1 id="page-title" tabIndex={-1}>Everything, in perspective<span>.</span></h1><p>A clear view of your investments and everyday cash.</p></div><div className="snapshot-label"><Clock3 size={14} aria-hidden="true" /><span>Snapshot as of<strong>{AS_OF}</strong></span></div></div>}
           {demoState === 'error' && <div role="alert" className="notice error-notice"><AlertTriangle size={19} aria-hidden="true" /><div><strong>The latest snapshot couldn’t load.</strong><p>{lastGoodState === 'empty' ? 'The last demo view had no accounts.' : 'You’re still seeing the last available sample snapshot.'} This is a simulated error.</p></div><button className="outlined-button" onClick={retry} disabled={retrying}><RefreshCw size={14} className={retrying ? 'spinning' : ''} aria-hidden="true" />{retrying ? 'Retrying…' : 'Retry demo'}</button></div>}
-          {view === 'loading' ? <LoadingState /> : view === 'empty' ? <EmptyState reset={() => changeState('populated')} /> : <>
+          {screen === 'unavailable' ? <section className="empty-state"><span className="eyebrow">Local prototype · Sample data</span><h1 id="page-title" tabIndex={-1}>This view is unavailable.</h1><p>Overview and Investments are the available screens.</p><a className="primary-button" href="#/investments">Go to investments</a></section>
+            : screen === 'investments' ? <Investments view={view} controls={holdingsControls} onChange={setHoldingsControls} onReset={() => changeState('populated')} />
+            : view === 'loading' ? <LoadingState /> : view === 'empty' ? <EmptyState reset={() => changeState('populated')} /> : <>
             <Summary positions={positions} />
             <div className={`coverage-strip ${partial ? 'needs-attention' : ''}`}>
               <div><span className="coverage-icon">{partial ? <AlertTriangle size={16} aria-hidden="true" /> : <Check size={16} aria-hidden="true" />}</span><span>{partial ? <><strong>Two items need a closer look.</strong><span> Your totals show known values only.</span></> : <><strong>Six accounts. One clear picture.</strong><span> All values are fictional demo snapshots.</span></>}</span></div>
@@ -246,10 +255,10 @@ export default function App() {
             <div className="details-grid"><AccountsPanel positions={positions} partial={partial} /><RecentActivity /></div>
           </>}
           <footer className="overview-footer"><div><ShieldCheck size={14} aria-hidden="true" /><span>Local prototype · Fictional data only</span></div><span>{preferences.hidden ? 'Demo FX rate hidden' : 'Demo FX · 1 USD = ₹83.50'} · {FX_DATE}</span></footer>
-          <section className="demo-controls" aria-label="Demo controls"><div><SlidersHorizontal size={17} aria-hidden="true" /><div><strong>Explore the demo</strong><span>See how the overview handles different states.</span></div></div><label htmlFor="demo-state">Demo state<select id="demo-state" value={demoState} onChange={event => changeState(event.target.value as DemoState)}><option value="populated">Populated</option><option value="loading">Loading</option><option value="empty">Empty</option><option value="partial">Partial / stale</option><option value="error">Failed load</option></select></label></section>
+          <section className="demo-controls" aria-label="Demo controls"><div><SlidersHorizontal size={17} aria-hidden="true" /><div><strong>Explore the demo</strong><span>See how this view handles different states.</span></div></div><label htmlFor="demo-state">Demo state<select id="demo-state" value={demoState} onChange={event => changeState(event.target.value as DemoState)}><option value="populated">Populated</option><option value="loading">Loading</option><option value="empty">Empty</option><option value="partial">Partial / stale</option><option value="error">Failed load</option></select></label></section>
         </main>
       </div>
     </div>
-    <dialog ref={drawer} className="nav-drawer" aria-label="Navigation" onKeyDown={containDrawerFocus} onCancel={closeDrawer} onClose={() => menuButton.current?.focus()} onClick={event => { if (event.target === drawer.current) closeDrawer() }}><div className="drawer-body"><div className="drawer-header"><Brand /><button className="icon-button" onClick={closeDrawer} aria-label="Close navigation"><X size={21} aria-hidden="true" /></button></div><Navigation onOverview={closeDrawer} /><p className="drawer-note"><ShieldCheck size={16} aria-hidden="true" />Local demo · Fictional data</p></div></dialog>
+    <dialog ref={drawer} className="nav-drawer" aria-label="Navigation" onKeyDown={containDrawerFocus} onCancel={closeDrawer} onClose={finishDrawerClose} onClick={event => { if (event.target === drawer.current) closeDrawer() }}><div className="drawer-body"><div className="drawer-header"><Brand /><button className="icon-button" onClick={closeDrawer} aria-label="Close navigation"><X size={21} aria-hidden="true" /></button></div><Navigation screen={screen} navigate={navigate} onNavigate={navigateFromDrawer} /><p className="drawer-note"><ShieldCheck size={16} aria-hidden="true" />Local demo · Fictional data</p></div></dialog>
   </DisplayContext.Provider>
 }

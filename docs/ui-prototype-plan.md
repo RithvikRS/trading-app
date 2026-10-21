@@ -1,6 +1,6 @@
 # UI prototype plan
 
-The prototype establishes visual design and everyday interactions before connecting financial accounts. Step 2A implements the Overview and minimum frontend foundation; [implementation notes](ui-prototype.md) describe its behavior and verification. Later screens remain planned.
+The prototype establishes visual design and everyday interactions before connecting financial accounts. Step 2A provides the Overview and minimum frontend foundation and is merged into `main`. Step 2B.1 implements the investment holdings list; [implementation notes](ui-prototype.md) describe both screens and their verification. Step 2B.2 and later screens remain planned.
 
 ## Scope and visual direction
 
@@ -16,8 +16,9 @@ The prototype runs on loopback with fabricated fixtures. Backend services, datab
 
 | Increment | Deliverable | Status |
 | --- | --- | --- |
-| 2A | Frontend foundation, responsive shell, Overview | Implemented locally |
-| 2B | Searchable/filterable/sortable holdings and holding details | Planned |
+| 2A | Frontend foundation, responsive shell, Overview | Merged into main |
+| 2B.1 | [Investment holdings list](#holdings-list-2b1) | Implemented |
+| 2B.2 | [Holding detail views](#holding-details-2b2) | Planned |
 | 2C | Banking activity, sample transfer matching, category review | Planned |
 | 2D | Budgets, cash flow, monthly categories, recurring items | Planned |
 | 2E | Import-review walkthrough and connection status with bundled samples | Planned |
@@ -66,3 +67,95 @@ Persist only display preferences. Financial fixtures remain bundled/in memory. E
 | Engineering | Types, production build, meaningful tests, dependency/license review |
 
 See W3C guidance for [contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), [target size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html), and [reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html). These targets are not a claim of full accessibility conformance. Record actual evidence and limits in the implementation notes.
+
+## Step 2B: Investments
+
+Status: the holdings list (2B.1) is implemented. Holding details (2B.2) remain planned.
+
+Help answer what is owned, where it is held, how much it is currently worth, and whether its units and prices are current. Retain Indigo & Apricot, the shared navigation/header, theme and currency controls, amount masking, and visible sample-data labeling. The prototype continues to use bundled fictional records only.
+
+### Delivery increments
+
+| Increment | Deliverable | Status | Conventional commit |
+| --- | --- | --- | --- |
+| 2B.1 | Individual holding fixtures, Overview reconciliation, Investments navigation, searchable/filterable/sortable holdings list | Implemented | `feat(investments): add searchable holdings overview` |
+| 2B.2 | Holding detail pages, source dates, sample activity, and UBS ESPP lot presentation | Planned | `feat(investments): add holding detail views` |
+
+Each increment includes its relevant tests, documentation, and light/dark desktop/mobile screenshots. Follow the existing `dev` to `main` PR workflow. During 2B.1, rows present their data without implying that the later detail destination already works.
+
+### Holdings list: 2B.1
+
+Implemented with 14 holdings across four investment accounts. Rows display data without detail links. Source-date sorting uses the holdings snapshot date; quote/NAV dates are displayed independently. Search, filters, sorting, and scroll survive navigation between Overview and Investments for the current session. Detail navigation requirements below belong to 2B.2.
+
+Use a full-width working area with a compact summary, search/filter toolbar, and holdings table. Mobile uses readable cards with the same information hierarchy rather than a compressed desktop table.
+
+| Area | Planned behavior |
+| --- | --- |
+| Summary | Investment value, holding count, investment-account count, and missing/stale coverage. Bank and broker cash remain in Overview and are excluded from this list. |
+| Search | Case-insensitive literal search across instrument name, ticker, and fund name; trim surrounding whitespace. Do not interpret input as a regular expression. |
+| Filters | Instrument type (stock, ETF, mutual fund), market (India/US), account, native currency, direct/regular fund plan, and data status. Filters combine; active filters and a clear-all action stay visible. |
+| Market meaning | Use explicit instrument market metadata; do not infer market from currency or represent an ETF's listing market as its underlying geographic exposure. |
+| Desktop columns | Instrument and plan/type, account, units, native price/NAV, value in the selected reporting currency, portfolio weight, and freshness. |
+| Mobile cards | Name/plan, account, reporting value, weight, and freshness first; units and native price/NAV remain available without horizontal page scrolling. |
+| Sorting | Value descending initially; name, value, weight, and source-date sorting with explicit direction. Sort numbers and timestamps, not formatted strings. Unknown values remain last in either direction; ties use a stable identifier. |
+| Filter results | Show matching count and matching valued subtotal separately from the overall investment summary. Preserve filters when changing currency/theme or visiting details. |
+| Portfolio weight | Percentage of all currently valued investment holdings, excluding cash. Filtering never changes the denominator. Unknown holdings show an unavailable weight; partial coverage is labeled. |
+| No matches | Explain that filters returned no matches and offer clear-all; distinguish this from an account with no holdings. |
+
+Rows represent one instrument in one account and, for mutual funds, one sample folio where relevant. Keep separate account/folio rows for the same instrument rather than merging them by name or ticker. Distinguish direct versus regular plans and growth versus distribution options. UBS Accenture shares carry an ESPP label, without implying a different security from the same shares held elsewhere.
+
+Use approximately 12–16 fictional holdings across INDmoney India, INDmoney US, advisor funds, and UBS. Include Indian/US stocks and ETFs, fractional units, direct and regular funds, the same security in two accounts, a missing NAV, and stale holdings with a separately dated price. Keep HDFC/SBI and broker cash in the shared Overview data.
+
+### Holding details: 2B.2
+
+Selecting a holding opens a dedicated detail page. A two-column desktop layout places the current position and source information beside supporting records; mobile stacks those sections. A breadcrumb and Back to holdings action restore the list's filters, sorting, and scroll position. Browser Back/Forward and direct navigation work, with a clear unavailable view for unknown holding identifiers.
+
+| Section | Planned content |
+| --- | --- |
+| Identity | Name, ticker or sample scheme identifier, instrument type, market, native currency, account, and applicable fund plan/option. |
+| Position | Units, native price/NAV, native value, reporting-currency value, investment weight, and explicit missing-value labels. |
+| Source and freshness | Separate holdings date, price/NAV date, and dated fictional FX rate. Explain stale or incomplete coverage beside the affected fields. |
+| Fund information | Direct/regular and growth/distribution distinctions, friendly sample folio label, units, and NAV date. |
+| Sample activity | A small dated list of relevant purchases/dividends/fees with original currency and clear event labels. Mark it as selected sample activity rather than a complete ledger. |
+| UBS ESPP lots | Illustrative purchase dates, remaining units, purchase price, and fees when supplied. Open-lot units reconcile to the sample holding; acquisition details are not presented as a tax-basis calculation. |
+
+Display source-supplied acquisition amounts only when the fixture contains them. Unknown cost or tax basis stays unknown. Do not derive purchase cost from today's market value or turn current FX into historical acquisition FX. P&L, daily gains, realized returns, XIRR/TWR, tax calculations, forecasts, and per-holding performance charts remain outside this increment.
+
+### Shared data and arithmetic
+
+Replace category-only investment fixtures with individual records and derive both screens from that shared collection. Do not maintain independent Overview and Investments totals. Keep instrument identity, account/folio identity, holding snapshot, quote/NAV, and optional activity/lot records distinct; ticker alone is not a holding identifier.
+
+Preserve the existing baseline: full investment value **INR 47,96,290**, cash **INR 2,89,790**, and tracked assets **INR 50,86,080**. The partial fixture continues to exclude the advisor holding worth INR 4,25,000 in the complete fixture, giving known investments of **INR 43,71,290** and tracked assets of **INR 46,61,080**. Unknown values are not zero. Account totals and class allocations reconcile to the same underlying positions.
+
+Represent fractional units and native prices/NAVs with exact scaled integers, with explicit fixture scales of up to eight decimal places for units and six for quotes. Multiply exactly, then round native valuation to currency minor units using the existing half-away-from-zero rule before applying the dated demo FX conversion. Keep accounting arithmetic separate from chart coordinates and displayed percentages. Test the rounding boundaries; do not use binary floating point to derive financial totals.
+
+INR remains the canonical aggregate currency for this prototype. Changing the display currency does not change holdings, native quotes, or canonical totals. Explain any minor-unit display reconciliation difference caused by converting independently rounded rows. No production import, valuation, or cost-basis engine is introduced.
+
+### States, privacy, and navigation
+
+- Exercise populated, loading, empty, missing-price, stale-holdings, and failed-load states, plus no search matches and an unknown detail identifier. A failure retains the last usable fixture view and its coverage labels.
+- Extend Hide amounts to quantities, prices/NAVs, acquisition amounts, lot records, and activity amounts, including accessible labels and hidden content. Instrument/account names and portfolio percentages remain visible, consistent with Overview. Masking remains visual privacy; bundled fixture data can be inspected.
+- Enable Overview and Investments navigation; other destinations retain their planned status. Reuse the shared theme, currency, and privacy state across routes.
+- Use a minimal client-side route layer with allowlisted screen names and opaque fixture identifiers. Refresh and Back/Forward must work on the local preview. Search text, financial values, and account/folio details must not be embedded in URLs.
+- Keep search, filters, sorting, and list scroll state in memory. Reload returns these controls to defaults; only the existing display preferences persist. Avoid new routing/table dependencies unless a concrete need emerges.
+- Use semantic table headers and sorting controls, labeled filters, visible focus, keyboard-operable holding links, and polite result-count announcements. Move focus to the detail heading on entry and restore it to the originating row, or the list heading when that row is unavailable, on return.
+
+### Security boundary
+
+No real statements, identifiers, broker credentials, account connections, uploads/downloads, analytics, remote fonts/logos, or external runtime requests. Continue loopback-only servers and the existing content policy. Render names, searches, and other strings as text; validate routes against known fixtures. Do not store financial records or searches in local/session storage, URLs, logs, or telemetry.
+
+Backend services, authentication, PostgreSQL/Supabase, hosted deployment, automated imports, live prices, trading buttons, buy/sell flows, watchlists, and recommendations remain separate work. The screen must not imply these capabilities exist.
+
+### Verification targets
+
+| Area | Required evidence |
+| --- | --- |
+| Financial consistency | Individual holdings reconcile to Overview, accounts, and classes in full/partial states; fractional valuation and FX rounding have known-result tests; duplicate securities across accounts stay separate; cash is excluded from Investments. |
+| Search/filter/sort | Combined filters, whitespace/case handling, no matches, clear-all, numeric ordering in both currencies, stable ties, unknown values last, and unchanged weight denominator. |
+| Details and navigation | Correct row opens correct account/folio detail; direct links and unknown identifiers; Back/Forward; restored filters, sorting, focus, and scroll. |
+| Privacy and safe rendering | Masking covers new values in visible/hidden DOM and accessible text across routes; markup-like names/searches remain plain text; URLs/storage do not receive financial values or search terms. |
+| States | Missing prices, separate stale holdings/price dates, retained data on failure, retry, empty holdings, and empty search results remain distinguishable. |
+| Visual/accessibility | Both themes at 1440, 768, and 390 px; 320 px reflow; long names and large amounts; keyboard flows, contrast, named controls, and chart/list alternatives. Revisit outstanding enlarged-text, 400% zoom, reduced-motion, and screen-reader checks and record actual limitations. |
+| Engineering | Existing Overview regressions plus targeted new tests, TypeScript checks, production build, dependency review if dependencies change, local security-header/network checks, and screenshots with fictional data. |
+
+Update the README and prototype implementation notes as each increment becomes available. Mark each increment implemented only when its behavior exists and its evidence is recorded.

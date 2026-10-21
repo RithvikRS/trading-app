@@ -4,9 +4,9 @@ A personal finance workspace for Indian and US investments, employee shares, and
 
 ## Current progress
 
-The Overview prototype runs locally with fictional data. It includes responsive light and dark themes, INR/USD display, amount masking, allocation, dated value history, expandable accounts, activity, and loading, empty, partial/stale, and failed-load states.
+The Overview and Investments prototype runs locally with fictional data. It includes responsive Indigo & Apricot light/dark themes, INR/USD display, amount masking, allocation, dated value history, expandable accounts, and activity. Investments adds 14 account-specific holdings with search, combined filters, sorting, native prices/NAVs, portfolio weights, and separate source dates. Both screens handle loading, empty, partial/stale, and failed-load states.
 
-Sample accounts represent INDmoney, advisor-held funds, Accenture employee shares at UBS, and HDFC/SBI balances. No financial account is connected. Backend services, authentication, imports, databases, and deployment are still planned.
+Sample accounts represent INDmoney, advisor-held funds, Accenture employee shares at UBS, and HDFC/SBI balances. No financial account is connected. Holding detail pages are the next UI increment; backend services, authentication, imports, databases, and deployment are still planned.
 
 ## Run locally
 
@@ -18,7 +18,7 @@ npm ci
 npm run dev
 ```
 
-Open [the local prototype](http://127.0.0.1:5173). The server binds to loopback only. Use **Explore the demo** at the bottom to switch fixture states. Theme, currency, and amount masking are saved locally; financial records are not stored in browser storage.
+Open [the local prototype](http://127.0.0.1:5173) or [Investments](http://127.0.0.1:5173/#/investments). The server binds to loopback only. Use **Explore the demo** at the bottom to switch fixture states. Theme, currency, and amount masking are saved locally; financial records and search/filter state are not stored in browser storage. Masking also hides units and quotes.
 
 ```sh
 npm run check       # tests, TypeScript checks, and production build
