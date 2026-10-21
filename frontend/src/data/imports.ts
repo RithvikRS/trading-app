@@ -21,6 +21,7 @@ export interface ImportBatch {
   complete: boolean; coverageNote: string; opening: Money | null; closing: Money | null
   baseline: { id: string; description: string; receivedFingerprints: string[]; rows: IncomingRow[] }
   rows: IncomingRow[]
+  distinctPairs?: { incomingId: string; baselineId: string; reason: string }[]
 }
 export interface NormalizedRow {
   account: BankId | null; owner: string | null; provider: string | null; transactionId: string | null
@@ -50,7 +51,7 @@ export function getImportBatches(): ImportBatch[] {
   return [
     fixtureBatch('i01', 'A first statement', 'A reconciling HDFC sample with posted and pending activity.', 'hdfc', hdfc, []),
     replay,
-    fixtureBatch('i03', 'An overlapping statement', 'Some rows already exist; one similar payment needs interpretation.', 'hdfc', hdfc, hdfc.slice(0, 5)),
+    fixtureBatch('i03', 'An overlapping statement', 'Some rows already exist; one similar payment needs interpretation.', 'hdfc', hdfc, hdfc.slice(0, 5), { distinctPairs: [{ incomingId: 'row-t06', baselineId: 'row-t05', reason: 'The sample source identifies two separate café payments with different transaction identities and references.' }] }),
     fixtureBatch('i04', 'Similar payments, separate identities', 'Two café payments and one exact repeated row.', 'hdfc', [...repeated, copyRow(repeated[0]!, 'row-t05-copy')], [], { complete: false, opening: null, closing: null, balanceAsOf: 'Not supplied', from: '2026-10-05', to: '2026-10-05', coverageNote: 'Selected payment excerpt. Opening/closing balances and complete period coverage were never supplied.' }),
     fixtureBatch('i05', 'A conflicting source record', 'SBI reports a changed amount under an existing source identity.', 'sbi', sbi.map(row => row.original.transactionId === 'source-t26' ? copyRow(row, row.id, { amount: '2300.00', narration: 'FICTIONAL RECORD / Water and maintenance bill / INR 2300.00 / DEBIT' }) : row), sbi),
     fixtureBatch('i06', 'Fields that need attention', 'Ambiguous dates, malformed money, missing identity, and incompatible records.', 'hdfc', [

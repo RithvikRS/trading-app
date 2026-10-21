@@ -49,3 +49,21 @@ The two café payments have equal dates, descriptions, and amounts but different
 i06 contains an ambiguous booking date with an unspecified format, malformed decimal text, an impossible value date, a missing transaction identity, incompatible account/owner evidence, an unexpected USD record in an INR statement, and an unsupported security event. The last record includes literal HTML-like text to verify plain-text rendering. Invalid amounts are unavailable, never zero; readable amounts on otherwise invalid rows remain explicitly labeled partial evidence in their original currency/status group. No mapping or field correction is available in this increment.
 
 Inspection keeps original strings beside normalized fields and matched baseline evidence. While amounts are hidden, original text, descriptions, references, and search fields that could contain monetary text are removed from the rendered content. Native/display amounts and reconciliation values use shared masking. Routes contain only the allowlisted batch ID; filters and selected rows remain in memory. See [prototype notes](ui-prototype.md) for implemented behavior and validation.
+
+## Reversible review expectations (Step 2E.3)
+
+Review choices start empty. Suggested choices include only valid new candidates and skip exact existing/within-batch matches; they leave overlaps and invalid/conflicting rows for individual inspection. A single confirmation applies eligible choices atomically and has one undo entry. Exclusion uses a fixed further-source-review reason and never removes underlying completeness, identity, or reconciliation blockers.
+
+| Sample | Expected review outcome |
+| --- | --- |
+| i01 | Suggested choices: 16 included, 0 present/excluded/unresolved. Proposed posted net INR 9,134.10, pending debit INR 1,299. Combined closing INR 186,420; both differences zero. Can complete. |
+| i02 | Suggested choices: 0 included, 16 present, 0 excluded/unresolved. No incremental movements. The retained baseline closes at INR 186,420. Can complete; repeat confirmation creates no extra receipt. |
+| i03 | Suggested choices: 10 included, 5 present, 1 unresolved. Supplied distinct-identity evidence for row-t06 versus row-t05 permits individual inclusion. Then 11 included, 5 present; proposed posted credits INR 800, debits INR 62,335.90, net INR −61,535.90; pending debit INR 1,299. Combined closing INR 186,420. Can complete. |
+| i04 | Suggested choices: 2 included, 1 excluded exact copy, 0 unresolved. Unique proposed debit INR 360. The source still contains INR 540 across its three occurrences. Missing balances and incomplete coverage block completion. Skipping the copy cannot replace a missing canonical decision. |
+| i05 | 11 present and 1 unresolved after suggestions. Excluding the conflict retains source/identity and reconciliation blockers. No overwrite or completion. |
+| i06 | Seven unresolved rows; exclusions record choices but retain all mandatory-field/scope/coverage blockers. No mapping can change owner, bank identity, unsupported kind, or malformed fields. |
+| i07 | 11 included after suggestions. Pending credit INR 2,000 stays separate; missing coverage and INR −2,200 difference still block completion. |
+
+The supplied distinct-pair annotation in i03 is evidence for two separate source references, not a general rule that any unequal IDs prove separate payments. Removing that evidence disables inclusion of the overlap. The only compatible mapping for these examples is their already-supplied bank account; there is no supported alternate account or corrective mapping editor.
+
+A review receipt records the batch revision, choices/reasons, counts, native proposed groups, and reconciled difference in memory. Reopening removes its current receipt before editing. Undo restores the previous review state; reset clears all import reviews/history only. Changed source, baseline, mapping, revision, or current decisions invalidates a pending action atomically. Existing decisions whose evidence changes stay visibly incompatible until restored and reviewed again. Source snapshots and all financial workspace totals remain unchanged.

@@ -1,3 +1,4 @@
+import { createImportReviewState, changeImportReview, proposeImport, resetImportReviews, undoImportReview } from './import-review'
 import { describe, expect, it } from 'vitest'
 import { getImportBatches, previewImport, normalizeImportRow, selectImportRows, initialImportFilters, isImportId, isDisposition, clearImportSearch, clearImportSelection } from './imports'
 import type { ImportId, OriginalRow } from './imports'
@@ -121,7 +122,14 @@ describe('Bank sample import evidence', () => {
     const snapshot = () => ({ holdings: getHoldings(partial), assets: getSummary(getPositions(partial)), banks: getBankSnapshots(partial, null).map(source => bankReconciliation(source, records)), budget: budgetOverview(budgets, records, review, partial), cash: cashFlow(records, review, '2026-10-01', '2026-10-20'), recurring: recurringOverview(records, review, recurring, '2026-10', bankCoverage(partial)), review, budgets })
     const initial = snapshot(), before = financialSnapshot(initial), samples = getImportBatches(), original = structuredClone(samples)
     expect(initial.assets.total.minor).toBe(partial ? 466108000n : 508608000n); expect(initial.banks).toHaveLength(6)
-    for (const sample of samples) previewImport(sample)
+    let importState = createImportReviewState()
+    for (const sample of samples) {
+      importState = changeImportReview(importState, sample, proposeImport(sample, importState, { type: 'suggestions' }))
+      importState = changeImportReview(importState, sample, proposeImport(sample, importState, { type: 'complete' }))
+      importState = changeImportReview(importState, sample, proposeImport(sample, importState, { type: 'reopen' }))
+      importState = changeImportReview(importState, sample, proposeImport(sample, importState, { type: 'row', rowId: sample.rows[0]!.id, choice: 'exclude' }))
+    }
+    undoImportReview(importState); resetImportReviews(importState)
     expect(samples).toEqual(original); expect(financialSnapshot(snapshot())).toBe(before)
     const connection = changeConnections(createConnectionState(), { type: 'scenario', id: 'ind-in', scenario: 'revoked' })
     changeConnections(connection, { type: 'reset' })
