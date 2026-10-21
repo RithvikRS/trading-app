@@ -440,4 +440,4 @@ Screenshots use fictional fixtures, with selected review decisions applied local
 
 ## Next increment
 
-Monthly category budgets, cash-flow trends, and [recurring-expense review](budgets-prototype-plan.md#step-2d3-recurring-commitments) complete Step 2D. Import/connection walkthroughs in Step 2E remain planned. Production data and security foundations remain separate work.
+Monthly category budgets, cash-flow trends, and [recurring-expense review](budgets-prototype-plan.md#step-2d3-recurring-commitments) complete Step 2D. The [Step 2E plan](imports-prototype-plan.md) defines connection status/coverage (2E.1), bank import previews (2E.2), reversible review decisions and sample completion (2E.3), and investment statement walkthroughs (2E.4). These screens remain planned; completing a future sample review will not change the existing financial ledger or holdings. Production data and security foundations remain separate work.
