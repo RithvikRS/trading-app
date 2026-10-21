@@ -1,19 +1,22 @@
 import { bankOwners, sampleTransfer } from './banking'
 import type { BankCategory, BankReview, BankTransaction } from './banking'
 import { sum } from './money'
+import { baseClassification, categoryOptions, categoryRestriction, categorySourceKey, previewCategories, sameClassification } from './categories'
+import type { CategoryEdit, CategoryPreview } from './categories'
 
 export type TransferPair = Readonly<{ id: string; debitId: string; creditId: string }>
-export type Classification = Readonly<{ category: BankCategory; provenance: 'source' | 'manual' | 'transfer' | 'incomplete' }>
-export type ReviewChange = Readonly<{ kind: 'confirm' | 'dismiss' | 'restore' | 'unlink'; pair: TransferPair; label: string }>
+export type Classification = Readonly<{ category: BankCategory; provenance: 'source' | 'manual' | 'suggestion' | 'transfer' | 'incomplete' }>
+type PairChange = Readonly<{ kind: 'confirm' | 'dismiss' | 'restore' | 'unlink'; pair: TransferPair; label: string }>
+export type ReviewChange = PairChange | Readonly<{ kind: 'category'; edits: readonly CategoryEdit[]; label: string }>
 export interface TransferState {
   pairs: readonly TransferPair[]; dismissed: readonly TransferPair[]
   // Underlying classifications remain intact when a transfer overlay is added or removed.
   classifications: Readonly<Record<string, Classification>>
   history: readonly ReviewChange[]; message: string; error: boolean
 }
-export type TransferAction = { type: 'confirm' | 'dismiss' | 'restore' | 'unlink'; pair: TransferPair } | { type: 'undo' } | { type: 'reset' }
+export type TransferAction = { type: 'confirm' | 'dismiss' | 'restore' | 'unlink'; pair: TransferPair } | { type: 'undo' } | { type: 'reset' } | { type: 'categorize'; preview: CategoryPreview }
 export type TransferStatus = 'suggested' | 'ambiguous' | 'unmatched' | 'confirmed' | 'dismissed'
-export interface TransferControls { view: 'activity' | 'transfers'; status: TransferStatus; selected: string | null }
+export interface TransferControls { view: 'activity' | 'transfers' | 'categories'; status: TransferStatus; selected: string | null }
 export const initialTransferControls: TransferControls = { view: 'activity', status: 'suggested', selected: null }
 export const transferLabels: Record<TransferStatus, string> = { suggested: 'Suggested', ambiguous: 'Ambiguous', unmatched: 'Unmatched', confirmed: 'Confirmed', dismissed: 'Dismissed' }
 
@@ -46,11 +49,11 @@ export function confirmedPairs(records: readonly BankTransaction[], state: Trans
 export function effectiveClassification(item: BankTransaction, records: readonly BankTransaction[], state: TransferState): Classification {
   const pair = state.pairs.find(pair => hasLeg(pair, item.id))
   if (pair) return pairRecords(pair, records) ? { category: 'transfer', provenance: 'transfer' } : { category: 'unresolved', provenance: 'incomplete' }
-  return state.classifications[item.id] ?? { category: item.sourceCategory === 'transfer' ? 'unresolved' : item.sourceCategory, provenance: 'source' }
+  return baseClassification(item, records, state)
 }
 export function transferReviewStatus(item: BankTransaction, records: readonly BankTransaction[], state: TransferState): BankReview {
   const classification = effectiveClassification(item, records, state)
-  return classification.provenance === 'transfer' ? 'confirmed' : classification.category === 'unresolved' ? 'needs-review' : 'recorded'
+  return classification.provenance === 'transfer' ? 'confirmed' : classification.category === 'unresolved' ? 'needs-review' : classification.provenance === 'manual' || classification.provenance === 'suggestion' ? 'reviewed' : 'recorded'
 }
 export function transferQueue(records: readonly BankTransaction[], state: TransferState) {
   const available = records.filter(item => eligibleRecord(item) && !state.pairs.some(pair => hasLeg(pair, item.id)))
@@ -75,9 +78,17 @@ export function transferCoverage(records: readonly BankTransaction[], state: Tra
     confirmed: pairs.length, transferred: sum(pairs.map(pair => records.find(item => item.id === pair.debitId)!.amount)) }
 }
 
-const labels: Record<ReviewChange['kind'], string> = { confirm: 'Pair confirmed', dismiss: 'Candidate dismissed', restore: 'Candidate restored', unlink: 'Pair unlinked' }
+const labels: Record<PairChange['kind'], string> = { confirm: 'Pair confirmed', dismiss: 'Candidate dismissed', restore: 'Candidate restored', unlink: 'Pair unlinked' }
 function result(state: TransferState, message: string, error = false) { return { ...state, message, error } }
 export function changeTransfers(state: TransferState, action: TransferAction, records: readonly BankTransaction[]): TransferState {
+  if (action.type === 'categorize') {
+    const preview = previewCategories(action.preview.ids, action.preview.target, records, state)
+    if (JSON.stringify(preview) !== JSON.stringify(action.preview)) return result(state, 'The preview is out of date. Review the current records before applying any changes.', true)
+    if (!preview.edits.length) return result(state, 'No eligible category changes to apply. Source records are unchanged.')
+    const classifications = { ...state.classifications }
+    for (const edit of preview.edits) classifications[edit.id] = { ...edit.after }
+    return { ...state, classifications, history: [...state.history, { kind: 'category', edits: preview.edits, label: 'Categories updated' }], message: `${preview.edits.length} category decision${preview.edits.length === 1 ? '' : 's'} applied. ${preview.excluded.length} excluded. Source records and balances are unchanged.`, error: false }
+  }
   if (action.type === 'reset') {
     const initial = createTransferState()
     return { ...initial, pairs: initial.pairs.filter(pair => pairRecords(pair, records)), message: 'Sample decisions reset. Review history cleared.' }
@@ -85,7 +96,18 @@ export function changeTransfers(state: TransferState, action: TransferAction, re
   if (action.type === 'undo') {
     // Skip inverses that require an unavailable or now-occupied source record.
     for (let index = state.history.length - 1; index >= 0; index--) {
-      const change = state.history[index]!, pair = change.pair
+      const change = state.history[index]!
+      if (change.kind === 'category') {
+        const applicable = change.edits.every(edit => {
+          const item = records.find(record => record.id === edit.id)
+          return item && categorySourceKey(item) === edit.source && !categoryRestriction(item, state) && sameClassification(state.classifications[edit.id], edit.after) && (!edit.before || categoryOptions(item).includes(edit.before.category))
+        })
+        if (!applicable) continue
+        const classifications = { ...state.classifications }
+        for (const edit of change.edits) { if (edit.before) classifications[edit.id] = { ...edit.before }; else delete classifications[edit.id] }
+        return { ...state, classifications, history: state.history.filter((_, i) => i !== index), message: 'Category changes undone together. Linked refunds follow the restored purchase categories.', error: false }
+      }
+      const pair = change.pair
       let pairs = state.pairs, dismissed = state.dismissed
       if (change.kind === 'confirm') {
         if (!pairs.some(item => item.id === pair.id)) continue

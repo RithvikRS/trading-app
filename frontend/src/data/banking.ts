@@ -9,11 +9,11 @@ export const bankOwners: Record<BankId, string> = { hdfc: 'sample-owner', sbi: '
 export const bankCategories = {
   salary: 'Salary', interest: 'Interest', housing: 'Housing', utilities: 'Utilities', transport: 'Transport',
   dining: 'Dining', shopping: 'Shopping', groceries: 'Food & groceries', health: 'Health', subscriptions: 'Subscriptions',
-  fee: 'Bank fees', investment: 'Investment funding', transfer: 'Internal transfer', refund: 'Refund', unresolved: 'Uncategorized',
+  fee: 'Bank fees', 'other-expense': 'Other expense', 'other-income': 'Other income', investment: 'Investment funding', transfer: 'Internal transfer', refund: 'Refund', unresolved: 'Uncategorized',
 }
 export type BankCategory = keyof typeof bankCategories
-export type BankReview = 'recorded' | 'confirmed' | 'needs-review'
-export const reviewLabels: Record<BankReview, string> = { recorded: 'Source recorded', confirmed: 'Transfer confirmed', 'needs-review': 'Needs review' }
+export type BankReview = 'recorded' | 'confirmed' | 'reviewed' | 'needs-review'
+export const reviewLabels: Record<BankReview, string> = { recorded: 'Source recorded', confirmed: 'Transfer confirmed', reviewed: 'Category reviewed', 'needs-review': 'Needs review' }
 export interface BankTransaction {
   id: string; accountId: BankId; ownerId: string; sourceId: string; date: string; valueDate?: string; transferReference?: string
   direction: 'debit' | 'credit'; amount: Money; status: 'posted' | 'pending'

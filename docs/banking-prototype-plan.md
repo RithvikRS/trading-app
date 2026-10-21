@@ -1,6 +1,6 @@
 # Banking prototype plan
 
-Status: bank activity and transaction inspection (2C.1) are merged into `main`. Transfer matching review (2C.2) is implemented; category corrections (2C.3) remain planned. The investment screens through Step 2B.2 are merged into `main`. See the [implementation notes](ui-prototype.md#banking-activity-and-inspection) for delivered behavior and evidence.
+Status: bank activity and transaction inspection (2C.1) are merged into `main`. Transfer matching review (2C.2) is also merged into `main`; category corrections (2C.3) are implemented. The investment screens through Step 2B.2 are merged into `main`. See the [implementation notes](ui-prototype.md#banking-activity-and-inspection) for delivered behavior and evidence.
 
 The screen should make three things clear: what moved, whether a movement belongs to another tracked account, and which classifications need attention. Security and financial integrity take priority over automation. All records and review actions use fictional data in memory.
 
@@ -10,7 +10,7 @@ The screen should make three things clear: what moved, whether a movement belong
 | --- | --- | --- | --- |
 | 2C.1 | Bank activity, dated balances, filters, and transaction inspection | Implemented | `feat(banking): add searchable bank activity` |
 | 2C.2 | Explainable transfer candidates, pair review, and reversible matching | Implemented | `feat(banking): add transfer matching review` |
-| 2C.3 | Category suggestions, individual/bulk corrections, and undo | Planned | `feat(banking): add transaction category review` |
+| 2C.3 | Category suggestions, individual/bulk corrections, and undo | Implemented | `feat(banking): add transaction category review` |
 
 Each increment delivers working behavior, meaningful tests, documentation, and light/dark desktop/mobile evidence through the existing `dev` to `main` workflow. Transfer and category editing become interactive only in their respective increments. Budgets, recurring detection, monthly cash-flow charts, and category trends belong to Step 2D. Import walkthroughs belong to Step 2E.
 
@@ -20,11 +20,11 @@ Retain Indigo & Apricot, the shared header/sidebar, currency and privacy control
 
 Desktop uses a semantic transaction table and a right-side inspection panel. On mobile, transactions become readable cards and inspection uses a full-height dialog. Keep primary actions reachable without horizontal scrolling, with at least 44 px primary touch targets where practical. Avoid a chart in this increment: activity and outstanding reviews are the main tasks.
 
-The activity toolbar contains search, date range, account selection, and an expandable filter area. Transfers provides a review view inside Banking with outstanding pair/record counts. Categories review remains planned. The separate top-level Activity destination remains planned; this increment covers bank records only.
+The activity toolbar contains search, date range, account selection, and an expandable filter area. Transfers provides a review view inside Banking with outstanding pair/record counts. Categories provides its own filtered review queue, correction previews, and classified-spending coverage. The separate top-level Activity destination remains planned; this increment covers bank records only.
 
 ## Step 2C.1: Bank activity
 
-Implemented with 28 fictional transactions, of which 26 are posted and two pending. Inspection uses a modal panel on the right on desktop and fills the viewport width on mobile. Source disclosures reconcile the entire supplied statement period independently of list filters. Original records and source categories remain read-only. Transfer matching decisions are available in the separate Transfers view; a category editor remains planned.
+Implemented with 28 fictional transactions, of which 26 are posted and two pending. Inspection uses a modal panel on the right on desktop and fills the viewport width on mobile. Source disclosures reconcile the entire supplied statement period independently of list filters. Original records and source categories remain read-only. Transfer matching decisions are available in Transfers; category corrections are available in Categories and transaction inspection.
 
 | Area | Planned behavior |
 | --- | --- |
@@ -89,6 +89,8 @@ Confirmed internal transfers are excluded from income/spending classification ev
 Keep transfer fees as separate expense records; never stretch the amount comparison to absorb a fee. Unequal-amount, split/many-to-one, cross-currency, and cross-owner matching are outside this increment. Investment funding and transfers to an untracked account do not acquire a fabricated bank counterpart. They retain an explicit source classification when provided, or remain unresolved when evidence is insufficient.
 
 ## Step 2C.3: Category review
+
+Implemented with three supplied suggestions, individual and bulk correction previews, shared undo/reset, protected transaction roles, and a scoped classified-spending preview. Original records and balances remain unchanged. See the [implementation notes](ui-prototype.md#category-review-and-corrections) for behavior, calculations, and verification.
 
 Show a queue for uncategorized transactions, suggestions needing review, and explicitly unresolved classifications. The inspector retains the original bank narration/category alongside the effective category, its provenance, and its review status. Offer a small fixed taxonomy appropriate to the fixtures: salary, interest, food/groceries, dining, shopping, utilities, housing, transport, health, subscriptions, bank fees, and other income/expense. Keep internal transfers, investment funding, refunds, and unresolved activity as distinct transaction roles rather than ordinary spending categories.
 

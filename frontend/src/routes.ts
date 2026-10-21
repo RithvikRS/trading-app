@@ -50,7 +50,7 @@ export function useScreen() {
   }, [])
   useLayoutEffect(() => {
     if (!navigated.current) return
-    const target = document.getElementById(focusTarget.current) ?? document.getElementById('page-title')
+    const target = document.getElementById(focusTarget.current) ?? (focusTarget.current.startsWith('category-link-') ? document.getElementById('category-review-title') : null) ?? document.getElementById('page-title')
     target?.focus({ preventScroll: true })
     // History traversal may scroll to the fragment after popstate dispatch.
     const frame = requestAnimationFrame(() => window.scrollTo({ top: scroll.current[scrollKey(route)] ?? 0, behavior: 'instant' }))
