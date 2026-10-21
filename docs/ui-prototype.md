@@ -1,6 +1,6 @@
 # Frontend prototype
 
-Step 2A provides the local Overview screen and frontend foundation. Steps 2B.1 and 2B.2 add investment holdings and details; Step 2C.1 adds banking activity and transaction inspection; Step 2C.2 adds transfer matching review. All financial records, dates, and exchange rates are fictional. Overview, Investments, and Banking are available through navigation; other destinations are visibly marked **Soon** and are not interactive links.
+Step 2A provides the local Overview screen and frontend foundation. Steps 2B.1 and 2B.2 add investment holdings and details; Steps 2C.1–2C.3 add banking activity, inspection, transfer matching, and category corrections. Step 2D.1 adds monthly category budgets. All financial records, dates, and exchange rates are fictional. Overview, Investments, Banking, and Budgets are available through navigation; other destinations are visibly marked **Soon** and are not interactive links.
 
 ## Behavior
 
@@ -104,6 +104,32 @@ Accepting the household-supplies suggestion adds INR 3,500 to classified expense
 
 Decisions survive app navigation and compatible partial/loading/error states. Loading or changing source coverage clears pending selections/previews; empty mode clears decisions and history. Reload clears every review decision. Inspector editing retains keyboard containment, Escape, and return to the originating link; if the reviewed row leaves its queue, focus returns to the category heading. The Overview activity excerpt reads the same effective classification. All preview, refund, and coverage amounts follow INR/USD and shared masking, while announcements contain counts and categories without monetary values. No new financial storage, export, credential, backend, network, or payment capability is introduced.
 
+## Monthly category budgets
+
+`#/budgets` provides an October 2026 plan across both HDFC and SBI, with eight supplied INR limits and all ten expense categories. Full-month limits are compared with available posted activity through 20 October, 10:00 IST, without proration. Utilities and Health initially exceed their limits, Housing and Subscriptions exactly match, Health has an explicit zero target, and Bank fees/Other expense have no limit. Over-limit categories appear first, with stable taxonomy order otherwise. Cash flow and Recurring are labeled Planned; there is no historical month selector yet.
+
+| Initial plan | INR |
+| --- | ---: |
+| Planned category limits | 38,199.00 |
+| Spending in budgeted categories | 35,959.00 |
+| Provisional remaining | 2,240.00 |
+| Spending without a category limit | 5.90 |
+| All net classified spending | 35,964.90 |
+
+Budgeted plus unbudgeted actuals reconcile to Banking's classified-spending preview. Expense debits and verified refunds use the existing effective classifications and full loaded refund evidence. A refund is attributed to its purchase category in the refund's booking period, even when that purchase falls outside the period. Pending records, investments, confirmed transfers, and unresolved entries remain outside classified spending. A negative category actual stays a net refund; remaining can exceed the original limit. Original transactions, dated bank balances, and the Overview asset baseline are unchanged.
+
+Source coverage and classification coverage are separate: the complete fixture covers both statements through the cutoff but still contains six unresolved posted movements. The coverage disclosure shows INR 16,500 outgoing, INR 18,000 incoming, and two pending entries. Missing source records or unresolved posted activity make remaining amounts and category statuses provisional. An observed zero does not establish zero spending. The partial fixture excludes the missing SBI bill, reduces budgeted actuals to INR 33,759, and preserves independent balance snapshots. Remaining is a difference against category limits, never available cash or a forecast.
+
+Expand a category to see gross expenses, verified refunds, net spending, and contributing source records. Inspection uses the existing Banking dialog with category corrections. The session-only origin restores Budgets, its expanded category, scroll, and exact record link on return; a record that moves to another category falls back to the category heading. Direct transaction reload still opens ordinary Banking inspection. Back/Forward, mobile navigation, and category corrections share the same model and display preferences.
+
+The limit editor accepts exact decimal INR strings from zero through 999999999.99, at most two decimal places, with a 32-character input bound. It rejects empty, negative, comma-separated, exponent, non-finite, oversized, and excess-precision input without rounding or losing the draft. USD reporting shows a labeled equivalent while the editor remains explicitly INR. Add/Edit, Cancel, Remove category limit, Undo budget change, and Reset sample budgets operate only on local planning data. Zero and Not set are distinct; removing every limit shows No budgets set, while actual spending remains visible. Unchanged saves do not create history.
+
+Budget history is separate from Banking review history. Neither domain's reset rewrites the other. Compatible partial/loading/error/retry and navigation preserve decisions; loading hides values and closes the editor. Empty clears planning/review state, and restoring populated or partial samples reinstates the supplied defaults. Reload clears all planning/review edits, retaining only existing display preferences. Budget ownership and month are fixed to the known sample scope; invalid scopes cannot accept edits.
+
+INR/USD applies to limits, actuals, remaining/over-limit values, summaries, coverage, detail breakdowns, and original/converted source records. Masking removes these values and the progress geometry from the DOM. An open editor replaces the monetary input with a neutral placeholder, keeps its draft only in memory, and disables Save/Remove until amounts are shown; a dialog privacy control makes this reversible. Dialogs contain keyboard focus, support Escape/Cancel, and restore their trigger. Status announcements contain no amounts. No financial data, planning state, or history is written to browser storage, URLs, logs, or external services.
+
+Budget state, bounded parsing, monthly actuals, and summaries live in `frontend/src/data/budgets.ts`. The workspace and editor are `Budgets.tsx` and `BudgetEditor.tsx`, with shared display/money helpers and `budgets.css`. There are no new dependencies or backend capabilities.
+
 ## Theme and chart colors
 
 Light mode pairs pale indigo backgrounds and white panels with warm apricot highlights. Dark mode uses indigo backgrounds and panels with brighter apricot accents. Navigation, summaries, controls, account monograms, history charts, and the favicon follow the palette.
@@ -155,7 +181,7 @@ Local verification on 21 October 2026:
 
 | Check | Result |
 | --- | --- |
-| `npm run check` | Passed: 181 tests across fourteen files, TypeScript checks, production build |
+| `npm run check` | Passed: 217 tests across sixteen files, TypeScript checks, production build; subsequent affected checks are recorded under Step 2D.1 below |
 | Financial fixtures | Exact totals, allocation/account reconciliation, fractional valuation and rounding, missing values, duplicate-security identity, currency display, transfer exclusion, fixed weight denominator, lot-unit reconciliation, supplied purchase amounts and distinct unknown/zero fees |
 | Component behavior | Combined holdings filters, literal search, numeric/stable sorting, missing values last, all 14 direct detail links, converted acquisition displays and unchanged source records, currency/range, privacy including hidden DOM text and accessible attributes, originating-row focus, state transitions, retry, persisted preferences, blocked/malformed storage |
 | Banking accounting | HDFC/SBI opening/posted movement/closing reconciliation; unchanged Overview totals; pending exclusion; partial discrepancy without balance adjustment; repeated payments preserved; immutable source accessors |
@@ -164,6 +190,7 @@ Local verification on 21 October 2026:
 | Transfer interactions | Two-stage confirmation, source inspection outside activity filters with exact link focus return, shared Overview classification, preserved decisions across navigation/partial/error/retry, empty/reset/reload behavior, INR/USD and masking across coverage, pairs, source inspection, and status announcements |
 | Category integrity | Direction/role restrictions, unapplied suggestions, preserved manual provenance, exact bulk previews/exclusions, stale-preview rejection, atomic shared undo, refund attribution across date filters, incomplete/excessive refund exclusion, and unchanged ledger/balance/assets |
 | Category interactions | Individual and bulk review, visible-only selection, selection clearing on filters/status, source/effective inspection, shared Overview updates, currency/privacy, preserved decisions and reset/reload behavior, keyboard focus and structural axe checks |
+| Budget integrity and interactions | Exact bounded inputs, zero/unset limits, edit/remove/cancel/undo/reset, source-linked refunds and classifications, partial coverage, currency/privacy including open drafts and progress geometry, navigation/focus, and separate review histories |
 | Structural accessibility | Axe check passed in jsdom; color contrast checked separately in the browser |
 | Responsive browser review | Light/dark screenshots at 1440, 768, and 390 px; no horizontal overflow, including at 320 px with a scrollbar |
 | Keyboard | Drawer forward/reverse focus wrap and Escape return; destination heading focus, visible mobile sorting without hidden tab stops; chart slider arrow navigation and data table |
@@ -270,6 +297,22 @@ Production-preview logs contained no warnings/errors. The final build used local
 
 Additional evidence: [bulk preview with an excluded credit in USD](screenshots/categories-bulk-1440-dark.jpg), [individual correction preview](screenshots/categories-inspector-390-dark.jpg), and [partial coverage with retained reviews and a load error](screenshots/categories-partial-error-390-dark.jpg). All records are fictional. Desktop/tablet captures use tall viewports to show the queue; mobile captures focus on the review controls and suggestions. Reflow measurements used a 1000 px viewport height.
 
+### Monthly budget verification and screenshots (Step 2D.1)
+
+The full `npm run check` run passed 217 tests across 16 files, TypeScript, and the production build. After tightening source-navigation focus and empty-to-partial recovery and adding a no-budgets regression, all 71 affected budget/banking/category/transfer component tests passed, followed by TypeScript and build. A display-rounding note and mobile spacing adjustment were followed by all 12 budget component tests, TypeScript, and production build. A subsequent CSS-only maximum-value wrapping fix passed TypeScript/build and browser reflow checks in INR and USD at 320 px. The current suite contains 218 tests; the added regression is included in those affected runs. No dependencies changed.
+
+Production-browser review exercised invalid limit entry, save and undo, canonical INR editing while reporting USD, masked draft removal/restoration, source inspection and Escape return, purchase/refund category propagation, and retained planning data through partial/error/retry. Both themes fit at 1440, 768, 390, and 320 px without page-wide overflow. Expanded details and narrow editing/source dialogs were checked, including forward/reverse focus wrap. Measured non-gradient text contrast remained at least approximately 4.80:1 light and 5.93:1 dark; existing hero gradient tokens are unchanged. Structural axe checks passed for the workspace, editor, and expanded category. Actual 400% zoom, enlarged text, full screen-reader testing, and a runtime reduced-motion preference switch remain outstanding as described above.
+
+The final build uses local script/style assets. Production response/security headers were verified, and browser logs contained no warnings/errors. Source records and bank snapshots are unchanged. Display conversions use exact original-INR totals before rounding; a USD note explains why independently rounded displayed figures can differ slightly.
+
+| Monthly budgets | Light | Dark |
+| --- | --- | --- |
+| Desktop, 1440 px | [Screenshot](screenshots/budgets-1440-light.jpg) | [Screenshot](screenshots/budgets-1440-dark.jpg) |
+| Tablet, 768 px | [Screenshot](screenshots/budgets-768-light.jpg) | [Screenshot](screenshots/budgets-768-dark.jpg) |
+| Mobile, 390 px | [Screenshot](screenshots/budgets-390-light.jpg) | [Screenshot](screenshots/budgets-390-dark.jpg) |
+
+Additional evidence: [USD reporting with an INR limit editor](screenshots/budgets-editor-390-dark.jpg), [masked input and progress](screenshots/budgets-masked-editor-390-dark.jpg), [expense/refund source breakdown in USD](screenshots/budgets-detail-1440-light.jpg), and [retained limits during a partial-data load failure](screenshots/budgets-partial-error-390-dark.jpg). The [maximum-limit example at 320 px](screenshots/budgets-large-limit-320-light.jpg) verifies that large INR values wrap without horizontal overflow. All values are fictional. Tall viewport captures show the layout; reflow measurements used a 1000 px height.
+
 ## Next increment
 
-[Step 2D](budgets-prototype-plan.md) remains planned in three increments: monthly category budgets (2D.1), reconciled historical cash-flow trends (2D.2), and recurring-expense review (2D.3). Existing source classifications and refund/transfer rules will supply actuals; limits and expected commitments remain separate planning data. No Step 2D runtime behavior is implemented. Import/connection walkthroughs follow in Step 2E. Production data and security foundations remain separate work.
+Monthly category budgets (2D.1) are implemented. [Cash-flow trends (2D.2)](budgets-prototype-plan.md#step-2d2-cash-flow-trends) remain planned and require reconciled historical fixtures before multi-month charts. Recurring-expense review follows in 2D.3, then import/connection walkthroughs in Step 2E. Production data and security foundations remain separate work.
