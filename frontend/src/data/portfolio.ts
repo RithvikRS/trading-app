@@ -1,8 +1,9 @@
 import { money, sum } from './money'
 import type { Money } from './money'
 import { getHoldings } from './holdings'
-import { bankNames, getBankSnapshots, getBankTransactions, sampleTransfer } from './banking'
-import { createTransferState, transferReviewStatus } from './transfers'
+import { bankCategories, bankNames, getBankSnapshots, getBankTransactions, sampleTransfer } from './banking'
+import { createTransferState, effectiveClassification, transferReviewStatus } from './transfers'
+import { expenseCategories } from './categories'
 import type { TransferState } from './transfers'
 export { money, sum, convert, formatMoney, axisLabel } from './money'
 export type { Currency, Money } from './money'
@@ -92,9 +93,10 @@ export function getActivity(partial = false, review: TransferState = createTrans
   const transfer = records.find(item => item.id === sampleTransfer.debitId)
   const confirmed = transfer && transferReviewStatus(transfer, records, review) === 'confirmed'
   const grocery = records.find(item => item.id === 't14')
+  const groceryCategory = grocery ? effectiveClassification(grocery, records, review).category : 'unresolved'
   return [...investmentActivity,
     ...(transfer ? [{ id: transfer.id, title: confirmed ? 'Transfer between accounts' : 'Account movement needs review', detail: confirmed ? 'HDFC Bank → SBI · Confirmed pair' : 'HDFC Bank · Source transfer label, unreviewed', date: transfer.date, kind: confirmed ? 'transfer' as const : 'unresolved' as const, value: transfer.amount }] : []),
-    ...(grocery ? [{ id: grocery.id, title: grocery.description, detail: 'HDFC Bank · Food & groceries', date: grocery.date, kind: 'spending' as const, value: grocery.amount }] : []),
+    ...(grocery ? [{ id: grocery.id, title: grocery.description, detail: `HDFC Bank · ${bankCategories[groceryCategory]}`, date: grocery.date, kind: expenseCategories.includes(groceryCategory) ? 'spending' as const : 'unresolved' as const, value: grocery.amount }] : []),
   ]
 }
 export const activity: readonly Activity[] = getActivity()

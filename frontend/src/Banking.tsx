@@ -6,16 +6,20 @@ import type { BankingControls, BankingFilters } from './data/banking'
 import { recordDate, sourceTimestamp } from './holdingPresentation'
 import TransactionInspector from './TransactionInspector'
 import TransferReview from './TransferReview'
+import CategoryReview from './CategoryReview'
+import { categorySuggestion } from './data/categories'
+import type { CategoryControls } from './data/categories'
 import { effectiveClassification, transferQueue, transferReviewStatus } from './data/transfers'
 import type { TransferAction, TransferControls, TransferState } from './data/transfers'
 
 interface Props {
+  categoryControls: CategoryControls; onCategoryControls: (value: CategoryControls) => void
   transferState: TransferState; transferControls: TransferControls; onTransferControls: (value: TransferControls) => void; onTransferAction: (action: TransferAction) => void
   view: 'populated' | 'partial' | 'loading' | 'empty'; controls: BankingControls; onChange: (value: BankingControls) => void
   filtersOpen: boolean; onToggleFilters: () => void; onReset: () => void; onOpen: (id: string) => void
   transactionId?: string; onClose: () => void; onTogglePrivacy: () => void
 }
-export default function Banking({ transferState, transferControls, onTransferControls, onTransferAction, view, controls, onChange, filtersOpen, onToggleFilters, onReset, onOpen, transactionId, onClose, onTogglePrivacy }: Props) {
+export default function Banking({ categoryControls, onCategoryControls, transferState, transferControls, onTransferControls, onTransferAction, view, controls, onChange, filtersOpen, onToggleFilters, onReset, onOpen, transactionId, onClose, onTogglePrivacy }: Props) {
   const { currency, hidden } = useContext(DisplayContext)
   const filtersId = useId()
   const records = view === 'empty' || view === 'loading' ? [] : getBankTransactions(view === 'partial')
@@ -44,10 +48,10 @@ export default function Banking({ transferState, transferControls, onTransferCon
     {view === 'loading' ? <section className="holdings-loading" aria-busy="true" aria-label="Loading bank activity"><span className="sr-only" role="status">Loading sample bank activity</span><div className="skeleton-panel"><div className="skeleton number" />{[0, 1, 2, 3].map(row => <div key={row} className="skeleton holding-skeleton-row" />)}</div></section>
       : view === 'empty' ? <section className="empty-state"><div className="empty-art" aria-hidden="true"><div /><Landmark size={39} /></div><span className="eyebrow">A little more clarity</span><h2>No bank activity loaded.</h2><p>This sample view has no bank accounts or transactions.</p><button className="primary-button" onClick={() => { reset(); onReset() }}>Explore sample banking</button></section>
         : <>
-          <div className="bank-workspace-nav" role="group" aria-label="Banking view"><button aria-pressed={transferControls.view === 'activity'} onClick={() => onTransferControls({ ...transferControls, view: 'activity' })}>Activity</button><button aria-pressed={transferControls.view === 'transfers'} onClick={() => onTransferControls({ ...transferControls, view: 'transfers' })}>Transfers<span>{queue.suggested.length + queue.ambiguous.length + queue.unmatched.length}</span></button></div>
-          {(transferControls.view === 'transfers' || transferState.history.length > 0) && <div className="bank-review-history"><div><p><strong>{transferState.history.at(-1)?.label ?? 'No review changes yet'}</strong>{transferState.history.length} {transferState.history.length === 1 ? 'change' : 'changes'} in memory · Reload clears decisions</p></div><div><button className="outlined-button" disabled={transferState.history.length === 0} onClick={() => { onTransferAction({ type: 'undo' }); onTransferControls({ ...transferControls, selected: null }) }}>Undo last change</button><button className="outlined-button" onClick={() => { onTransferAction({ type: 'reset' }); onTransferControls({ ...transferControls, selected: null }) }}>Reset sample decisions</button></div></div>}
+          <div className="bank-workspace-nav" role="group" aria-label="Banking view"><button aria-pressed={transferControls.view === 'activity'} onClick={() => onTransferControls({ ...transferControls, view: 'activity' })}>Activity</button><button aria-pressed={transferControls.view === 'transfers'} onClick={() => onTransferControls({ ...transferControls, view: 'transfers' })}>Transfers<span>{queue.suggested.length + queue.ambiguous.length + queue.unmatched.length}</span></button><button aria-pressed={transferControls.view === 'categories'} onClick={() => onTransferControls({ ...transferControls, view: 'categories' })}>Categories<span>{records.filter(item => classification.category(item) === 'unresolved' || categorySuggestion(item, transferState)).length}</span></button></div>
+          {(transferControls.view !== 'activity' || transferState.history.length > 0) && <div className="bank-review-history"><div><p><strong>{transferState.history.at(-1)?.label ?? 'No review changes yet'}</strong>{transferState.history.length} {transferState.history.length === 1 ? 'change' : 'changes'} in memory · Reload clears decisions</p></div><div><button className="outlined-button" disabled={transferState.history.length === 0} onClick={() => { onTransferAction({ type: 'undo' }); onTransferControls({ ...transferControls, selected: null }) }}>Undo last change</button><button className="outlined-button" onClick={() => { onTransferAction({ type: 'reset' }); onTransferControls({ ...transferControls, selected: null }) }}>Reset sample decisions</button></div></div>}
           {transferState.message && <p className={`review-announcement ${transferState.error ? 'error' : ''}`} role={transferState.error ? 'alert' : 'status'}>{transferState.message}</p>}
-          {transferControls.view === 'transfers' ? <TransferReview incomplete={view === 'partial'} records={records} state={transferState} controls={transferControls} onControls={onTransferControls} onAction={onTransferAction} onOpen={onOpen} visibleIds={new Set(selected.map(item => item.id))} /> : <>
+          {transferControls.view === 'transfers' ? <TransferReview incomplete={view === 'partial'} records={records} state={transferState} controls={transferControls} onControls={onTransferControls} onAction={onTransferAction} onOpen={onOpen} visibleIds={new Set(selected.map(item => item.id))} /> : transferControls.view === 'categories' ? <CategoryReview incomplete={view === 'partial'} records={records} state={transferState} controls={categoryControls} onControls={onCategoryControls} onAction={onTransferAction} onOpen={onOpen} /> : <>
           <section className="bank-accounts" aria-label="Bank balance snapshots">{snapshots.map(snapshot => {
             const reconciliation = bankReconciliation(snapshot, records)
             const complete = snapshot.complete && reconciliation.difference?.minor === 0n
@@ -74,7 +78,7 @@ export default function Banking({ transferState, transferControls, onTransferCon
               <label className="holding-select"><span>Posting status</span><select value={controls.filters.status} onChange={event => filter('status', event.target.value)}><option value="">All statuses</option><option value="posted">Posted</option><option value="pending">Pending</option></select></label>
               <label className="holding-select"><span>Effective category</span><select value={controls.filters.category} onChange={event => filter('category', event.target.value)}><option value="">All categories</option>{Object.entries(bankCategories).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
               <label className="holding-select"><span>Review status</span><select value={controls.filters.review} onChange={event => filter('review', event.target.value)}><option value="">All review states</option>{Object.entries(reviewLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-              <p>Transfer review updates effective classifications. Category editing is planned; source categories stay unchanged.</p>
+              <p>Transfer and category review update effective classifications. Original source categories stay unchanged.</p>
             </div>
             {activeFilters.length > 0 && <div className="active-holding-filters" aria-label="Active banking filters">{activeFilters.map(([key, value]) => <button key={key} aria-label={`Remove ${filterLabel(key, value)} filter`} onClick={() => filter(key as keyof BankingFilters, defaultBankingFilters[key as keyof BankingFilters])}>{filterLabel(key, value)}<X size={12} aria-hidden="true" /></button>)}<button className="clear-filters" onClick={reset}>Clear all</button></div>}
             <section className="bank-movement-summary" aria-label="Account and date range movements"><div className="bank-summary-context"><strong>{controls.filters.account ? bankNames[controls.filters.account] : 'All accounts'} · Available activity</strong><span>Account/date range only · Includes transfers · {currency}</span></div>{datesValid ? <div className="bank-movement-values"><div><span><ArrowDownLeft size={14} aria-hidden="true" />Money in · Posted</span><strong><Amount value={totals.credits} /></strong></div><div><span><ArrowUpRight size={14} aria-hidden="true" />Money out · Posted</span><strong><Amount value={totals.debits} /></strong></div><div><span>Recorded movements</span><strong>{totals.posted} <small>posted</small></strong><span>{totals.pending} pending · Excluded from totals</span></div></div> : <p>Movement totals unavailable until the date range is valid.</p>}</section>
@@ -84,6 +88,6 @@ export default function Banking({ transferState, transferControls, onTransferCon
           </section>
           </>}
         </>}
-    {transactionId && <TransactionInspector review={transferState} key={transactionId} id={transactionId} records={records} snapshots={snapshots} loading={view === 'loading'} onClose={onClose} onTogglePrivacy={onTogglePrivacy} />}
+    {transactionId && <TransactionInspector onReviewAction={onTransferAction} review={transferState} key={transactionId} id={transactionId} records={records} snapshots={snapshots} loading={view === 'loading'} onClose={onClose} onTogglePrivacy={onTogglePrivacy} />}
   </>
 }
