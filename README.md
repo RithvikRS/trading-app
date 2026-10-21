@@ -31,7 +31,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 
 ## Direction
 
-[Step 2D](docs/budgets-prototype-plan.md) provides monthly category budgets, historical cash-flow analysis, and recurring-expense review (2D.1–2D.3). Import and connection walkthroughs (2E) remain planned.
+[Step 2D](docs/budgets-prototype-plan.md) provides monthly category budgets, historical cash-flow analysis, and recurring-expense review (2D.1–2D.3). [Step 2E](docs/imports-prototype-plan.md) plans connection status, bank import previews, reversible review decisions, and investment statement walkthroughs with bundled samples.
 
 - Indian and US stocks, ETFs, and direct/regular mutual funds.
 - UBS Accenture ESPP lots, dividends, and cash movements.
@@ -48,6 +48,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Product plan](docs/plan.md) | Scope and staged roadmap |
 | [UI prototype plan](docs/ui-prototype-plan.md) | Visual direction, increments, acceptance criteria |
 | [Budgets and cash-flow plan](docs/budgets-prototype-plan.md) | Step 2D increments, financial rules, security, and acceptance criteria |
+| [Import and connection prototype plan](docs/imports-prototype-plan.md) | Step 2E increments, review rules, sample boundaries, and verification |
 | [Prototype implementation](docs/ui-prototype.md) | Behavior, calculations, security boundaries, verification |
 | [Architecture](docs/architecture.md) | Components, database decisions, financial data rules |
 | [Security](docs/security.md) | Threat model, controls, release gates |

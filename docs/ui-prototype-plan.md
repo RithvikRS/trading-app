@@ -1,6 +1,6 @@
 # UI prototype plan
 
-The prototype establishes visual design and everyday interactions before connecting financial accounts. Steps 2A, 2B.1, and 2B.2 provide the Overview, frontend foundation, investment holdings list, and holding details and are merged into `main`. Banking activity/inspection, transfer matching, and category corrections through Step 2C.3 are also merged into `main`. The [implementation notes](ui-prototype.md) describe these screens and their verification. [Step 2D.1](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) adds monthly category budgets; Step 2D.2 adds reconciled cash-flow trends; Step 2D.3 adds recurring-expense review; Step 2E onward remains planned.
+The prototype establishes visual design and everyday interactions before connecting financial accounts. Steps 2A, 2B.1, and 2B.2 provide the Overview, frontend foundation, investment holdings list, and holding details and are merged into `main`. Banking activity/inspection, transfer matching, and category corrections through Step 2C.3 are also merged into `main`. The [implementation notes](ui-prototype.md) describe these screens and their verification. [Step 2D.1](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) adds monthly category budgets; Step 2D.2 adds reconciled cash-flow trends; Step 2D.3 adds recurring-expense review. Step 2D is merged into `main`. [Step 2E](imports-prototype-plan.md) defines the planned connection-status and import-review walkthroughs.
 
 ## Scope and visual direction
 
@@ -22,10 +22,13 @@ The prototype runs on loopback with fabricated fixtures. Backend services, datab
 | 2C.1 | [Bank activity and transaction inspection](banking-prototype-plan.md#step-2c1-bank-activity) | Merged into main |
 | 2C.2 | [Transfer matching review](banking-prototype-plan.md#step-2c2-transfer-matching-review) | Merged into main |
 | 2C.3 | [Category review and corrections](banking-prototype-plan.md#step-2c3-category-review) | Merged into main |
-| 2D.1 | [Monthly category budgets](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) | Implemented |
-| 2D.2 | [Cash-flow trends](budgets-prototype-plan.md#step-2d2-cash-flow-trends) | Implemented |
-| 2D.3 | [Recurring commitments](budgets-prototype-plan.md#step-2d3-recurring-commitments) | Implemented |
-| 2E | Import-review walkthrough and connection status with bundled samples | Planned |
+| 2D.1 | [Monthly category budgets](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) | Merged into main |
+| 2D.2 | [Cash-flow trends](budgets-prototype-plan.md#step-2d2-cash-flow-trends) | Merged into main |
+| 2D.3 | [Recurring commitments](budgets-prototype-plan.md#step-2d3-recurring-commitments) | Merged into main |
+| 2E.1 | [Connections and source coverage](imports-prototype-plan.md#step-2e1-connections-and-source-coverage) | Planned |
+| 2E.2 | [Bank import previews](imports-prototype-plan.md#step-2e2-bank-import-previews) | Planned |
+| 2E.3 | [Review decisions and completion](imports-prototype-plan.md#step-2e3-review-decisions-and-completion) | Planned |
+| 2E.4 | [Investment statement walkthroughs](imports-prototype-plan.md#step-2e4-investment-statement-walkthroughs) | Planned |
 
 Refine each increment after reviewing the preceding screen. Future destinations may appear with planned status, but must not resemble working links. Import walkthroughs use fixtures without file inputs or provider sign-in.
 
@@ -173,3 +176,7 @@ The [banking prototype plan](banking-prototype-plan.md) defines three increments
 ## Step 2D: Budgets and cash flow
 
 The [budgets and cash-flow plan](budgets-prototype-plan.md) defines monthly category limits and actuals (2D.1), reconciled historical cash-flow trends (2D.2), and recurring-expense review (2D.3). It keeps planned amounts separate from recorded activity, preserves transfer/refund rules, and distinguishes source coverage from classification coverage. October remains month-to-date; prior months require reconciled source fixtures. Monthly category budgets (2D.1) are implemented with in-memory limits and separate undo/reset. Cash-flow trends (2D.2) are implemented with reconciled August/September statements, explicit coverage, matching-day comparisons, daily details, and full source inspection. Recurring review (2D.3) is implemented with supplied monthly evidence, reversible decisions, missing-source handling, and fixed/range commitments kept separate from actuals. All inherit the existing security/privacy boundary.
+
+## Step 2E: Import review and connection status
+
+The [Step 2E plan](imports-prototype-plan.md) separates source coverage/status walkthroughs, read-only bank batch previews, reversible review decisions with sample receipts, and investment statement scenarios. Connections becomes the entry point for source details and sample import reviews. All examples remain bundled and local: no uploads, provider sign-in, real parser, network sync, or committed financial changes. Completion records only an in-memory sample review outcome. Existing financial baselines and review domains remain unchanged.
