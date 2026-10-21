@@ -2,7 +2,7 @@
 
 Planning baseline: 21 October 2026.
 
-Steps 2A and 2B.1, the responsive Overview and searchable holdings list, are merged into `main`. [Step 2B.2](ui-prototype-plan.md#holding-details-2b2) adds holding detail pages with source dates, selected sample activity, fund information, and illustrative UBS ESPP lots. See the [implementation notes](ui-prototype.md) for current behavior and verification. Step 2C and later screens remain planned.
+Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. See the [implementation notes](ui-prototype.md) for current behavior and verification. [Step 2C](banking-prototype-plan.md) is planned as bank activity and inspection, transfer matching review, and category corrections in three increments. Later screens remain planned.
 
 Build a personal finance application that provides a trustworthy view of investments and banking activity with as little manual maintenance as supported integrations allow. Security takes priority over convenience, cost optimization, and delivery speed. Financial accuracy and recoverability are part of that requirement.
 

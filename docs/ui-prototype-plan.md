@@ -1,6 +1,6 @@
 # UI prototype plan
 
-The prototype establishes visual design and everyday interactions before connecting financial accounts. Steps 2A and 2B.1 provide the Overview, frontend foundation, and investment holdings list and are merged into `main`. Step 2B.2 implements holding details; [implementation notes](ui-prototype.md) describe the screens and their verification. Step 2C and later screens remain planned.
+The prototype establishes visual design and everyday interactions before connecting financial accounts. Steps 2A, 2B.1, and 2B.2 provide the Overview, frontend foundation, investment holdings list, and holding details and are merged into `main`. The [implementation notes](ui-prototype.md) describe these screens and their verification. [Step 2C](banking-prototype-plan.md) and later screens remain planned.
 
 ## Scope and visual direction
 
@@ -18,8 +18,10 @@ The prototype runs on loopback with fabricated fixtures. Backend services, datab
 | --- | --- | --- |
 | 2A | Frontend foundation, responsive shell, Overview | Merged into main |
 | 2B.1 | [Investment holdings list](#holdings-list-2b1) | Merged into main |
-| 2B.2 | [Holding detail views](#holding-details-2b2) | Implemented |
-| 2C | Banking activity, sample transfer matching, category review | Planned |
+| 2B.2 | [Holding detail views](#holding-details-2b2) | Merged into main |
+| 2C.1 | [Bank activity and transaction inspection](banking-prototype-plan.md#step-2c1-bank-activity) | Planned |
+| 2C.2 | [Transfer matching review](banking-prototype-plan.md#step-2c2-transfer-matching-review) | Planned |
+| 2C.3 | [Category review and corrections](banking-prototype-plan.md#step-2c3-category-review) | Planned |
 | 2D | Budgets, cash flow, monthly categories, recurring items | Planned |
 | 2E | Import-review walkthrough and connection status with bundled samples | Planned |
 
@@ -70,7 +72,7 @@ See W3C guidance for [contrast](https://www.w3.org/WAI/WCAG22/Understanding/cont
 
 ## Step 2B: Investments
 
-Status: the holdings list (2B.1) and holding details (2B.2) are implemented.
+Status: the holdings list (2B.1) and holding details (2B.2) are merged into `main`.
 
 Help answer what is owned, where it is held, how much it is currently worth, and whether its units and prices are current. Retain Indigo & Apricot, the shared navigation/header, theme and currency controls, amount masking, and visible sample-data labeling. The prototype continues to use bundled fictional records only.
 
@@ -78,8 +80,8 @@ Help answer what is owned, where it is held, how much it is currently worth, and
 
 | Increment | Deliverable | Status | Conventional commit |
 | --- | --- | --- | --- |
-| 2B.1 | Individual holding fixtures, Overview reconciliation, Investments navigation, searchable/filterable/sortable holdings list | Implemented | `feat(investments): add searchable holdings overview` |
-| 2B.2 | Holding detail pages, source dates, sample activity, and UBS ESPP lot presentation | Implemented | `feat(investments): add holding detail views` |
+| 2B.1 | Individual holding fixtures, Overview reconciliation, Investments navigation, searchable/filterable/sortable holdings list | Merged into main | `feat(investments): add searchable holdings overview` |
+| 2B.2 | Holding detail pages, source dates, sample activity, and UBS ESPP lot presentation | Merged into main | `feat(investments): add holding detail views` |
 
 Each increment includes its relevant tests, documentation, and light/dark desktop/mobile screenshots. Follow the existing `dev` to `main` PR workflow. Holding names now link to their account-specific detail pages.
 
@@ -161,3 +163,7 @@ Backend services, authentication, PostgreSQL/Supabase, hosted deployment, automa
 | Engineering | Existing Overview regressions plus targeted new tests, TypeScript checks, production build, dependency review if dependencies change, local security-header/network checks, and screenshots with fictional data. |
 
 Update the README and prototype implementation notes as each increment becomes available. Mark each increment implemented only when its behavior exists and its evidence is recorded.
+
+## Step 2C: Banking
+
+The [banking prototype plan](banking-prototype-plan.md) defines three increments: searchable HDFC/SBI activity with transaction inspection, explainable transfer matching with reversible decisions, and category review with individual/bulk corrections. It specifies shared balance reconciliation, original-currency arithmetic, incomplete coverage, privacy, and acceptance evidence. All three increments remain planned; Step 2D retains budgets and cash-flow trends.

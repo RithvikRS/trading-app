@@ -136,4 +136,4 @@ Holdings search, selects, and primary filter controls are at least 44 px high; r
 
 ## Next increment
 
-Step 2C covers banking activity, sample transfer matching, and category review. It remains planned. Budgets and import/connection walkthroughs follow. Production data and security foundations remain separate work.
+[Step 2C](banking-prototype-plan.md) is planned in three increments: HDFC/SBI activity and transaction inspection (2C.1), transfer matching review (2C.2), and category corrections (2C.3). Banking is not yet implemented. Budgets and import/connection walkthroughs follow. Production data and security foundations remain separate work.
