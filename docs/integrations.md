@@ -2,7 +2,7 @@
 
 Research baseline: 21 October 2026. Public documentation identifies possible interfaces; authenticated access, scopes, data coverage, and automation behavior still need verification against the owner's accounts. No provider connection has been established.
 
-The implemented [connection-status walkthroughs](ui-prototype.md#connections-and-source-coverage-step-2e1) illustrate coverage and recovery using bundled fictional evidence. [Import review walkthroughs](imports-prototype-plan.md) remain planned. They do not verify a provider API/export format, establish a connection, or change the research baseline below. Simulated permissions and attempts must remain labeled separately from actual capabilities.
+The implemented [connection-status walkthroughs](ui-prototype.md#connections-and-source-coverage-step-2e1) illustrate coverage and recovery using bundled fictional evidence. [Bank sample previews](import-samples.md) also provide read-only fictional evidence inspection; decisions, completion, and investment samples remain planned. They do not verify a provider API/export format, establish a connection, or change the research baseline below. Simulated permissions and attempts must remain labeled separately from actual capabilities.
 
 ## Provider coverage
 

@@ -12,5 +12,6 @@ import './budgets.css'
 import './cash-flow.css'
 import './recurring.css'
 import './connections.css'
+import './imports.css'
 
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)

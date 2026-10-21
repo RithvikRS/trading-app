@@ -440,7 +440,7 @@ Screenshots use fictional fixtures, with selected review decisions applied local
 
 ## Connections and source coverage (Step 2E.1)
 
-Connections is available at `#/connections`. Sources opens six inline inspectors; Sample imports is visibly planned and noninteractive. Literal source/account search is capped at 80 characters, with investment/bank filters and an explicit clear action. Source selection, filters, scenarios, and scroll survive navigation in memory. Closing an inspector restores focus to its source button; browser Back/Forward uses the shared route behavior. Unknown source/import paths remain unavailable. No source/account, search, decision, or permission value enters the route.
+Connections is available at `#/connections`. Sources opens six inline inspectors; Sample imports now opens the bank catalog introduced in Step 2E.2. Literal source/account search is capped at 80 characters, with investment/bank filters and an explicit clear action. Source selection, filters, scenarios, and scroll survive navigation in memory. Closing an inspector restores focus to its source button; browser Back/Forward uses the shared route behavior. Unknown source paths and batch IDs remain unavailable. No source/account, search, decision, or permission value enters the route.
 
 ### Financial coverage
 
@@ -459,7 +459,7 @@ FX remains separately dated 20 October and display-only. No new monetary surface
 
 ### Local status and recovery examples
 
-Only INDmoney India/US expose connector simulations; their defaults are Available snapshot and Transient failure, respectively. HDFC, SBI, UBS, and advisor funds are statement examples with no invented authorization or refresh controls. Their next action is source inspection; import previews are still planned.
+Only INDmoney India/US expose connector simulations; their defaults are Available snapshot and Transient failure, respectively. HDFC, SBI, UBS, and advisor funds are statement examples with no invented authorization or refresh controls. HDFC/SBI source details also link to their bundled bank previews; investment import examples remain planned.
 
 | Scenario | Initial outcome | Explicit recovery/result |
 | --- | --- | --- |
@@ -498,6 +498,42 @@ Screenshots show only fictional fixtures:
 - [Light tablet](screenshots/connections-light-tablet.jpg) and [dark tablet](screenshots/connections-dark-tablet.jpg).
 - [Light mobile](screenshots/connections-light-mobile.jpg), [dark mobile recovery](screenshots/connections-dark-mobile-recovery.jpg), and [masked dark 320 px](screenshots/connections-dark-masked-320.jpg).
 
+## Bank sample import previews (Step 2E.2)
+
+Connections → Sample imports offers seven HDFC/SBI examples. Each has a stable allowlisted route such as `#/connections/imports/i03`, fictional source metadata, statement and balance dates, an explicit comparison baseline, and a fixed row set. HDFC/SBI source details also open a relevant sample. No file is selected, parsed, or imported. The [sample reference](import-samples.md) supplies independent expected row counts, native totals, and balances for every scenario.
+
+### Evidence and arithmetic
+
+Each row receives exactly one of New candidate, Already present, Duplicate within batch, Possible overlap, Conflict, or Invalid / unsupported. Incoming occurrence IDs are stable independently of source transaction IDs and list order. Source identities include provider, owner, and account. Identical copies point to a deterministic canonical row; conflicting immutable fields retain both versions. Same-date/payee/amount similarity with a different identity stays unresolved rather than proving a duplicate. Batch fingerprint labels and row matches are separate checks.
+
+Original source totals include every readable occurrence, including duplicates and rows with other validation errors. They are grouped by original currency and posting status. The separate new-candidate subset excludes already-present, duplicate, and unresolved rows; it is not a final import effect. Source arithmetic uses the full original posted set and exact native minor units. Missing balances, unreadable money/status/direction, and mixed original currencies keep arithmetic unavailable. Matching opening/closing arithmetic does not imply complete coverage or readiness. No reconciliation adjustment is manufactured.
+
+The row inspector explains the disposition and shows normalized values, original supplied text, and matched baseline/conflicting evidence. Ambiguous dates are not guessed; malformed money remains unavailable. Original text, including a hostile fictional HTML example, renders as text. There are no include/skip/map/correct/complete controls.
+
+### Navigation, privacy, and isolation
+
+Catalog bank/search filters and per-batch disposition/account/search filters stay in memory through navigation. Filtering never changes whole-batch counts, totals, or reconciliation. Inspect rows jumps to the row list. The inspector traps focus, supports Escape, and returns focus to the row or list heading when a canonical row is outside the active filter. Back to sample imports/source restores its originating control and scroll position; browser Back/Forward preserves per-batch selection. Only allowlisted batch IDs enter the route. Reload resets all import controls.
+
+INR/USD changes every primary amount, including native-group summaries, source balances/differences, rows, and normalized comparison evidence. Original currency remains labeled, and original supplied amount text is unchanged. Masking removes descriptions, all original fields, searches, and matching financial text from rendered DOM/attributes/accessibility labels; normalized amounts use the shared mask. Only display preferences persist.
+
+Loading closes inspection and hides financial previews/actions while retaining filters. Empty clears import controls; restoring samples starts fresh. Failed load retains the last usable view. Partial mode explicitly retains each isolated comparison baseline, independently of the partial portfolio. Connection resets cannot alter import controls; previews cannot change bank/holding records, source dates, transfer/category decisions, budgets, cash-flow results, or recurring expectations. This is a local inspection model, not production parsing, authentication, authorization, durable idempotency, or an audit log.
+
+Implementation: `frontend/src/data/imports.ts` supplies isolated fixtures, validation, identity comparisons, exact arithmetic, and filters. `ImportPreview.tsx` and `imports.css` provide the catalog, preview, and inspector. App owns only ephemeral controls; `routes.ts` allowlists batch paths. No dependency, backend, database, migration, or deployment change is introduced.
+
+### Import verification and screenshots
+
+- Data validation: 47 import tests verify the seven independent row partitions, native posted/pending amounts, source balances/differences, replay versus row identity, deterministic duplicate selection, conflicting versions, invalid fields, literal filters, immutable fixtures, and unchanged full/partial financial baselines. Twelve import component tests cover routes, catalog/source entry, filters, inspection, focus/history, USD originals, masking, hostile text, lifecycle states, independent resets, and structural accessibility. Nine existing connection tests also passed with the new tab.
+- All **379 distinct tests across 24 files** were verified through the full regression run and targeted reruns. The initial standard-worker run (`--maxWorkers=1 --testTimeout=30000`) recorded 366 passes, three timeouts, a follow-on transfer query failure, and a worker-start timeout that prevented nine recurring tests from running. All 50 tests in the affected currency, holding-detail, transfer, recurring, and import UI files subsequently passed with `--pool=vmThreads --maxWorkers=1 --testTimeout=30000`. The VM retry exposed two cross-realm snapshot comparisons in the new data tests; those snapshots now compare exact BigInt values and Set members, and all 47 import data tests passed again. This is validation across multiple runs, not a single green full-suite run. Repository timeout settings are unchanged. TypeScript, the production build, staged whitespace checks, and local documentation links passed.
+- Browser checks covered 1440, 768, 390, and 320 px in Indigo & Apricot light/dark themes. Catalog, previews, filters, original/matched inspection, and narrow layouts had no observed horizontal overflow. Import controls have at least 44 px height. The row shortcut, Tab/Shift+Tab containment, Escape/close focus, actual Back/Forward, loading/empty/error/partial states, USD values, and masked source text were checked.
+- Minimum measured non-gradient text contrast was 4.80:1 light / 5.84:1 dark, with no measured failures. Automated axe checks found no structural violations in preview and visible/masked inspection. Full screen-reader validation, actual 400% browser zoom/enlarged-text checks, and runtime reduced-motion emulation remain unperformed; narrow reflow is not a substitute.
+- Original HTML-like text rendered literally with no injected image/script nodes. Masking removed source descriptions, original fields, matching financial values, search text, and financial accessible attributes. Browser warning/error logs were empty. Local HTTP returned 200 with restrictive CSP, frame denial, no-sniff, referrer, and permissions policies. Dependency manifests and lockfile are unchanged.
+
+Screenshots show fictional examples only:
+
+- [Light catalog](screenshots/imports-catalog-light-desktop.jpg), [light preview](screenshots/imports-preview-light-desktop.jpg), [dark USD preview](screenshots/imports-preview-dark-desktop.jpg), and [dark row inspection](screenshots/imports-inspector-dark-desktop.jpg).
+- [Light tablet](screenshots/imports-preview-light-tablet.jpg) and [dark tablet](screenshots/imports-preview-dark-tablet.jpg).
+- [Light mobile inspection](screenshots/imports-inspector-light-mobile.jpg), [light 320 px preview](screenshots/imports-preview-light-320.jpg), and [masked dark 320 px inspection](screenshots/imports-inspector-dark-masked-320.jpg).
+
 ## Next increment
 
-[Step 2E.2](imports-prototype-plan.md#step-2e2-bank-import-previews) adds the bank sample catalog, read-only batch previews, issue summaries, and original/normalized row inspection. Review decisions/completion (2E.3) and investment walkthroughs (2E.4) remain planned. No sample import functionality, production ingestion, or provider connection is activated by Step 2E.1.
+[Step 2E.3](imports-prototype-plan.md#step-2e3-review-decisions-and-completion) adds reversible review decisions and sample completion. Investment walkthroughs follow in 2E.4. Both remain planned; no financial records are saved by the current previews.

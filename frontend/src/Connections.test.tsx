@@ -11,13 +11,12 @@ const simulation = () => within(screen.getByRole('region', { name: 'Connector si
 const expand = (user: ReturnType<typeof userEvent.setup>, name: string) => user.click(screen.getByRole('button', { name: new RegExp(`^${name}`) }))
 
 describe('Connections workspace', () => {
-  it('supports the direct route, keeps imports planned, and rejects unknown source/import paths', () => {
+  it('supports the direct route, exposes sample imports, and rejects unknown source/import paths', () => {
     open()
     expect(screen.getByRole('heading', { level: 1 }).textContent).toContain('Know what’s behind the numbers')
     expect(screen.getByRole('link', { name: 'Connections' }).getAttribute('aria-current')).toBe('page')
-    expect(screen.getByText('Sample imports').textContent).toContain('Planned')
-    expect(screen.queryByRole('button', { name: /Sample imports/ })).toBeNull()
-    for (const hash of ['#/connections/imports/i01', '#/connections/hdfc', '#/connections?account=secret', '#/connections/<img>']) expect(readRoute(hash)).toEqual({ screen: 'unavailable' })
+    expect(screen.getByRole('button', { name: 'Sample imports' }).getAttribute('aria-pressed')).toBe('false')
+    for (const hash of ['#/connections/imports/i99', '#/connections/hdfc', '#/connections?account=secret', '#/connections/<img>']) expect(readRoute(hash)).toEqual({ screen: 'unavailable' })
   })
   it('explains statement sources without invented authorization, refresh, file selection or credentials', async () => {
     const { user, container } = open()
