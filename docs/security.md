@@ -2,7 +2,7 @@
 
 Security is the highest project priority. These requirements cover confidentiality, integrity, and availability of financial data. They are planned controls; completion must be demonstrated before the relevant feature is used with personal data.
 
-The current Overview prototype uses fictional records, loopback-only servers, bundled assets, restrictive browser headers, and display-only preference storage. See its [implemented boundaries and limitations](ui-prototype.md#security-boundary). Authentication, database policies, secret scanning, and production hosting protections remain future work; no real data belongs in the prototype.
+The current Overview and Investments prototype uses fictional records, loopback-only servers, bundled assets, restrictive browser headers, and display-only preference storage. Searches and holding controls stay in memory; routes use allowlisted screen names without financial values. Masking hides amounts, units, and quotes. See its [implemented boundaries and limitations](ui-prototype.md#security-boundary). Authentication, database policies, secret scanning, and production hosting protections remain future work; no real data belongs in the prototype.
 
 ## Assets and trust boundaries
 

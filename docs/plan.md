@@ -2,7 +2,7 @@
 
 Planning baseline: 21 October 2026.
 
-Planning and the UI design direction are recorded in `main`. Step 2A implements the responsive Overview locally with synthetic data. See the [prototype plan](ui-prototype-plan.md) and [implementation notes](ui-prototype.md). Later screens remain planned.
+Step 2A, the responsive Overview with synthetic data, is merged into `main`. Step 2B.1 adds the searchable, filterable investment holdings list and shared valuation fixtures. [Step 2B.2](ui-prototype-plan.md#holding-details-2b2), holding details, remains planned. See the [implementation notes](ui-prototype.md) for current behavior and verification. Later screens remain planned.
 
 Build a personal finance application that provides a trustworthy view of investments and banking activity with as little manual maintenance as supported integrations allow. Security takes priority over convenience, cost optimization, and delivery speed. Financial accuracy and recoverability are part of that requirement.
 
@@ -73,10 +73,10 @@ Multiple users require enrollment, recovery, authorization, database policy, bac
 
 ## Decisions still to make
 
-- App name, detailed visual direction, and authentication provider.
+- App name and authentication provider; the current visual direction is Indigo & Apricot in light and dark modes.
 - Private access method, domain, Oracle region, Supabase region, and available storage.
 - Actual provider exports, history depth, consent scopes, and supported unattended renewal.
 - Refresh cadence and any market-data budget; daily valuations are the starting proposal.
 - Backup destination, retention, recovery targets, and statement retention preferences.
 
-The current prototype covers Overview only. Provider access, real data, databases, and deployment remain outside the prototype scope.
+The current prototype covers Overview and the investment holdings list. Provider access, real data, databases, and deployment remain outside the prototype scope.
