@@ -1,6 +1,6 @@
 # Frontend prototype
 
-Step 2A provides the local Overview screen and frontend foundation. Steps 2B.1 and 2B.2 add investment holdings and details; Steps 2C.1–2C.3 add banking activity, inspection, transfer matching, and category corrections. Step 2D.1 adds monthly category budgets; Step 2D.2 adds historical cash-flow trends. All financial records, dates, and exchange rates are fictional. Overview, Investments, Banking, and Budgets are available through navigation; other destinations are visibly marked **Soon** and are not interactive links.
+Step 2A provides the local Overview screen and frontend foundation. Steps 2B.1 and 2B.2 add investment holdings and details; Steps 2C.1–2C.3 add banking activity, inspection, transfer matching, and category corrections. Step 2D.1 adds monthly category budgets; Step 2D.2 adds historical cash-flow trends; Step 2D.3 adds recurring-expense review. All financial records, dates, and exchange rates are fictional. Overview, Investments, Banking, and Budgets are available through navigation; other destinations are visibly marked **Soon** and are not interactive links.
 
 ## Behavior
 
@@ -181,7 +181,7 @@ Local verification on 21 October 2026:
 
 | Check | Result |
 | --- | --- |
-| `npm run check` | Passed: 243 tests across eighteen files, TypeScript checks, production build; subsequent affected checks are recorded under Step 2D.2 below |
+| `npm run check` | Passed: 299 tests across twenty files, TypeScript checks, production build; subsequent affected checks are recorded under Step 2D.3 below |
 | Financial fixtures | Exact totals, allocation/account reconciliation, fractional valuation and rounding, missing values, duplicate-security identity, currency display, transfer exclusion, fixed weight denominator, lot-unit reconciliation, supplied purchase amounts and distinct unknown/zero fees |
 | Component behavior | Combined holdings filters, literal search, numeric/stable sorting, missing values last, all 14 direct detail links, converted acquisition displays and unchanged source records, currency/range, privacy including hidden DOM text and accessible attributes, originating-row focus, state transitions, retry, persisted preferences, blocked/malformed storage |
 | Banking accounting | HDFC/SBI opening/posted movement/closing reconciliation; unchanged Overview totals; pending exclusion; partial discrepancy without balance adjustment; repeated payments preserved; immutable source accessors |
@@ -315,7 +315,7 @@ Additional evidence: [USD reporting with an INR limit editor](screenshots/budget
 
 ## Cash-flow trends
 
-The Cash flow view inside `#/budgets` covers August, September, and October 2026 for All accounts, HDFC, or SBI. August and September are full months; October stops at 20 October, 10:00 IST. These controls apply only to analytics; October budget limits still cover both accounts. Reload starts with Monthly budgets and default cash-flow controls. Recurring remains planned.
+The Cash flow view inside `#/budgets` covers August, September, and October 2026 for All accounts, HDFC, or SBI. August and September are full months; October stops at 20 October, 10:00 IST. These controls apply only to analytics; October budget limits still cover both accounts. Reload starts with Monthly budgets and default cash-flow controls. Recurring has an independent month selector and review history.
 
 Monthly charts have selectable, keyboard-operable month groups and an always-visible table. Daily charts have a visible zero baseline, negative-spending support, horizontal scrolling, keyboard-operable days, and a disclosure for the equivalent table. Select a month/day or source category to inspect its contributing records. The source list starts collapsed to keep reconciliation accessible. Day/category selection changes that list without redefining the month summary or reconciliation. Source inspection restores the selected view, account, month, day, category, scroll, and exact source link; if a correction removes the link, focus falls back to the source heading. A direct transaction reload opens Banking inspection.
 
@@ -381,6 +381,63 @@ The production preview returned HTTP 200 with the existing restrictive CSP, fram
 
 Additional evidence: [September comparison and cross-month refund in USD](screenshots/cashflow-refund-1440-light.jpg), [masked charts](screenshots/cashflow-masked-390-dark.jpg), [retained SBI scope during partial-data load failure](screenshots/cashflow-partial-error-390-dark.jpg), and [single-account bridge and statement gap](screenshots/cashflow-gap-390-dark.jpg). All values and source records are fictional. Tall captures show context; 320 px reflow measurements used a 1000 px viewport height.
 
+## Recurring-expense review
+
+The Recurring view inside `#/budgets` reviews seven supplied monthly patterns across August–October 2026. It shares the existing 58-record ledger, effective classifications, source inspector, and dated reporting FX. No records, source amounts, statement balances, or budget limits were added or changed. All patterns start unconfirmed.
+
+### Supplied evidence and schedules
+
+These definitions are explicit fictional evidence, not inferred contracts or a general detection service. Each pattern binds the same known owner, account, and payee to its original source identities. The day is a supplied schedule; actual dates remain visible and can differ.
+
+| Pattern | Account | Supporting occurrence IDs | Monthly day | Original INR observations |
+| --- | --- | --- | ---: | --- |
+| Home rent | HDFC | `t30`, `t45`, `t02` | 2 | Fixed 22,000 |
+| Electricity | HDFC | `t31`, `t46`, `t03` | 3 | Range 1,700–1,900 |
+| Monthly subscription | SBI | `t39`, `t55`, `t23` | 15 | Fixed 499 |
+| Water & maintenance | SBI | `t41`, `t57`, `t26` | 19 | Range 2,000–2,200; October source missing in partial mode |
+| Monthly service fee | SBI | `t42`, `t58` | 22 | Fixed 5.90; HDFC's separate `t11` fee is unrelated |
+| Grocery top-up | HDFC | `t36`, `t50` | 28 | Range 1,800–2,200; regular grocery trips are separate |
+| Home purchases | HDFC | `t33`, `t52` | 12 | Range 2,000–6,000; ambiguous October association |
+
+Home purchases has two unassigned October candidates: posted `t07` and pending `t16`. Neither is counted as an October recurring occurrence. Confirmation is disabled because the association is ambiguous; dismissal and restoration remain available. Pending is never treated as paid. The observations are gross source expenses; purchase refunds remain separate in the existing actual-spending calculations.
+
+Confirming both the service fee and grocery top-up produces a fixed expected total of **INR 5.90**, plus a separately shown **INR 1,800–2,200 range**, for 21–31 October. The range is not averaged or added to the fixed total. Confirmed rent/subscription/bills already recorded this month do not become another expected payment. Historical months show evidence only. A monthly day beyond month end clamps to the last day without changing the original day for subsequent months; leap years and century boundaries are covered by tests.
+
+### Review, integrity, and coverage
+
+Expand a pattern to inspect its source dates, amounts, payee, monthly interval, and eligibility. Confirm recurring, Dismiss suggestion, Restore suggestion, Undo recurring change, and Reset sample recurring decisions operate on a dedicated in-memory history. Filters show all, suggested, confirmed, or dismissed patterns; changing the month does not change budget or cash-flow controls. A confirmed pattern may be dismissed, and undo restores the previous decision. Reset affects only recurring decisions; category/transfer reviews and budget limits retain their own histories.
+
+Confirmation revalidates full source identity (including payee/narrative), known ownership, positive original INR debit amounts, eligible posted expense roles, distinct monthly occurrences, and non-overlapping source membership. Duplicate IDs, reused occurrences, same-month café repeats, altered source evidence, and stale action evidence cannot establish a pattern. Pending, transfers, investments, refunds, and unresolved movements are excluded. An expense-to-expense category correction remains compatible; unresolved or retained transfer membership invalidates the affected evidence. Undo or restoration of valid source evidence can make a retained confirmation usable again.
+
+Changed or missing evidence retains the decision with **Needs review** and excludes it from expectations. Partial mode removes `t26`: maintenance retains its confirmation but its October occurrence becomes **Unknown**. Available observations still show their actual source amounts. The incomplete SBI coverage also withholds the future service fee from expected totals; HDFC's supported grocery pattern remains eligible. Expected totals are a subset of reviewed patterns, never an assurance of complete upcoming expenses.
+
+Occurrence states distinguish **Recorded**, **Pending source**, **Expected**, **Not observed in available records**, **Unknown**, **Needs review**, and **Unconfirmed**. Absence is only labeled not observed when the relevant supplied account window is complete; missing history is not evidence of nonpayment. Expected entries never create transactions, change bank snapshots, or enter actual spending, budget remaining, or cash-flow totals. All previously documented accounting baselines remain unchanged.
+
+### State, navigation, and privacy
+
+The month, filter, expanded pattern, decisions, and undo history stay in memory. Loading hides totals/actions; partial and failed-load states retain compatible decisions and the last usable sources. Retry does not duplicate decisions. Empty clears recurring decisions and controls; restoring samples returns the initial fixtures. Reload resets all recurring state and preserves only display preferences.
+
+Source links open the shared transaction inspector and return to Recurring with its month, filter, expansion, scroll, and source-link focus. Back/Forward preserve the session origin; when a source disappears, focus falls back to the pattern-list heading. A directly loaded transaction URL still opens in Banking. No month, decision, amount, or evidence key is placed in the URL or browser storage.
+
+All source amounts, observed ranges, expected entries, and totals follow INR/USD. Masking removes monetary content from the DOM and accessible values, including both endpoints of a range and inspector narration/reference. Status messages contain no financial amounts. Source text renders as text, without HTML interpretation. There are no new dependencies, network calls, provider credentials, file inputs, backend services, notifications, schedulers, payment actions, or persistence.
+
+Implementation: `frontend/src/data/recurring.ts` defines supplied evidence, validation, reversible decisions, calendar dates, occurrence states, and exact totals. `RecurringReview.tsx` and `recurring.css` provide the view; App/Budgets own independent state and existing routes provide source inspection.
+
+### Recurring verification and screenshots (Step 2D.3)
+
+- Full `npm run check`: **299 tests across 20 files passed**, with TypeScript checks and production build. The 56 recurring data/component tests also passed after copy refinements; the final wording/disclosure-style changes passed TypeScript/build and browser verification. The suite emits existing jsdom canvas-implementation notices; real browser checks supply layout and contrast evidence.
+- Data coverage includes original identity changes, known ownership, eligibility exclusions, duplicate/overlapping occurrences, stale decisions, independent undo/reset, missing sources, classification changes/undo, exact fixed/range separation, historical months, month-end/leap-year dates, unsupported inputs, and unchanged ledger, balances, budgets, cash flow, and assets.
+- Component checks cover review actions/filters, source correction and focus return, pending/ambiguous candidates, partial/loading/error/retry/empty/reload, INR/USD across monetary surfaces, masked DOM/storage boundaries, plain-text rendering, keyboard actions, and automated axe checks in expanded light and masked dark states.
+- Production browser checks cover both themes at **1440, 768, 390, and 320 px** without page overflow; mobile source details, USD/masking, keyboard focus containment, Escape, real Back/Forward, fixed/range confirmations, partial-source retention, failed-load/retry, loading, and empty recovery. Minimum measured non-gradient text contrast was **4.80:1 light / 5.93:1 dark**, with no measured failures. Primary review and source controls have at least 44 px height. Full screen-reader validation, actual 400% browser zoom/enlarged-text testing, and runtime reduced-motion emulation remain unperformed; 320 px reflow is not a substitute for those checks.
+- The local production response returned HTTP 200 with the existing restrictive CSP, frame denial, no-sniff, referrer, and permissions policies. Browser warning/error logs were empty. Dependency manifests/lockfile are unchanged. The final diff was reviewed for source mutation, financial double counting, privacy leaks, unrelated changes, credentials, and attribution text.
+
+Screenshots use fictional fixtures, with selected review decisions applied locally:
+
+- [Light desktop](screenshots/recurring-light-desktop.jpg) and [dark desktop](screenshots/recurring-dark-desktop.jpg).
+- [Light evidence](screenshots/recurring-light-evidence.jpg) and [partial evidence](screenshots/recurring-light-partial-evidence.jpg).
+- [Light tablet](screenshots/recurring-light-tablet.jpg) and [dark tablet](screenshots/recurring-dark-tablet.jpg).
+- [Light mobile](screenshots/recurring-light-mobile.jpg), [dark mobile evidence](screenshots/recurring-dark-mobile-evidence.jpg), and [masked dark 320 px](screenshots/recurring-dark-masked-320.jpg).
+
 ## Next increment
 
-Monthly category budgets (2D.1) and cash-flow trends (2D.2) are implemented. [Recurring-expense review (2D.3)](budgets-prototype-plan.md#step-2d3-recurring-commitments) remains planned, then import/connection walkthroughs in Step 2E. Production data and security foundations remain separate work.
+Monthly category budgets, cash-flow trends, and [recurring-expense review](budgets-prototype-plan.md#step-2d3-recurring-commitments) complete Step 2D. Import/connection walkthroughs in Step 2E remain planned. Production data and security foundations remain separate work.

@@ -24,13 +24,13 @@ async function correct(user: ReturnType<typeof userEvent.setup>, value: string) 
 }
 
 describe('cash-flow workspace', () => {
-  it('starts with October MTD and exact totals, while keeping recurring planned and budget scope independent', async () => {
+  it('starts with October MTD and exact totals, while keeping budget scope independent', async () => {
     const { user } = await open()
     expect(summary().textContent).toContain('₹95,250'); expect(summary().textContent).toContain('₹35,964.9'); expect(summary().textContent).toContain('₹59,285.1')
     expect(reconciliation().textContent).toContain('₹45,785.1')
     expect(document.querySelector('.cash-comparison')?.textContent).toContain('Same 20 calendar days')
     expect(document.querySelector('.cash-comparison')?.textContent).toContain('need classification')
-    expect(screen.queryByRole('button', { name: 'Recurring' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Recurring' }).getAttribute('aria-pressed')).toBe('false')
     await user.selectOptions(screen.getByLabelText('Cash-flow account'), 'sbi')
     expect(summary().textContent).toContain('₹250')
     await user.click(screen.getByRole('button', { name: 'Monthly budgets' }))

@@ -57,7 +57,7 @@ export function useScreen() {
   }, [])
   useLayoutEffect(() => {
     if (!navigated.current) return
-    const target = document.getElementById(focusTarget.current) ?? (focusTarget.current.startsWith('category-link-') ? document.getElementById('category-review-title') : null) ?? (focusTarget.current.startsWith('cash-link-') ? document.getElementById('cash-sources-title') : null) ?? (focusTarget.current.startsWith('budget-link-') ? document.getElementById('budget-categories-title') : null) ?? document.getElementById('page-title')
+    const target = document.getElementById(focusTarget.current) ?? (focusTarget.current.startsWith('category-link-') ? document.getElementById('category-review-title') : null) ?? (focusTarget.current.startsWith('cash-link-') ? document.getElementById('cash-sources-title') : null) ?? (focusTarget.current.startsWith('recurring-link-') ? document.getElementById('recurring-patterns-title') : null) ?? (focusTarget.current.startsWith('budget-link-') ? document.getElementById('budget-categories-title') : null) ?? document.getElementById('page-title')
     target?.focus({ preventScroll: true })
     // History traversal may scroll to the fragment after popstate dispatch.
     const frame = requestAnimationFrame(() => window.scrollTo({ top: scroll.current[scrollKey(route)] ?? 0, behavior: 'instant' }))
