@@ -5,6 +5,7 @@ export const BANK_PERIOD = { from: '2026-10-01', to: '2026-10-20' }
 export const BANK_SNAPSHOT = '2026-10-20T04:30:00Z'
 export type BankId = 'hdfc' | 'sbi'
 export const bankNames: Record<BankId, string> = { hdfc: 'HDFC Bank', sbi: 'SBI' }
+export const bankOwners: Record<BankId, string> = { hdfc: 'sample-owner', sbi: 'sample-owner' }
 export const bankCategories = {
   salary: 'Salary', interest: 'Interest', housing: 'Housing', utilities: 'Utilities', transport: 'Transport',
   dining: 'Dining', shopping: 'Shopping', groceries: 'Food & groceries', health: 'Health', subscriptions: 'Subscriptions',
@@ -12,9 +13,9 @@ export const bankCategories = {
 }
 export type BankCategory = keyof typeof bankCategories
 export type BankReview = 'recorded' | 'confirmed' | 'needs-review'
-export const reviewLabels: Record<BankReview, string> = { recorded: 'Source recorded', confirmed: 'Sample pair confirmed', 'needs-review': 'Needs review' }
+export const reviewLabels: Record<BankReview, string> = { recorded: 'Source recorded', confirmed: 'Transfer confirmed', 'needs-review': 'Needs review' }
 export interface BankTransaction {
-  id: string; accountId: BankId; sourceId: string; date: string; valueDate?: string
+  id: string; accountId: BankId; ownerId: string; sourceId: string; date: string; valueDate?: string; transferReference?: string
   direction: 'debit' | 'credit'; amount: Money; status: 'posted' | 'pending'
   description: string; counterparty: string; narration: string; reference: string; sourceCategory: BankCategory
 }
@@ -27,7 +28,8 @@ const snapshots: readonly BankSnapshot[] = [
   { accountId: 'sbi', sourceId: 'sample-sbi-oct', opening: money('38199'), balance: money('74850'), balanceDate: BANK_SNAPSHOT, activityDate: BANK_SNAPSHOT, complete: true },
 ]
 function transaction(id: string, accountId: BankId, date: string, direction: BankTransaction['direction'], amount: string, description: string, counterparty: string, sourceCategory: BankCategory, status: BankTransaction['status'] = 'posted', valueDate?: string): BankTransaction {
-  return { id, accountId, sourceId: `sample-${accountId}-oct`, date: `2026-10-${date}`, ...(valueDate ? { valueDate: `2026-10-${valueDate}` } : {}), direction, amount: money(amount), status, description, counterparty, sourceCategory,
+  const transferReference = ['t10', 't20'].includes(id) ? 'Sample transfer A' : ['t15', 't25'].includes(id) ? 'Sample transfer B' : undefined
+  return { id, accountId, ownerId: bankOwners[accountId], transferReference, sourceId: `sample-${accountId}-oct`, date: `2026-10-${date}`, ...(valueDate ? { valueDate: `2026-10-${valueDate}` } : {}), direction, amount: money(amount), status, description, counterparty, sourceCategory,
     narration: `FICTIONAL RECORD / ${description} / INR ${amount} / ${direction.toUpperCase()}`,
     reference: `Sample reference ${id.slice(1)}` }
 }
@@ -62,7 +64,7 @@ const transactions: readonly BankTransaction[] = [
   transaction('t28', 'sbi', '19', 'debit', '650', 'Evening meal', 'Sample kitchen', 'dining'),
 ]
 
-// Initial source evidence only. Interactive matching and corrections are separate increments.
+// Initial fixture evidence. Interactive decisions live separately from source records.
 export const sampleTransfer = { id: 'sample-pair-a', debitId: 't15', creditId: 't25' } as const
 export const sampleRefund = { creditId: 't08', purchaseId: 't07' } as const
 export function isBankTransactionId(id: string) { return transactions.some(item => item.id === id) }
@@ -100,8 +102,8 @@ export function bankScope(records: readonly BankTransaction[], filters: BankingF
   if (!validBankDates(filters)) return []
   return records.filter(item => (!filters.account || item.accountId === filters.account) && (!filters.from || item.date >= filters.from) && (!filters.to || item.date <= filters.to))
 }
-export function selectBankTransactions(records: readonly BankTransaction[], controls: BankingControls) {
+export function selectBankTransactions(records: readonly BankTransaction[], controls: BankingControls, classification = { category: (item: BankTransaction) => item.sourceCategory, review: (item: BankTransaction) => bankReview(item, records) }) {
   const f = controls.filters; const query = f.query.trim().toLocaleLowerCase('en')
-  return bankScope(records, f).filter(item => (!query || `${item.description} ${item.counterparty} ${item.reference}`.toLocaleLowerCase('en').includes(query)) && (!f.direction || item.direction === f.direction) && (!f.status || item.status === f.status) && (!f.category || item.sourceCategory === f.category) && (!f.review || bankReview(item, records) === f.review))
+  return bankScope(records, f).filter(item => (!query || `${item.description} ${item.counterparty} ${item.reference}`.toLocaleLowerCase('en').includes(query)) && (!f.direction || item.direction === f.direction) && (!f.status || item.status === f.status) && (!f.category || classification.category(item) === f.category) && (!f.review || classification.review(item) === f.review))
     .sort((a, b) => { const comparison = controls.sort === 'amount' ? a.amount.minor < b.amount.minor ? -1 : a.amount.minor > b.amount.minor ? 1 : 0 : controls.sort === 'description' ? a.description.localeCompare(b.description, 'en') : a.date.localeCompare(b.date); return comparison * (controls.direction === 'asc' ? 1 : -1) || a.id.localeCompare(b.id) })
 }

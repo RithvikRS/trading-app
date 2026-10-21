@@ -16,7 +16,9 @@ import { Amount, DisplayContext, ReportingAmount } from './display'
 import Investments from './Investments'
 import HoldingDetail from './HoldingDetail'
 import Banking from './Banking'
-import { defaultBankingControls } from './data/banking'
+import { defaultBankingControls, getBankTransactions } from './data/banking'
+import { changeTransfers, createTransferState, initialTransferControls } from './data/transfers'
+import type { TransferAction, TransferState } from './data/transfers'
 import { defaultControls } from './data/holdings'
 import { useScreen } from './routes'
 import type { Screen } from './routes'
@@ -151,11 +153,11 @@ function AccountsPanel({ positions, partial }: { positions: Position[]; partial:
   </Panel>
 }
 
-function RecentActivity({ partial }: { partial: boolean }) {
-  const icons = { purchase: Plus, dividend: ArrowDownLeft, transfer: ArrowDownUp, spending: ArrowUpRight }
-  const labels = { purchase: 'Investment', dividend: 'Income', transfer: 'Internal transfer', spending: 'Spending' }
+function RecentActivity({ partial, review }: { partial: boolean; review: TransferState }) {
+  const icons = { purchase: Plus, dividend: ArrowDownLeft, transfer: ArrowDownUp, spending: ArrowUpRight, unresolved: CircleHelp }
+  const labels = { purchase: 'Investment', dividend: 'Income', transfer: 'Internal transfer', spending: 'Spending', unresolved: 'Unreviewed movement' }
   return <Panel title="Recent activity" subtitle="The small moves behind the big picture" className="activity-panel" action={<span className="quiet-badge">Sample</span>}>
-    <ul className="activity-list">{getActivity(partial).map(item => { const Icon = icons[item.kind]; return <li key={item.id}>
+    <ul className="activity-list">{getActivity(partial, review).map(item => { const Icon = icons[item.kind]; return <li key={item.id}>
       <span className={`activity-icon ${item.kind}`}><Icon size={17} aria-hidden="true" /></span>
       <div className="activity-copy"><strong>{item.title}</strong><span>{item.detail}</span><small>{shortDate(item.date)} · {labels[item.kind]}</small></div>
       <div className={`activity-value ${item.kind === 'dividend' ? 'positive' : ''}`}><ReportingAmount value={item.value} /></div>
@@ -186,6 +188,8 @@ export default function App() {
   const navScreen = screen === 'holding' ? 'investments' : screen === 'transaction' ? 'banking' : screen
   const screenLabel = screen === 'holding' ? 'Holding details' : screen === 'transaction' ? 'Transaction details' : screen === 'banking' ? 'Banking' : screen === 'investments' ? 'Investments' : screen === 'overview' ? 'Overview' : 'Unavailable'
   const [bankingControls, setBankingControls] = useState(defaultBankingControls)
+  const [transferState, setTransferState] = useState(() => createTransferState())
+  const [transferControls, setTransferControls] = useState(initialTransferControls)
   const [bankingFiltersOpen, setBankingFiltersOpen] = useState(false)
   const [holdingsControls, setHoldingsControls] = useState(defaultControls)
   const [holdingsFiltersOpen, setHoldingsFiltersOpen] = useState(false)
@@ -211,7 +215,14 @@ export default function App() {
     if (retryTimer.current) clearTimeout(retryTimer.current)
     setRetrying(false)
     if (value === 'populated' || value === 'partial' || value === 'empty') setLastGoodState(value)
+    if (value === 'empty') { setTransferState(createTransferState(false)); setTransferControls(current => ({ ...current, selected: null })) }
+    else if (value === 'populated' && lastGoodState === 'empty') setTransferState(createTransferState())
+    if (value === 'partial' || value === 'loading') setTransferControls(current => ({ ...current, selected: null }))
     setDemoState(value)
+  }
+  function reviewTransfer(action: TransferAction) {
+    const records = view === 'empty' || view === 'loading' ? [] : getBankTransactions(partial)
+    setTransferState(current => changeTransfers(current, action, records))
   }
   function retry() {
     setRetrying(true)
@@ -221,7 +232,7 @@ export default function App() {
   function navigateFromDrawer() { drawerNavigating.current = true; drawer.current?.close() }
   function finishDrawerClose() {
     if (drawerNavigating.current) {
-      if (!/^(holding|transaction)-link-/.test(document.activeElement?.id ?? '')) document.getElementById('page-title')?.focus({ preventScroll: true })
+      if (!/^(holding|transaction|transfer)-link-/.test(document.activeElement?.id ?? '')) document.getElementById('page-title')?.focus({ preventScroll: true })
     }
     else menuButton.current?.focus()
     drawerNavigating.current = false
@@ -251,7 +262,7 @@ export default function App() {
           {screen === 'overview' && <div className="page-heading"><div><span className="eyebrow">Your overview <span className="mobile-demo">· Sample data</span></span><h1 id="page-title" tabIndex={-1}>Everything, in perspective<span>.</span></h1><p>A clear view of your investments and everyday cash.</p></div><div className="snapshot-label"><Clock3 size={14} aria-hidden="true" /><span>Snapshot as of<strong>{AS_OF}</strong></span></div></div>}
           {demoState === 'error' && <div role="alert" className="notice error-notice"><AlertTriangle size={19} aria-hidden="true" /><div><strong>The latest snapshot couldn’t load.</strong><p>{lastGoodState === 'empty' ? 'The last demo view had no accounts.' : 'You’re still seeing the last available sample snapshot.'} This is a simulated error.</p></div><button className="outlined-button" onClick={retry} disabled={retrying}><RefreshCw size={14} className={retrying ? 'spinning' : ''} aria-hidden="true" />{retrying ? 'Retrying…' : 'Retry demo'}</button></div>}
           {screen === 'unavailable' ? <section className="empty-state"><span className="eyebrow">Local prototype · Sample data</span><h1 id="page-title" tabIndex={-1}>This view is unavailable.</h1><p>Overview, Investments, and Banking are the available screens.</p><a className="primary-button" href="#/investments">Go to investments</a><a className="text-button" href="#/banking">Go to banking</a></section>
-            : screen === 'banking' || route.screen === 'transaction' ? <Banking view={view} controls={bankingControls} onChange={setBankingControls} filtersOpen={bankingFiltersOpen} onToggleFilters={() => setBankingFiltersOpen(open => !open)} onReset={() => changeState('populated')} onOpen={openTransaction} transactionId={route.screen === 'transaction' ? route.transactionId : undefined} onClose={() => navigate('banking')} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />
+            : screen === 'banking' || route.screen === 'transaction' ? <Banking view={view} transferState={transferState} transferControls={transferControls} onTransferControls={setTransferControls} onTransferAction={reviewTransfer} controls={bankingControls} onChange={setBankingControls} filtersOpen={bankingFiltersOpen} onToggleFilters={() => setBankingFiltersOpen(open => !open)} onReset={() => changeState('populated')} onOpen={openTransaction} transactionId={route.screen === 'transaction' ? route.transactionId : undefined} onClose={() => navigate('banking')} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />
             : route.screen === 'holding' ? <HoldingDetail holdingId={route.holdingId} view={view} onBack={() => navigate('investments')} onReset={() => changeState('populated')} />
             : screen === 'investments' ? <Investments view={view} controls={holdingsControls} onChange={setHoldingsControls} onReset={() => changeState('populated')} onOpen={openHolding} filtersOpen={holdingsFiltersOpen} onToggleFilters={() => setHoldingsFiltersOpen(open => !open)} />
             : view === 'loading' ? <LoadingState /> : view === 'empty' ? <EmptyState reset={() => changeState('populated')} /> : <>
@@ -262,7 +273,7 @@ export default function App() {
             </div>
             <div id={attentionId} className="coverage-detail" hidden={!attentionOpen}>{partial ? <><strong>What needs attention</strong><ul><li>Advisor funds: the 20 Oct NAV is missing. One regular-plan holding is excluded from totals and allocation.</li><li>UBS: holdings are dated 17 Oct, while prices are dated 20 Oct. The last known holding value remains included and may be stale.</li><li>SBI: activity is stale and incomplete. The separately dated bank balance remains included; inspect Banking for the reconciliation gap.</li></ul></> : <><strong>Understand your coverage</strong><p>Tracked assets combine valued investments and cash once each. Liabilities are not included, so this is not net worth. Select an account below to inspect its holdings and price dates.</p></>}<p>These are sample records, not live connections. {preferences.hidden ? 'Demo exchange rate details are hidden.' : 'Demo FX: 1 USD = ₹83.50, dated 20 Oct 2026. This is not a live quote.'}</p></div>
             <div className="charts-grid"><ValueChart partial={partial} /><Allocation positions={positions} /></div>
-            <div className="details-grid"><AccountsPanel positions={positions} partial={partial} /><RecentActivity partial={partial} /></div>
+            <div className="details-grid"><AccountsPanel positions={positions} partial={partial} /><RecentActivity partial={partial} review={transferState} /></div>
           </>}
           <footer className="overview-footer"><div><ShieldCheck size={14} aria-hidden="true" /><span>Local prototype · Fictional data only</span></div><span>{preferences.hidden ? 'Demo FX rate hidden' : 'Demo FX · 1 USD = ₹83.50'} · {FX_DATE}</span></footer>
           <section className="demo-controls" aria-label="Demo controls"><div><SlidersHorizontal size={17} aria-hidden="true" /><div><strong>Explore the demo</strong><span>See how this view handles different states.</span></div></div><label htmlFor="demo-state">Demo state<select id="demo-state" value={demoState} onChange={event => changeState(event.target.value as DemoState)}><option value="populated">Populated</option><option value="loading">Loading</option><option value="empty">Empty</option><option value="partial">Partial / stale</option><option value="error">Failed load</option></select></label></section>

@@ -31,9 +31,9 @@ export function useScreen() {
     if (routeKey(next) === routeKey(previous)) return
     scroll.current[scrollKey(previous)] = window.scrollY
     if (previous.screen === 'investments' && next.screen === 'holding') listOrigin.current = next.holdingId
-    if (previous.screen === 'banking' && next.screen === 'transaction') listOrigin.current = next.transactionId
+    if (previous.screen === 'banking' && next.screen === 'transaction') listOrigin.current = document.activeElement?.id || `transaction-link-${next.transactionId}`
     focusTarget.current = next.screen === 'investments' && previous.screen === 'holding' && listOrigin.current === previous.holdingId
-      ? `holding-link-${previous.holdingId}` : next.screen === 'banking' && previous.screen === 'transaction' && listOrigin.current === previous.transactionId ? `transaction-link-${previous.transactionId}` : next.screen === 'transaction' ? 'transaction-title' : 'page-title'
+      ? `holding-link-${previous.holdingId}` : next.screen === 'banking' && previous.screen === 'transaction' && listOrigin.current ? listOrigin.current : next.screen === 'transaction' ? 'transaction-title' : 'page-title'
     if (push) window.history.pushState(null, '', next.screen === 'holding' ? `#/investments/${next.holdingId}` : next.screen === 'transaction' ? `#/banking/${next.transactionId}` : `#/${next.screen}`)
     current.current = next
     navigated.current = true

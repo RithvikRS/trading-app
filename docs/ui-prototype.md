@@ -1,6 +1,6 @@
 # Frontend prototype
 
-Step 2A provides the local Overview screen and frontend foundation. Steps 2B.1 and 2B.2 add investment holdings and details; Step 2C.1 adds banking activity and transaction inspection. All financial records, dates, and exchange rates are fictional. Overview, Investments, and Banking are available through navigation; other destinations are visibly marked **Soon** and are not interactive links.
+Step 2A provides the local Overview screen and frontend foundation. Steps 2B.1 and 2B.2 add investment holdings and details; Step 2C.1 adds banking activity and transaction inspection; Step 2C.2 adds transfer matching review. All financial records, dates, and exchange rates are fictional. Overview, Investments, and Banking are available through navigation; other destinations are visibly marked **Soon** and are not interactive links.
 
 ## Behavior
 
@@ -39,7 +39,7 @@ Loading and empty details remain navigable. In partial mode, the advisor fund ha
 
 ## Banking activity and inspection
 
-Banking contains 28 original-INR records across HDFC and SBI: 26 posted and two pending. Search matches description, counterparty, and friendly sample reference literally. Account, inclusive booking-date range, direction, posting status, recorded category, and review-status filters combine. Date/amount/description sorting supports both directions with stable identity ties. Legitimate repeated payments remain separate. Invalid date ranges withhold movement totals; ranges beyond supplied coverage explain the limitation.
+Banking contains 28 original-INR records across HDFC and SBI: 26 posted and two pending. Search matches description, counterparty, and friendly sample reference literally. Account, inclusive booking-date range, direction, posting status, effective category, and review-status filters combine. Effective transfer classifications are separate from read-only source categories. Date/amount/description sorting supports both directions with stable identity ties. Legitimate repeated payments remain separate. Invalid date ranges withhold movement totals; ranges beyond supplied coverage explain the limitation.
 
 Bank cards show independent booked-balance snapshots. Expand Source details to see opening balance, calculated closing balance, statement-minus-calculated difference, activity date, and period coverage. Monetary fields follow the selected reporting currency with labeled original INR amounts; reconciliation arithmetic remains in native minor units. The account/date-range movement summary includes transfers and is labeled money in/out, not income/spending. Search and other classification filters only affect the matching-result subtotals. Pending entries are counted separately and excluded from posted movements and reconciliation. There is no synthetic running balance.
 
@@ -50,13 +50,35 @@ Bank cards show independent booked-balance snapshots. Expand Source details to s
 | Posted debits | 86,665.90 | 6,599.00 |
 | Closing balance | 1,86,420.00 | 74,850.00 |
 
-The period is 1–20 October 2026, through the balance cutoff at 10:00 IST. Both accounts reconcile in the complete fixture. Partial mode removes SBI's INR 2,200 bill, labels activity stale/incomplete, and shows a difference of INR -2,200 without changing the supplied closing balance. HDFC/SBI snapshots feed Overview directly; broker cash remains outside Banking. Overview's selected bank activity uses these same source records and initial pair evidence. Its INR 2,450 spending example is an excerpt, not a full-period spending calculation.
+The period is 1–20 October 2026, through the balance cutoff at 10:00 IST. Both accounts reconcile in the complete fixture. Partial mode removes SBI's INR 2,200 bill, labels activity stale/incomplete, and shows a difference of INR -2,200 without changing the supplied closing balance. HDFC/SBI snapshots feed Overview directly; broker cash remains outside Banking. Overview's selected bank activity uses these same source records and current transfer decisions. Unlinking the initial pair changes the Overview excerpt to an unreviewed movement. Its INR 2,450 spending example is an excerpt, not a full-period spending calculation.
 
-`#/banking` and known `#/banking/t01`–`#/banking/t28` routes are allowlisted. The inspector is a native modal panel on the right on desktop and full width on mobile; the background is inert until closed. It displays original narration/reference, booking/value dates, amount/direction, source period, separate balance/activity dates, and read-only category/pair evidence. Absent value dates stay unsupplied. A known record missing from partial/empty data gets an unavailable inspector; unknown identifiers get the shared unavailable route. No raw URL content is echoed.
+`#/banking` and known `#/banking/t01`–`#/banking/t28` routes are allowlisted. The inspector is a native modal panel on the right on desktop and full width on mobile; the background is inert until closed. It displays original narration/reference, booking/value dates, amount/direction, source period, separate balance/activity dates, and original category alongside effective classification and current pair evidence. Absent value dates stay unsupplied. A known record missing from partial/empty data gets an unavailable inspector; unknown identifiers get the shared unavailable route. No raw URL content is echoed.
 
 Search, filters, expanded controls, sort, and list scroll survive navigation. Inspection focuses its heading, contains keyboard focus, supports Escape, and returns focus to the originating row or the list heading. Direct reload opens the inspector with default list controls. An inspector privacy control changes the same global masking preference; raw narration/reference are removed while hidden. All displayed amounts, including closed source disclosures and background content, follow shared masking. Only display preferences persist.
 
-Bank cards, scope summaries, matching-result subtotals, transaction rows, reconciliation fields, and the inspector’s primary amount all follow the global reporting currency. Differing original INR amounts are labeled separately, and source narration remains verbatim. This uses the dated demo FX rate for display, never historical FX or a change to source amounts. Recorded categories and the initial matched sample pair are read-only. Candidate generation, matching decisions, undo, and category editing are not implemented in Step 2C.1.
+Bank cards, scope summaries, matching-result subtotals, transaction rows, reconciliation fields, and the inspector’s primary amount all follow the global reporting currency. Differing original INR amounts are labeled separately, and source narration remains verbatim. This uses the dated demo FX rate for display, never historical FX or a change to source amounts. Recorded categories stay read-only. Transfer decisions, candidate generation, undo, and reset are implemented in Step 2C.2; category editing remains planned.
+
+## Transfer matching review
+
+Banking has Activity and Transfers views. Review uses all loaded source records regardless of activity filters; each leg outside those filters is labeled and remains inspectable. The originating review link, selected status, activity filters, and scroll survive inspection and navigation. No extra financial data or decisions enter URLs or browser storage.
+
+The initial review queue contains one suggested pair (HDFC debit/SBI credit of INR 8,000), two ambiguous pairs (one INR 5,000 debit with two competing credits), one unmatched INR 3,500 debit, one seeded confirmed INR 25,000 pair, and no dismissed candidates. Suggested/ambiguous/dismissed counts refer to pairs; unmatched counts refer to records. Pending records and known non-transfer activity are outside candidate generation.
+
+Candidates require distinct posted entries in different known accounts with the same fictional owner, opposite directions, exactly equal positive native amounts and currency, and booking dates within three calendar days. Dates are validated and compared in UTC as calendar dates. Only unresolved/source-transfer roles qualify. Equal amounts/dates suggest a pair but do not prove a transfer. Matching structured sample references are supporting evidence; narration similarity is not a matching rule. Fees, purchases, refunds, salary, investment funding, and other known non-transfer records remain separate.
+
+| Action | Behavior |
+| --- | --- |
+| Review pair / Confirm this pair | Preview the exact two records, then explicitly confirm. All eligibility and exclusive-membership checks run again before both legs receive one transfer classification. A stale/conflicting action fails without a partial update. Repeated confirmation is idempotent. |
+| Dismiss / Restore | Change only the selected candidate pair. Competing alternatives remain available; restored candidates cannot reuse a record already confirmed elsewhere. |
+| Unlink | Remove the pair overlay from both records and expose their previous classifications together. Original amounts/narration are never overwritten. The model also preserves an underlying manual classification for the later category workflow. |
+| Undo last change | Reverse the latest applicable confirm, dismiss, restore, or unlink action atomically. An inverse that would recreate an incomplete/conflicting pair is skipped; if none can apply, show an explanation. This is local demo history, not a durable audit log. |
+| Reset sample decisions | Clear decisions and history and restore only the initial pair whose source legs are available. Display preferences and original records remain unchanged. |
+
+Confirmed transfers appear once in review totals and are excluded from income/spending classification even when the activity filters show only one leg. Gross account/date money-in/out still includes each posted ledger entry. Unresolved posted outgoing and incoming amounts are displayed separately as coverage, not spending/income. Initially these are INR 16,500 outgoing and INR 18,000 incoming; confirming the unique pair reduces them to INR 8,500 and INR 10,000. The separate INR 5.90 fee remains an expense record. No full classified-spending report or category editor is introduced.
+
+Populated/partial/loading/error modes preserve compatible decisions. Missing or ineligible source legs make the whole retained pair unresolved and exclude it from confirmed totals; the remaining leg is reserved until unlink, preventing reuse. Restored source coverage can make the retained pair valid again. Partial mode warns that only available activity is considered. Empty mode clears decisions/history/selection; loading the populated sample reinstates initial evidence. Reload resets all review decisions. The inspector and Overview read the same effective classification as Banking.
+
+Every reporting amount uses the shared INR/USD preference, including pair previews and coverage. Masking removes displayed original/converted amounts and raw/structured references; action messages and counts contain no amounts. Unknown, zero, pending, and incomplete states stay distinct. Source accounting, dated balance snapshots, and the Overview baseline remain unchanged.
 
 ## Theme and chart colors
 
@@ -75,7 +97,7 @@ Three-pixel separators sit at the exact cumulative allocation boundaries. They r
 
 ## Fixture calculations
 
-`frontend/src/data/holdings.ts` owns instrument identities, account/folio snapshots, and dated quotes. Overview derives its investment positions from the same collection in `portfolio.ts`, where broker cash, history, and selected investment activity remain. Bank snapshots, source transactions, selectors, and reconciliation live in `banking.ts`; Overview consumes its balances and selected activity. `holdingRecords.ts` holds separate selected investment activity and employee lots keyed by holding ID. `money.ts` contains exact parsing, rounding, conversion, and formatting helpers. There is no production accounting engine.
+`frontend/src/data/holdings.ts` owns instrument identities, account/folio snapshots, and dated quotes. Overview derives its investment positions from the same collection in `portfolio.ts`, where broker cash, history, and selected investment activity remain. Bank snapshots, source transactions, selectors, and reconciliation live in `banking.ts`; Overview consumes its balances and selected activity. `holdingRecords.ts` holds separate selected investment activity and employee lots keyed by holding ID. `money.ts` contains exact parsing, rounding, conversion, and formatting helpers. The pure transfer-review model in `transfers.ts` owns candidate eligibility, effective classification, in-memory decisions/history, and coverage. There is no production accounting engine.
 
 Amounts start as decimal strings and become `bigint` paise/cents. Units use eight decimal places and quotes use six, also as scaled integers. Multiplication is exact; native valuation rounds to minor units, half away from zero, before FX conversion. Parsing rejects ambiguous input and excess precision. Floating point is used only for presentation percentages and chart coordinates after exact financial totals are calculated.
 
@@ -91,11 +113,11 @@ The fictional rate is **1 USD = INR 83.50**, dated 20 October 2026. Conversion u
 | Partial-mode unpriced holding | Unknown; excluded, not zero |
 | Sample spending, excluding transfers/purchases | 2,450.00 |
 
-Account and asset-class totals reconcile to the summary. Bank and broker cash are counted once. The last history point matches the full current snapshot. History describes asset value, not returns; deposits, withdrawals, and currency movements can affect it. The matched bank transfer is not income or spending. These examples do not implement a transfer-matching engine.
+Account and asset-class totals reconcile to the summary. Bank and broker cash are counted once. The last history point matches the full current snapshot. History describes asset value, not returns; deposits, withdrawals, and currency movements can affect it. The matched bank transfer is not income or spending. Transfer matching is a local fixture review model; it does not import data or execute bank transfers.
 
 ## Security boundary
 
-The prototype has no backend, authentication, uploads, provider access, live quotes, analytics, or financial persistence. Only theme, currency, and amount-mask preferences are persisted under `portfolio.display.v1`. Invalid or blocked storage falls back safely. Holdings controls stay in memory, routes are allowlisted, and searches render as plain text. Hidden values are omitted from rendered DOM and accessible labels. Masking is a display feature; bundled fixture data remains inspectable.
+The prototype has no backend, authentication, uploads, provider access, live quotes, analytics, or financial persistence. Transfer decisions, selection, and undo history remain in memory. Only theme, currency, and amount-mask preferences are persisted under `portfolio.display.v1`. Invalid or blocked storage falls back safely. Holdings controls stay in memory, routes are allowlisted, and searches render as plain text. Hidden values are omitted from rendered DOM and accessible labels. Masking is a display feature; bundled fixture data remains inspectable.
 
 Vite development and preview bind to `127.0.0.1` with fixed ports and host checks. Development file access is restricted to the frontend directory. Both send no-sniff, no-referrer, frame-denial, and camera/microphone/geolocation restrictions. The content policy limits scripts, fonts, images, and connections to the local origin; development adds inline scripts and the local HMR WebSocket for Vite refresh. Dynamic allocation styling requires inline styles. Production preview removes the inline-script exception and sends `frame-ancestors 'none'`; built HTML also contains a fallback content-policy meta tag. Frame restrictions require HTTP headers and cannot be enforced by that meta tag alone.
 
@@ -109,15 +131,17 @@ Local verification on 21 October 2026:
 
 | Check | Result |
 | --- | --- |
-| `npm run check` | Passed: 85 tests across ten files, TypeScript checks, production build |
+| `npm run check` | Passed: 148 tests across twelve files, TypeScript checks, production build |
 | Financial fixtures | Exact totals, allocation/account reconciliation, fractional valuation and rounding, missing values, duplicate-security identity, currency display, transfer exclusion, fixed weight denominator, lot-unit reconciliation, supplied purchase amounts and distinct unknown/zero fees |
 | Component behavior | Combined holdings filters, literal search, numeric/stable sorting, missing values last, all 14 direct detail links, converted acquisition displays and unchanged source records, currency/range, privacy including hidden DOM text and accessible attributes, originating-row focus, state transitions, retry, persisted preferences, blocked/malformed storage |
 | Banking accounting | HDFC/SBI opening/posted movement/closing reconciliation; unchanged Overview totals; pending exclusion; partial discrepancy without balance adjustment; repeated payments preserved; immutable source accessors |
-| Banking behavior | Combined filters and inclusive booking dates, invalid ranges, scope versus matching totals, stable sorting, all 28 direct inspectors, consistent reporting USD with labeled original INR, read-only pair evidence, absent records, browser history, retained controls/scroll, focus containment/return, and narration/amount masking |
+| Banking behavior | Combined filters and inclusive booking dates, invalid ranges, scope versus matching totals, stable sorting, all 28 direct inspectors, consistent reporting USD with labeled original INR, current pair evidence, absent records, browser history, retained controls/scroll, focus containment/return, and narration/amount masking |
+| Transfer integrity | Unique/competing/unmatched candidates, native currency/amount/owner/date constraints, atomic confirmation, exclusive membership, repeated actions, pair-specific dismissal/restore, unlink/undo, incomplete source coverage, prior classification restoration, and unchanged ledger/balance totals |
+| Transfer interactions | Two-stage confirmation, source inspection outside activity filters with exact link focus return, shared Overview classification, preserved decisions across navigation/partial/error/retry, empty/reset/reload behavior, INR/USD and masking across coverage, pairs, source inspection, and status announcements |
 | Structural accessibility | Axe check passed in jsdom; color contrast checked separately in the browser |
 | Responsive browser review | Light/dark screenshots at 1440, 768, and 390 px; no horizontal overflow, including at 320 px with a scrollbar |
 | Keyboard | Drawer forward/reverse focus wrap and Escape return; destination heading focus, visible mobile sorting without hidden tab stops; chart slider arrow navigation and data table |
-| Text contrast | No failing measured text pairs in either theme, including warning states; gradient-card text also checked, lowest text pair approximately 4.80:1 |
+| Text contrast | No failing measured text pairs in either theme, including warning states; gradient-card text also checked, lowest measured pair approximately 4.73:1 |
 | Allocation contrast | Each segment and matching legend marker contrasts with the panel by at least 4.28:1 in light mode and 6.00:1 in dark mode; three-pixel separators distinguish adjoining segments |
 | Production interactions | Holdings search/filters, currency/privacy across routes, loading, empty reset, partial valuation, error retention/retry, Back/Forward and reload; no browser warnings/errors observed |
 | Browser policy | Local script/style URLs; production security headers verified, including CSP and frame denial |
@@ -190,6 +214,20 @@ The list screenshots use the literal search `transfer`, showing two supplied tra
 
 Transaction inspection: [desktop light](screenshots/banking-inspector-1440-light.jpg), [mobile light](screenshots/banking-inspector-390-light.jpg), and [mobile dark](screenshots/banking-inspector-390-dark.jpg). The [partial-data/error example](screenshots/banking-partial-error-390-dark.jpg) shows SBI source reconciliation with the separate balance retained. All values, labels, and references are fictional.
 
+### Transfer review verification and screenshots (Step 2C.2)
+
+Production-browser review covered unique and competing candidates, confirmation, pair-specific dismissal/restore, unlink and undo, source inspection outside activity filters, exact origin-link focus return, and the shared Overview excerpt. Partial/error/retry retained compatible decisions. USD displays, masking of amounts and references, and the source inspector were checked on mobile. Automated tests additionally cover missing/ineligible source legs, stale actions, underlying manual classifications, exclusive membership, invalid/calendar-boundary dates, empty/reset/reload behavior, and every existing workspace currency surface.
+
+Both themes were checked at 1440, 768, 390, and 320 px without horizontal overflow, including a selected pair and the source inspector at 320 px. Measured non-gradient text contrast remained at least approximately 4.80:1 light and 4.73:1 dark, including warning states. Summary cards reuse the existing hero gradient tokens; muted-text contrast at their endpoints is at least 4.84:1 light and 5.12:1 dark. Structural axe checks passed with the confirmation panel both collapsed and expanded. Production-preview logs contained no warnings/errors, and local asset URLs and security headers were verified. No dependencies changed. The outstanding zoom, screen-reader, and runtime reduced-motion checks above still apply.
+
+| Suggested pair | Light | Dark |
+| --- | --- | --- |
+| Desktop, 1440 px | [Screenshot](screenshots/transfers-1440-light.jpg) | [Screenshot](screenshots/transfers-1440-dark.jpg) |
+| Tablet, 768 px | [Screenshot](screenshots/transfers-768-light.jpg) | [Screenshot](screenshots/transfers-768-dark.jpg) |
+| Mobile, 390 px | [Screenshot](screenshots/transfers-390-light.jpg) | [Screenshot](screenshots/transfers-390-dark.jpg) |
+
+Additional evidence: [competing candidates](screenshots/transfers-ambiguous-1440-light.jpg), [explicit mobile confirmation in USD](screenshots/transfers-confirm-390-dark.jpg), [confirmed pairs counted once](screenshots/transfers-confirmed-1440-dark.jpg), and [partial coverage with a retained load error](screenshots/transfers-partial-error-390-dark.jpg). Screenshots use fictional records; tall viewport captures show the queue layout, while the confirmation and error examples show their relevant viewport. Reflow was measured separately at a 1000 px viewport height.
+
 ## Next increment
 
-[Step 2C.2](banking-prototype-plan.md#step-2c2-transfer-matching-review) adds transfer matching review; Step 2C.3 adds category corrections. Both remain planned. Budgets and import/connection walkthroughs follow. Production data and security foundations remain separate work.
+[Step 2C.3](banking-prototype-plan.md#step-2c3-category-review) adds category corrections and remains planned. Budgets and import/connection walkthroughs follow. Production data and security foundations remain separate work.

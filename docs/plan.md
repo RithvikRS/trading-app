@@ -2,7 +2,7 @@
 
 Planning baseline: 21 October 2026.
 
-Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. Step 2C.1 adds HDFC/SBI activity and transaction inspection. See the [implementation notes](ui-prototype.md) for current behavior and verification. [Transfer matching review (2C.2) and category corrections (2C.3)](banking-prototype-plan.md) remain planned, as do later screens.
+Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. Step 2C.1, covering HDFC/SBI activity and transaction inspection, is also merged into `main`. Step 2C.2 adds transfer matching review with reversible in-memory decisions. See the [implementation notes](ui-prototype.md) for current behavior and verification. [Category corrections (2C.3)](banking-prototype-plan.md#step-2c3-category-review) remain planned, as do later screens.
 
 Build a personal finance application that provides a trustworthy view of investments and banking activity with as little manual maintenance as supported integrations allow. Security takes priority over convenience, cost optimization, and delivery speed. Financial accuracy and recoverability are part of that requirement.
 

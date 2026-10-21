@@ -31,7 +31,7 @@ describe('banking activity and inspection', () => {
     const summary = screen.getByRole('region', { name: 'Account and date range movements' }).textContent
     await user.type(screen.getByRole('searchbox'), ' coffee ')
     await user.click(screen.getByRole('button', { name: 'Filters' }))
-    await user.selectOptions(screen.getByLabelText('Recorded category'), 'dining')
+    await user.selectOptions(screen.getByLabelText('Effective category'), 'dining')
     await user.selectOptions(screen.getByLabelText('Review status'), 'recorded')
     await user.selectOptions(screen.getByLabelText('Direction'), 'debit')
     expect(rowLinks()).toHaveLength(2)
@@ -58,17 +58,15 @@ describe('banking activity and inspection', () => {
     await user.click(screen.getByRole('button', { name: 'Explore sample banking' }))
     expect(rowLinks()).toHaveLength(28)
   })
-  it('opens every known transaction directly with its own source and original amount', () => {
-    for (const item of getBankTransactions()) {
-      const view = renderRoute(`#/banking/${item.id}`)
-      const panel = inspector()
-      expect(within(panel).getByRole('heading', { level: 2 }).textContent).toBe(item.description)
-      expect(panel.textContent).toContain(formatMoney(item.amount))
-      expect(panel.textContent).toContain(item.narration)
-      expect(panel.textContent).toContain(item.sourceId)
-      expect(document.activeElement?.id).toBe('transaction-title')
-      view.unmount()
-    }
+  it.each(getBankTransactions())('opens $id directly with its own source and original amount', item => {
+    const view = renderRoute(`#/banking/${item.id}`)
+    const panel = inspector()
+    expect(within(panel).getByRole('heading', { level: 2 }).textContent).toBe(item.description)
+    expect(panel.textContent).toContain(formatMoney(item.amount))
+    expect(panel.textContent).toContain(item.narration)
+    expect(panel.textContent).toContain(item.sourceId)
+    expect(document.activeElement?.id).toBe('transaction-title')
+    view.unmount()
     expect(document.body.style.overflow).toBe('')
   })
   it('restores filters, sort, scroll and row focus, including browser Back/Forward', async () => {
