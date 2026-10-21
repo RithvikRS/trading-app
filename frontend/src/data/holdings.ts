@@ -61,12 +61,14 @@ export function valueHolding(units: bigint, quote: bigint, currency: Currency): 
   return { minor: divideRounded(units * quote, 10n ** BigInt(UNIT_SCALE + QUOTE_SCALE - 2)), currency }
 }
 
+export function isHoldingId(id: string): boolean { return snapshots.some(snapshot => snapshot.id === id) }
+
 export function getHoldings(partial = false): Holding[] {
   return snapshots.map(snapshot => {
     const instrument = instruments.find(item => item.id === snapshot.instrumentId)!
     const units = parseFixed(snapshot.units, UNIT_SCALE)
     const stale = partial && snapshot.accountId === 'ubs'
-    const holdingsDate = stale ? '2026-10-17T03:30:00Z' : snapshot.accountId === 'advisor' ? '2026-10-18T12:00:00Z'
+    const holdingsDate = stale ? '2026-10-17T03:30:00Z' : snapshot.accountId === 'advisor' ? '2026-10-18T04:30:00Z'
       : instrument.market === 'US' ? '2026-10-20T03:30:00Z' : '2026-10-20T12:00:00Z'
     const quote = partial && snapshot.id === 'h13' ? null : {
       amount: parseFixed(prices[instrument.id]!, QUOTE_SCALE),

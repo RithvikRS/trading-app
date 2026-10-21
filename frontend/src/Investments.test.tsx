@@ -13,12 +13,13 @@ function table() { return screen.getByRole('table', { name: /Investment holdings
 function summary() { return screen.getByRole('region', { name: 'Investment summary' }) }
 
 describe('Investments', () => {
-  it('renders account-specific holdings without detail links and reconciles the summary', () => {
+  it('renders account-specific holding links and reconciles the summary', () => {
     renderInvestments()
     expect(within(summary()).getByText('₹47,96,290')).toBeTruthy()
     expect(within(table()).getAllByRole('row')).toHaveLength(15)
     expect(within(table()).getAllByRole('row', { name: /Accenture/ })).toHaveLength(2)
-    expect(within(table()).queryByRole('link')).toBeNull()
+    expect(within(table()).getAllByRole('link')).toHaveLength(14)
+    expect(within(table()).getByRole('link', { name: 'View Accenture at UBS' }).getAttribute('href')).toBe('#/investments/h14')
     expect(screen.getByRole('status').textContent).toBe('Showing 14 of 14 holdings')
   })
   it('combines search and filters, clears no matches, and retains the full portfolio denominator', async () => {
@@ -140,7 +141,8 @@ describe('Investments', () => {
   it('allowlists routes and provides a safe unavailable screen', () => {
     expect(readScreen('#/investments')).toBe('investments')
     expect(readScreen('#/overview')).toBe('overview')
-    expect(readScreen('#/investments/h14')).toBe('unavailable')
+    expect(readScreen('#/investments/h14')).toBe('holding')
+    expect(readScreen('#/investments/h99')).toBe('unavailable')
     window.history.replaceState(null, '', '/#/unknown')
     render(<App />)
     expect(screen.getByRole('heading', { name: 'This view is unavailable.' })).toBeTruthy()

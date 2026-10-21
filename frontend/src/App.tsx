@@ -14,6 +14,7 @@ import type { Account, Currency, DemoState, Position } from './data/portfolio'
 import { readPreferences, savePreferences } from './preferences'
 import { Amount, DisplayContext } from './display'
 import Investments from './Investments'
+import HoldingDetail from './HoldingDetail'
 import { defaultControls } from './data/holdings'
 import { useScreen } from './routes'
 import type { Screen } from './routes'
@@ -180,9 +181,11 @@ function LoadingState() {
 }
 
 export default function App() {
-  const { screen, navigate } = useScreen()
-  const screenLabel = screen === 'investments' ? 'Investments' : screen === 'overview' ? 'Overview' : 'Unavailable'
+  const { screen, route, navigate, openHolding } = useScreen()
+  const navScreen = screen === 'holding' ? 'investments' : screen
+  const screenLabel = screen === 'holding' ? 'Holding details' : screen === 'investments' ? 'Investments' : screen === 'overview' ? 'Overview' : 'Unavailable'
   const [holdingsControls, setHoldingsControls] = useState(defaultControls)
+  const [holdingsFiltersOpen, setHoldingsFiltersOpen] = useState(false)
   const [preferences, setPreferences] = useState(readPreferences)
   const [demoState, setDemoState] = useState<DemoState>('populated')
   const [lastGoodState, setLastGoodState] = useState<'populated' | 'partial' | 'empty'>('populated')
@@ -214,7 +217,9 @@ export default function App() {
   function closeDrawer() { drawerNavigating.current = false; drawer.current?.close(); menuButton.current?.focus() }
   function navigateFromDrawer() { drawerNavigating.current = true; drawer.current?.close() }
   function finishDrawerClose() {
-    if (drawerNavigating.current) document.getElementById('page-title')?.focus({ preventScroll: true })
+    if (drawerNavigating.current) {
+      if (!document.activeElement?.id.startsWith('holding-link-')) document.getElementById('page-title')?.focus({ preventScroll: true })
+    }
     else menuButton.current?.focus()
     drawerNavigating.current = false
   }
@@ -229,7 +234,7 @@ export default function App() {
 
   return <DisplayContext.Provider value={preferences}>
     <a href="#main-content" className="skip-link" onClick={event => { event.preventDefault(); document.getElementById('main-content')?.focus() }}>Skip to {screenLabel.toLowerCase()}</a>
-    <div className="app-layout"><Sidebar screen={screen} navigate={navigate} />
+    <div className="app-layout"><Sidebar screen={navScreen} navigate={navigate} />
       <div className="main-shell">
         <header className="topbar">
           <div className="topbar-left"><button ref={menuButton} className="icon-button menu-toggle" aria-label="Open navigation" onClick={() => drawer.current?.showModal()}><Menu size={21} aria-hidden="true" /></button><span className="breadcrumb"><span>Workspace</span><ChevronRight size={14} aria-hidden="true" /><strong>{screenLabel}</strong></span></div>
@@ -243,7 +248,8 @@ export default function App() {
           {screen === 'overview' && <div className="page-heading"><div><span className="eyebrow">Your overview <span className="mobile-demo">· Sample data</span></span><h1 id="page-title" tabIndex={-1}>Everything, in perspective<span>.</span></h1><p>A clear view of your investments and everyday cash.</p></div><div className="snapshot-label"><Clock3 size={14} aria-hidden="true" /><span>Snapshot as of<strong>{AS_OF}</strong></span></div></div>}
           {demoState === 'error' && <div role="alert" className="notice error-notice"><AlertTriangle size={19} aria-hidden="true" /><div><strong>The latest snapshot couldn’t load.</strong><p>{lastGoodState === 'empty' ? 'The last demo view had no accounts.' : 'You’re still seeing the last available sample snapshot.'} This is a simulated error.</p></div><button className="outlined-button" onClick={retry} disabled={retrying}><RefreshCw size={14} className={retrying ? 'spinning' : ''} aria-hidden="true" />{retrying ? 'Retrying…' : 'Retry demo'}</button></div>}
           {screen === 'unavailable' ? <section className="empty-state"><span className="eyebrow">Local prototype · Sample data</span><h1 id="page-title" tabIndex={-1}>This view is unavailable.</h1><p>Overview and Investments are the available screens.</p><a className="primary-button" href="#/investments">Go to investments</a></section>
-            : screen === 'investments' ? <Investments view={view} controls={holdingsControls} onChange={setHoldingsControls} onReset={() => changeState('populated')} />
+            : route.screen === 'holding' ? <HoldingDetail holdingId={route.holdingId} view={view} onBack={() => navigate('investments')} onReset={() => changeState('populated')} />
+            : screen === 'investments' ? <Investments view={view} controls={holdingsControls} onChange={setHoldingsControls} onReset={() => changeState('populated')} onOpen={openHolding} filtersOpen={holdingsFiltersOpen} onToggleFilters={() => setHoldingsFiltersOpen(open => !open)} />
             : view === 'loading' ? <LoadingState /> : view === 'empty' ? <EmptyState reset={() => changeState('populated')} /> : <>
             <Summary positions={positions} />
             <div className={`coverage-strip ${partial ? 'needs-attention' : ''}`}>
@@ -259,6 +265,6 @@ export default function App() {
         </main>
       </div>
     </div>
-    <dialog ref={drawer} className="nav-drawer" aria-label="Navigation" onKeyDown={containDrawerFocus} onCancel={closeDrawer} onClose={finishDrawerClose} onClick={event => { if (event.target === drawer.current) closeDrawer() }}><div className="drawer-body"><div className="drawer-header"><Brand /><button className="icon-button" onClick={closeDrawer} aria-label="Close navigation"><X size={21} aria-hidden="true" /></button></div><Navigation screen={screen} navigate={navigate} onNavigate={navigateFromDrawer} /><p className="drawer-note"><ShieldCheck size={16} aria-hidden="true" />Local demo · Fictional data</p></div></dialog>
+    <dialog ref={drawer} className="nav-drawer" aria-label="Navigation" onKeyDown={containDrawerFocus} onCancel={closeDrawer} onClose={finishDrawerClose} onClick={event => { if (event.target === drawer.current) closeDrawer() }}><div className="drawer-body"><div className="drawer-header"><Brand /><button className="icon-button" onClick={closeDrawer} aria-label="Close navigation"><X size={21} aria-hidden="true" /></button></div><Navigation screen={navScreen} navigate={navigate} onNavigate={navigateFromDrawer} /><p className="drawer-note"><ShieldCheck size={16} aria-hidden="true" />Local demo · Fictional data</p></div></dialog>
   </DisplayContext.Provider>
 }

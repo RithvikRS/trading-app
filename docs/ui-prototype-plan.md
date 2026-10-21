@@ -1,6 +1,6 @@
 # UI prototype plan
 
-The prototype establishes visual design and everyday interactions before connecting financial accounts. Step 2A provides the Overview and minimum frontend foundation and is merged into `main`. Step 2B.1 implements the investment holdings list; [implementation notes](ui-prototype.md) describe both screens and their verification. Step 2B.2 and later screens remain planned.
+The prototype establishes visual design and everyday interactions before connecting financial accounts. Steps 2A and 2B.1 provide the Overview, frontend foundation, and investment holdings list and are merged into `main`. Step 2B.2 implements holding details; [implementation notes](ui-prototype.md) describe the screens and their verification. Step 2C and later screens remain planned.
 
 ## Scope and visual direction
 
@@ -17,8 +17,8 @@ The prototype runs on loopback with fabricated fixtures. Backend services, datab
 | Increment | Deliverable | Status |
 | --- | --- | --- |
 | 2A | Frontend foundation, responsive shell, Overview | Merged into main |
-| 2B.1 | [Investment holdings list](#holdings-list-2b1) | Implemented |
-| 2B.2 | [Holding detail views](#holding-details-2b2) | Planned |
+| 2B.1 | [Investment holdings list](#holdings-list-2b1) | Merged into main |
+| 2B.2 | [Holding detail views](#holding-details-2b2) | Implemented |
 | 2C | Banking activity, sample transfer matching, category review | Planned |
 | 2D | Budgets, cash flow, monthly categories, recurring items | Planned |
 | 2E | Import-review walkthrough and connection status with bundled samples | Planned |
@@ -70,7 +70,7 @@ See W3C guidance for [contrast](https://www.w3.org/WAI/WCAG22/Understanding/cont
 
 ## Step 2B: Investments
 
-Status: the holdings list (2B.1) is implemented. Holding details (2B.2) remain planned.
+Status: the holdings list (2B.1) and holding details (2B.2) are implemented.
 
 Help answer what is owned, where it is held, how much it is currently worth, and whether its units and prices are current. Retain Indigo & Apricot, the shared navigation/header, theme and currency controls, amount masking, and visible sample-data labeling. The prototype continues to use bundled fictional records only.
 
@@ -79,13 +79,13 @@ Help answer what is owned, where it is held, how much it is currently worth, and
 | Increment | Deliverable | Status | Conventional commit |
 | --- | --- | --- | --- |
 | 2B.1 | Individual holding fixtures, Overview reconciliation, Investments navigation, searchable/filterable/sortable holdings list | Implemented | `feat(investments): add searchable holdings overview` |
-| 2B.2 | Holding detail pages, source dates, sample activity, and UBS ESPP lot presentation | Planned | `feat(investments): add holding detail views` |
+| 2B.2 | Holding detail pages, source dates, sample activity, and UBS ESPP lot presentation | Implemented | `feat(investments): add holding detail views` |
 
-Each increment includes its relevant tests, documentation, and light/dark desktop/mobile screenshots. Follow the existing `dev` to `main` PR workflow. During 2B.1, rows present their data without implying that the later detail destination already works.
+Each increment includes its relevant tests, documentation, and light/dark desktop/mobile screenshots. Follow the existing `dev` to `main` PR workflow. Holding names now link to their account-specific detail pages.
 
 ### Holdings list: 2B.1
 
-Implemented with 14 holdings across four investment accounts. Rows display data without detail links. Source-date sorting uses the holdings snapshot date; quote/NAV dates are displayed independently. Search, filters, sorting, and scroll survive navigation between Overview and Investments for the current session. Detail navigation requirements below belong to 2B.2.
+Implemented with 14 holdings across four investment accounts. Source-date sorting uses the holdings snapshot date; quote/NAV dates are displayed independently. Search, filters, sorting, expanded filters, and scroll survive navigation for the current session. Step 2B.2 adds links and return focus to the originating holding.
 
 Use a full-width working area with a compact summary, search/filter toolbar, and holdings table. Mobile uses readable cards with the same information hierarchy rather than a compressed desktop table.
 
@@ -107,6 +107,8 @@ Rows represent one instrument in one account and, for mutual funds, one sample f
 Use approximately 12–16 fictional holdings across INDmoney India, INDmoney US, advisor funds, and UBS. Include Indian/US stocks and ETFs, fractional units, direct and regular funds, the same security in two accounts, a missing NAV, and stale holdings with a separately dated price. Keep HDFC/SBI and broker cash in the shared Overview data.
 
 ### Holding details: 2B.2
+
+Implemented for every known holding, including direct routes with opaque IDs. Unknown identifiers have an unavailable view. Selected activity is supplied only where fixtures contain it; absent records are explained. The three UBS lots total 24 units, retain USD purchase amounts, and distinguish a zero fee from an unknown fee. See [implementation and verification](ui-prototype.md#holding-details).
 
 Selecting a holding opens a dedicated detail page. A two-column desktop layout places the current position and source information beside supporting records; mobile stacks those sections. A breadcrumb and Back to holdings action restore the list's filters, sorting, and scroll position. Browser Back/Forward and direct navigation work, with a clear unavailable view for unknown holding identifiers.
 
