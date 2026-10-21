@@ -1,6 +1,6 @@
 # Frontend prototype
 
-Step 2A provides the local Overview screen and frontend foundation. Steps 2B.1 and 2B.2 add investment holdings and details; Steps 2C.1–2C.3 add banking activity, inspection, transfer matching, and category corrections. Step 2D.1 adds monthly category budgets; Step 2D.2 adds historical cash-flow trends; Step 2D.3 adds recurring-expense review. All financial records, dates, and exchange rates are fictional. Overview, Investments, Banking, and Budgets are available through navigation; other destinations are visibly marked **Soon** and are not interactive links.
+Step 2A provides the local Overview screen and frontend foundation. Steps 2B.1 and 2B.2 add investment holdings and details; Steps 2C.1–2C.3 add banking activity, inspection, transfer matching, and category corrections. Step 2D.1 adds monthly category budgets; Step 2D.2 adds historical cash-flow trends; Step 2D.3 adds recurring-expense review; Step 2E.1 adds connection-status and source-coverage walkthroughs. All financial records, dates, and exchange rates are fictional. Overview, Investments, Banking, Budgets, and Connections are available through navigation; other destinations are visibly marked **Soon** and are not interactive links.
 
 ## Behavior
 
@@ -438,6 +438,66 @@ Screenshots use fictional fixtures, with selected review decisions applied local
 - [Light tablet](screenshots/recurring-light-tablet.jpg) and [dark tablet](screenshots/recurring-dark-tablet.jpg).
 - [Light mobile](screenshots/recurring-light-mobile.jpg), [dark mobile evidence](screenshots/recurring-dark-mobile-evidence.jpg), and [masked dark 320 px](screenshots/recurring-dark-masked-320.jpg).
 
+## Connections and source coverage (Step 2E.1)
+
+Connections is available at `#/connections`. Sources opens six inline inspectors; Sample imports is visibly planned and noninteractive. Literal source/account search is capped at 80 characters, with investment/bank filters and an explicit clear action. Source selection, filters, scenarios, and scroll survive navigation in memory. Closing an inspector restores focus to its source button; browser Back/Forward uses the shared route behavior. Unknown source/import paths remain unavailable. No source/account, search, decision, or permission value enters the route.
+
+### Financial coverage
+
+Coverage is derived from the existing holdings, bank snapshots, and banking coverage intervals. It is independent of the simulated connection state. Source group, sample account, and individual data streams have separate labels. All six sources say **Bundled sample · No provider connected**. Actual automatic access, permissions, and export formats remain unverified; a display-only UI does not prove a provider has read-only scopes.
+
+| Source | Supplied evidence | Gaps and partial-state behavior |
+| --- | --- | --- |
+| INDmoney India | Holdings 20 Oct 2026, 17:30 IST; prices/NAV 18:00 IST | Selected activity only; no complete statement period. Broker cash has no independent timestamp. |
+| INDmoney US | Holdings 20 Oct 2026, 09:00 IST; quotes 01:30 IST | Selected activity only; no complete statement period. Broker cash has no independent timestamp. |
+| Advisor mutual funds | Regular-plan holdings 18 Oct 2026, 10:00 IST; NAV 20 Oct, 18:00 IST | Partial mode removes the NAV, excluding that holding from valued totals. Separate cash was never supplied. |
+| UBS Accenture ESPP | Holdings 20 Oct 2026, 09:00 IST; quotes 01:30 IST; selected employee lots | Partial mode retains stale 17 Oct holdings with 20 Oct quotes. Separate cash and complete tax-basis/history are not supplied. |
+| HDFC | Full August and September statements; October activity and balance through 20 Oct, 10:00 IST | October is month-to-date. Later activity is never supplied. |
+| SBI | Full August and September statements; October balance through 20 Oct, 10:00 IST | Partial mode retains the balance but activity is dated 19 Oct, 10:00 IST; 19–20 Oct coverage is incomplete with a missing bill. |
+
+FX remains separately dated 20 October and display-only. No new monetary surface is introduced; the shared currency/privacy controls and masked FX footer remain intact. Snapshot, full-month, month-to-date, missing stream, stale evidence, and never-supplied data are distinct. Empty source history is not a zero balance. A receipt cannot advance these financial dates.
+
+### Local status and recovery examples
+
+Only INDmoney India/US expose connector simulations; their defaults are Available snapshot and Transient failure, respectively. HDFC, SBI, UBS, and advisor funds are statement examples with no invented authorization or refresh controls. Their next action is source inspection; import previews are still planned.
+
+| Scenario | Initial outcome | Explicit recovery/result |
+| --- | --- | --- |
+| Available snapshot | Sample received | Run sample refresh → In progress → Show sample outcome. Snapshot coverage stays unchanged. |
+| Never received | No attempt or receipt | Run/Show creates only a walkthrough receipt; existing financial fixtures were independently available throughout. |
+| Stale / partial success | Partial sample received | Run/Show retains 17 Oct, 09:00 IST holdings and a missing activity stream in the walkthrough receipt. It does not alter the portfolio's coverage. |
+| Transient failure | Failed attempt with prior receipt | Retry/Show produces the supplied success and preserves financial evidence dates. |
+| Rate limited | Deferred attempt with prior receipt | Simulate retry window enables Retry/Show. No countdown, timer, scheduled retry, or network request exists. |
+| Expired / revoked access | Access blocked with prior receipt | Simulate access renewal enables Retry/Show. Renewal alone does not turn the last blocked attempt into a success or grant real access. |
+
+All walkthrough timestamps are supplied fixtures on **20 Oct 2026**: initial attempt **19:00 IST**; retained receipt after failure/block/rate limit **18:45 IST**; next attempt **19:05 IST**; next successful receipt **19:06 IST**. Successful initial examples use a 19:00 receipt. Receipt holdings/quote dates remain separate; no machine clock is used. The stale/partial receipt is explicitly separate example evidence, with 17 Oct holdings and each account's original 20 Oct quote date, no activity stream, and no statement period.
+
+In-progress is an explicit walkthrough step. Run and scenario selection are disabled while it is active; Show sample outcome advances it and Cancel sample attempt stops it. No background process completes work. A finished scenario cannot append another attempt until a scenario is loaded or connections are reset. Cancellation rejects late completion and permits a fresh bounded retry. The latest three completed/cancelled outcomes form an explanatory sample history, not a provider audit log. Keyboard focus advances to the next relevant control when a step removes or disables the current button.
+
+### Isolation and recovery
+
+The connection reducer accepts only known connector IDs and scenario/action choices. It cannot write holdings, bank records, prices, source coverage, transfer/category decisions, budget limits, or recurring decisions. Reset sample connection states affects this domain only. All source text renders as text; there are no file inputs, passwords, provider login, credential forms, external assets, requests, exports, parsers, schedulers, backend services, or new dependencies.
+
+Populated/partial states preserve compatible scenarios while coverage follows the financial fixtures. Loading hides source data/actions and cancels pending attempts, retaining completed scenarios and prior receipts. Failed load retains the last usable snapshot and scenarios; retry restores that state without creating receipts. Failed load after empty explicitly has no prior accounts. Empty/reload clears connection scenarios, filters, and selection; restoring samples reinstates defaults. Only theme, currency, and amount visibility persist.
+
+Implementation: `frontend/src/data/connections.ts` contains coverage derivation and isolated state transitions; `Connections.tsx` and `connections.css` provide the view. App owns the connection state separately from financial review domains. The existing router adds only the allowlisted Connections destination.
+
+### Connection verification and screenshots
+
+- Full regression run: **320 tests across 22 files passed** using `node node_modules/vitest/vitest.mjs run --maxWorkers=2`. The initial unrestricted parallel run exceeded several existing UI test time limits; bounded concurrency passed without increasing timeouts. TypeScript and the production build passed. The 21 connection data/component tests were rerun after final keyboard refinements.
+- Tests cover all supplied scenarios, retained dates, authorization/retry gates, statement-only sources, no overlapping attempts, cancellation/late completion, bounded history, unknown IDs/enums, literal search, direct/invalid routes, navigation/focus, global states, independent resets, display preferences, privacy, no fetch calls, and automated axe structural checks.
+- Financial invariants cover full/partial assets (INR 5,086,080 / 4,661,080), holdings, all six bank reconciliations, financial coverage, existing category decisions, edited budget limits, cash flow, and confirmed recurring expectations across every walkthrough scenario/reset. Connection reset also preserves recurring decisions and budget/cash-flow actuals in component navigation tests.
+- Production browser checks passed at **1440, 768, 390, and 320 px in both themes**, including expanded source/recovery views without horizontal overflow. Keyboard renewal → run → outcome moves focus to the next control; close returns to the source. Mobile drawer focus wraps and Escape returns to its trigger. Actual Back/Forward retains the source/scenario; loading cancels attempts, error/retry retains evidence, and empty recovery restores defaults. USD/masking leaves no amounts in rendered text or accessible attributes.
+- Minimum measured non-gradient text contrast was **4.80:1 light / 5.84:1 dark**, with no measured failures. Source, scenario, recovery, and history controls have at least **44 px** height at mobile widths. Full screen-reader validation, actual 400% browser zoom/enlarged-text testing, and runtime reduced-motion emulation remain unperformed; narrow-width reflow is not a substitute.
+- Loopback production response returned HTTP 200 with restrictive CSP, frame denial, no-sniff, referrer, and permissions policies. Browser warning/error logs were empty. Dependency manifests and lockfile are unchanged. The final recovery-copy refinement passed the nine component tests, TypeScript, and build.
+
+Screenshots show only fictional fixtures:
+
+- [Light desktop](screenshots/connections-light-desktop.jpg) and [dark desktop](screenshots/connections-dark-desktop.jpg).
+- [Dark recovery step](screenshots/connections-dark-recovery.jpg) and [light SBI coverage](screenshots/connections-light-bank-coverage.jpg).
+- [Light tablet](screenshots/connections-light-tablet.jpg) and [dark tablet](screenshots/connections-dark-tablet.jpg).
+- [Light mobile](screenshots/connections-light-mobile.jpg), [dark mobile recovery](screenshots/connections-dark-mobile-recovery.jpg), and [masked dark 320 px](screenshots/connections-dark-masked-320.jpg).
+
 ## Next increment
 
-Monthly category budgets, cash-flow trends, and [recurring-expense review](budgets-prototype-plan.md#step-2d3-recurring-commitments) complete Step 2D. The [Step 2E plan](imports-prototype-plan.md) defines connection status/coverage (2E.1), bank import previews (2E.2), reversible review decisions and sample completion (2E.3), and investment statement walkthroughs (2E.4). These screens remain planned; completing a future sample review will not change the existing financial ledger or holdings. Production data and security foundations remain separate work.
+[Step 2E.2](imports-prototype-plan.md#step-2e2-bank-import-previews) adds the bank sample catalog, read-only batch previews, issue summaries, and original/normalized row inspection. Review decisions/completion (2E.3) and investment walkthroughs (2E.4) remain planned. No sample import functionality, production ingestion, or provider connection is activated by Step 2E.1.

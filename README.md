@@ -10,6 +10,8 @@ Banking adds HDFC/SBI booked balance snapshots, 58 fictional transactions across
 
 Budgets adds October category limits, exact INR editing, separate undo/reset, and actual-spending breakdowns linked to the same source records and category decisions. Missing classifications or activity make remaining amounts provisional. The workspace supports both themes, INR/USD, and amount masking, including edit fields and progress bars. Limits and decisions remain in memory until reload. Cash flow adds three months of reconciled statement history, account filters, selectable monthly/daily charts with tables, matching-day comparisons, source inspection, and a bridge from classified activity to bank movement. October is month-to-date; missing coverage and unresolved classifications stay explicit. Recurring review adds seven supplied monthly patterns with source evidence, confirm/dismiss/restore, independent undo/reset, and expected commitments for the rest of October. Fixed amounts and variable ranges stay separate; missing or changed evidence retains the decision and requires review. Expected expenses never change actual spending or balances.
 
+Connections adds six source inspectors with separate financial, statement, quote/NAV, and FX dates. Two local connector walkthroughs demonstrate successful, missing, partial, failed, rate-limited, expired, and revoked scenarios; four statement examples have no simulated authorization. Attempts and receipts never change financial records or other review decisions. Sample imports remain planned.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
@@ -20,7 +22,7 @@ npm ci
 npm run dev
 ```
 
-Open [the local prototype](http://127.0.0.1:5173), [Investments](http://127.0.0.1:5173/#/investments), [Banking](http://127.0.0.1:5173/#/banking), [Budgets](http://127.0.0.1:5173/#/budgets), or a [sample transaction](http://127.0.0.1:5173/#/banking/t08). The server binds to loopback only. Use **Explore the demo** at the bottom to switch fixture states. Theme, currency, and amount masking are saved locally; financial records and search/filter state are not stored in browser storage. Masking also hides units, quotes, purchase amounts, fees, bank activity values, and raw narration/reference in transaction inspection.
+Open [the local prototype](http://127.0.0.1:5173), [Investments](http://127.0.0.1:5173/#/investments), [Banking](http://127.0.0.1:5173/#/banking), [Budgets](http://127.0.0.1:5173/#/budgets), [Connections](http://127.0.0.1:5173/#/connections), or a [sample transaction](http://127.0.0.1:5173/#/banking/t08). The server binds to loopback only. Use **Explore the demo** at the bottom to switch fixture states. Theme, currency, and amount masking are saved locally; financial records and search/filter state are not stored in browser storage. Masking also hides units, quotes, purchase amounts, fees, bank activity values, and raw narration/reference in transaction inspection.
 
 ```sh
 npm run check       # tests, TypeScript checks, and production build
@@ -31,7 +33,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 
 ## Direction
 
-[Step 2D](docs/budgets-prototype-plan.md) provides monthly category budgets, historical cash-flow analysis, and recurring-expense review (2D.1–2D.3). [Step 2E](docs/imports-prototype-plan.md) plans connection status, bank import previews, reversible review decisions, and investment statement walkthroughs with bundled samples.
+[Step 2D](docs/budgets-prototype-plan.md) provides monthly category budgets, historical cash-flow analysis, and recurring-expense review (2D.1–2D.3). [Step 2E.1](docs/imports-prototype-plan.md#step-2e1-connections-and-source-coverage) provides source coverage and connection-status walkthroughs. Bank import previews (2E.2), reversible review decisions (2E.3), and investment statement walkthroughs (2E.4) remain planned.
 
 - Indian and US stocks, ETFs, and direct/regular mutual funds.
 - UBS Accenture ESPP lots, dividends, and cash movements.
