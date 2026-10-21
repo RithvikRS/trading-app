@@ -1,6 +1,6 @@
 # Import review and connection status prototype plan
 
-Status: Step 2E.1 is implemented with six source inspectors and isolated connection-status simulations. Steps 2E.2–2E.4 remain planned. See the [current prototype](ui-prototype.md), [integration research](integrations.md), and [security requirements](security.md).
+Status: Step 2E.1 is implemented with six source inspectors and isolated connection-status simulations. Step 2E.2 adds the bank sample catalog, read-only batch previews, and row inspection. Steps 2E.3–2E.4 remain planned. See the [current prototype](ui-prototype.md), [integration research](integrations.md), and [security requirements](security.md).
 
 The next screens should explain where records come from, what periods they cover, what an incoming batch would change, and why some records need review. Security and financial accuracy take priority over automation. Continue the Indigo & Apricot themes, shared INR/USD and privacy controls, visible sample labels, and loopback-only runtime.
 
@@ -9,7 +9,7 @@ The next screens should explain where records come from, what periods they cover
 | Increment | Deliverable | Status | Conventional commit |
 | --- | --- | --- | --- |
 | 2E.1 | Connections workspace, source coverage/details, and simulated status/recovery walkthroughs | Implemented | `feat(connections): add source status walkthrough` |
-| 2E.2 | Bank sample catalog, batch previews, issue summaries, and original/normalized row inspection | Planned | `feat(imports): add bank statement review previews` |
+| 2E.2 | Bank sample catalog, batch previews, issue summaries, and original/normalized row inspection | Implemented | `feat(imports): add bank statement review previews` |
 | 2E.3 | Reversible bank review decisions, duplicate/conflict handling, reconciliation, and sample review completion | Planned | `feat(imports): add reversible sample review decisions` |
 | 2E.4 | Investment review examples for INDmoney, mutual-fund overlap, and UBS employee shares | Planned | `feat(imports): add investment statement walkthroughs` |
 
@@ -55,6 +55,8 @@ Actions such as **Run sample refresh**, **Retry sample attempt**, **Simulate acc
 Use explicit fixture timestamps and deterministic scenario outcomes, not the current wall clock. A sample receipt has its own evidence dates; retrying does not silently replace the underlying financial snapshots or manufacture a newer price. A small attempt history can explain the latest outcome, but it is neither a production audit log nor proof of provider access. Reset affects only connection walkthrough state.
 
 ## Step 2E.2: Bank import previews
+
+Implemented with seven fixed HDFC/SBI examples. [Sample expectations](import-samples.md) document every row-count partition, native amount group, and reconciliation result; [implementation notes](ui-prototype.md#bank-sample-import-previews-step-2e2) describe navigation, privacy, and verification. No decisions or completion controls are enabled.
 
 Add a small HDFC/SBI sample catalog and a read-only batch review flow: **Choose sample → Inspect source and rows → Review issues**. Each batch identifies its fictional source, account, owner, statement period, source revision, original currency, row count, and supplied opening/closing balances where available. Describe the examples as illustrative statement data rather than tested CSV/PDF parsers.
 

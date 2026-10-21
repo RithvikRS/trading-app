@@ -1,10 +1,12 @@
 import { useLayoutEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
 import { AlertTriangle, Check, ChevronDown, Clock3, Database, FileText, FlaskConical, Layers3, Link2, RotateCcw, Search, ShieldCheck } from 'lucide-react'
 import { getHoldings } from './data/holdings'
 import { canRunSample, getSourceCoverage, isConnectorId, isScenario, outcomeLabels, scenarios, selectSources, sourceDate } from './data/connections'
 import type { ConnectionAction, ConnectionControls, ConnectionSimulation, ConnectionState, ConnectorId, SourceCoverage } from './data/connections'
 
 interface Props {
+  tab: 'sources' | 'imports'; onTab: (tab: 'sources' | 'imports') => void; catalog: ReactNode; onOpenImport: (id: string) => void
   view: 'populated' | 'partial' | 'empty' | 'loading'; state: ConnectionState; controls: ConnectionControls
   onAction: (action: ConnectionAction) => void; onChange: (controls: ConnectionControls) => void; onReset: () => void
 }
@@ -57,24 +59,24 @@ function Simulation({ id, state, onAction }: { id: ConnectorId; state: Connectio
   </section>
 }
 
-function SourceDetail({ source, state, onAction, onClose }: { source: SourceCoverage; state: ConnectionState; onAction: Props['onAction']; onClose: () => void }) {
+function SourceDetail({ source, state, onAction, onClose, onOpenImport }: { source: SourceCoverage; state: ConnectionState; onAction: Props['onAction']; onClose: () => void; onOpenImport: Props['onOpenImport'] }) {
   return <div id={`source-detail-${source.id}`} className="connection-detail" role="region" aria-label={`${source.name} source details`}>
     <div className="connection-boundary"><ShieldCheck size={18} aria-hidden="true" /><div><strong>Bundled sample · No provider connected</strong><p>{source.mode === 'statement' ? 'Statement example only. No connector authorization, credentials, or refresh attempt exists for this source.' : 'Connector scenarios below are simulations. Actual automatic access and provider permission scopes are unverified.'} Real permissions are not established by this interface.</p></div></div>
     <dl className="connection-facts source-identity"><div><dt>Source group</dt><dd>{source.name}</dd></div><div><dt>Account</dt><dd>{source.account} · Sample owner</dd></div><div><dt>Financial snapshot as of</dt><dd>{source.asOf}</dd></div><div><dt>Statement coverage</dt><dd>{source.period}</dd></div></dl>
     <h3>Financial source coverage</h3><p className="connection-caption">Dates come from the existing portfolio fixtures. Each stream keeps its own evidence and gaps.</p>
     <ul className="connection-streams">{source.streams.map(stream => <li key={stream.name}><div><strong>{stream.name}</strong><span>{stream.status}</span></div><div><strong>{stream.date}</strong><p>{stream.note}</p></div></li>)}</ul>
-    {isConnectorId(source.id) ? <Simulation id={source.id} state={state.sources[source.id]} onAction={onAction} /> : <div className="connection-statement-note"><FileText size={22} aria-hidden="true" /><div><h3>Statement walkthrough</h3><p>Inspect the source dates and gaps above. Sample import previews are planned; no files can be selected or imported yet. Actual provider export formats remain unverified.</p></div></div>}
+    {isConnectorId(source.id) ? <Simulation id={source.id} state={state.sources[source.id]} onAction={onAction} /> : <div className="connection-statement-note"><FileText size={22} aria-hidden="true" /><div><h3>Statement walkthrough</h3><p>{source.bank ? 'Inspect a bundled bank sample and its incoming rows. No files are selected or imported.' : 'Investment import previews are planned. Inspect the available source dates and gaps above.'} Actual provider export formats remain unverified.</p>{source.bank && <a id={`source-import-${source.id}`} className="text-button" href={`#/connections/imports/${source.id === 'hdfc' ? 'i01' : 'i07'}`} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); onOpenImport(source.id === 'hdfc' ? 'i01' : 'i07') }}>Inspect bank sample</a>}</div></div>}
     <button className="text-button connection-close" onClick={onClose}>Close source details</button>
   </div>
 }
 
-export default function Connections({ view, state, controls, onAction, onChange, onReset }: Props) {
+export default function Connections({ view, state, controls, onAction, onChange, onReset, tab, onTab, catalog, onOpenImport }: Props) {
   const sources = getSourceCoverage(view === 'partial')
   const selected = selectSources(sources, controls)
   return <div className="connections-workspace">
-    <div className="page-heading"><div><span className="eyebrow">A clear line to your sources <span className="mobile-demo">· Sample data</span></span><h1 id="page-title" tabIndex={-1}>Know what’s behind the numbers<span>.</span></h1><p>See what each source covers, how old it is, and what needs a closer look.</p></div><span className="connection-mode"><ShieldCheck size={16} aria-hidden="true" />No provider connected</span></div>
-    <div className="budget-views connection-views" aria-label="Connection views"><span className="connection-current">Sources</span><span className="connection-planned">Sample imports <small>Planned</small></span></div>
-    {view === 'loading' ? <section aria-busy="true" aria-label="Loading sample sources" className="holdings-loading"><span className="sr-only" role="status">Loading sample sources</span><div className="skeleton-panel"><div className="skeleton number" />{[0, 1, 2].map(row => <div key={row} className="skeleton holding-skeleton-row" />)}</div></section>
+    <div className="page-heading"><div><span className="eyebrow">A clear line to your sources <span className="mobile-demo">· Sample data</span></span><h1 id="page-title" tabIndex={-1}>{tab === 'imports' ? 'Review what comes in' : 'Know what’s behind the numbers'}<span>.</span></h1><p>{tab === 'imports' ? 'Inspect a statement’s evidence before it would reach your records.' : 'See what each source covers, how old it is, and what needs a closer look.'}</p></div><span className="connection-mode"><ShieldCheck size={16} aria-hidden="true" />No provider connected</span></div>
+    <div className="budget-views connection-views" aria-label="Connection views"><button aria-pressed={tab === 'sources'} onClick={() => onTab('sources')}>Sources</button><button aria-pressed={tab === 'imports'} onClick={() => onTab('imports')}>Sample imports</button></div>
+    {tab === 'imports' ? catalog : view === 'loading' ? <section aria-busy="true" aria-label="Loading sample sources" className="holdings-loading"><span className="sr-only" role="status">Loading sample sources</span><div className="skeleton-panel"><div className="skeleton number" />{[0, 1, 2].map(row => <div key={row} className="skeleton holding-skeleton-row" />)}</div></section>
       : view === 'empty' ? <section className="empty-state"><Database size={36} aria-hidden="true" /><h2>No sample sources loaded.</h2><p>Explore fictional account coverage and local connection scenarios.</p><button className="primary-button" onClick={onReset}>Explore sample sources</button></section>
         : <>
           <section className="connection-summary" aria-label="Source summary"><div><span className="connection-summary-icon"><Layers3 size={23} aria-hidden="true" /></span><div><span>Bundled sample sources</span><strong>06 <small>across your workspace</small></strong></div></div><div><span>Walkthroughs</span><strong>02 <small>connector simulations</small></strong><p>04 statement examples</p></div><div><span>Financial coverage</span><strong>{sources.some(source => source.attention) ? '3 sources need attention' : 'Snapshot dates vary'}</strong><p>{view === 'partial' ? 'Missing NAV · Stale holdings · Incomplete activity' : 'Bank activity through 20 Oct, 10:00 IST'}</p></div></section>
@@ -89,7 +91,7 @@ export default function Connections({ view, state, controls, onAction, onChange,
                 <span className="connection-source-name"><span className="connection-source-icon">{source.bank ? <FileText size={20} aria-hidden="true" /> : <Link2 size={20} aria-hidden="true" />}</span><span><strong>{source.name}</strong><small>{source.account}</small></span></span>
                 <span className="connection-source-coverage"><span className={source.attention ? 'connection-attention' : ''}>{source.attention ? <AlertTriangle size={13} aria-hidden="true" /> : <Check size={13} aria-hidden="true" />}{source.summary}</span><small>{source.asOf}</small></span>
                 <span className="connection-source-kind">{source.mode === 'connector' ? 'Connector simulation' : 'Statement example'}<ChevronDown size={17} className={open ? 'rotated' : ''} aria-hidden="true" /></span>
-              </button>{open && <SourceDetail source={source} state={state} onAction={onAction} onClose={() => { onChange({ ...controls, selected: null }); document.getElementById(`source-${source.id}`)?.focus() }} />}</li>
+              </button>{open && <SourceDetail onOpenImport={onOpenImport} source={source} state={state} onAction={onAction} onClose={() => { onChange({ ...controls, selected: null }); document.getElementById(`source-${source.id}`)?.focus() }} />}</li>
             })}</ul>
             {!selected.length && <div className="connection-no-results"><Search size={23} aria-hidden="true" /><h3>No sources match.</h3><p>Try a different source name or account type.</p><button className="outlined-button" onClick={() => onChange({ ...controls, query: '', filter: 'all' })}>Clear source filters</button></div>}
             <div className="connection-local-note"><ShieldCheck size={15} aria-hidden="true" /><p>Scenarios and selections stay in memory until reload. Only theme, display currency, and amount visibility are saved.</p></div>
