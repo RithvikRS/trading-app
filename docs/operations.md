@@ -2,6 +2,8 @@
 
 The intended hosted topology is a Python application and static frontend on Oracle Cloud, with PostgreSQL hosted by Supabase. Deployment, accounts, secrets, and automation have not been provisioned. All settings below are implementation requirements or provisional targets. [Step 3G](foundation-plan.md#supabase-and-recovery-readiness) prepares local production-style packaging and an encrypted synthetic restore exercise; Stage 10 remains the hosted rollout. Dedicated non-production Supabase checks are recorded separately from local tests, and remain unperformed until the actual project/network/credentials are available.
 
+The [Step 3A process](api-foundation.md) is local-only and explicitly rejects hosted environment names. It is not a deployment artifact; its limits have not been measured on Oracle. Supabase Auth on Free is selected, but no identity project or paid feature is enabled.
+
 ## Oracle application host
 
 Use the available AMD VM if resource checks support the workload. Oracle documents 1 GB RAM and burstable CPU for the Always Free AMD micro shape, so imports must be measured under realistic constraints. Build frontend assets and container images locally or in CI rather than on the production VM. See [Oracle Always Free resources](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).

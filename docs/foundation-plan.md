@@ -1,8 +1,8 @@
 # Step 3: Secure application foundation
 
-Status: planned. Step 2, including the investment walkthroughs in PR #19, is merged into `main`. This stage creates a tested Python application foundation using local PostgreSQL in development and Supabase PostgreSQL when deployed. Security is the first acceptance criterion. No backend, database, identity service, CI configuration, or hosting change is implemented by this plan.
+Status: Step 3A implemented; 3B–3G remain planned. Step 2 and the Step 3 planning PR #20 are merged into `main`. The [local API scaffold](api-foundation.md) provides a liveness endpoint, validated configuration, conservative server settings, and sanitized error/log handling. Databases, authentication, CI, and hosting remain unimplemented. Security is the first acceptance criterion.
 
-The [authentication comparison](authentication-options.md) precedes framework-specific scaffolding. FastAPI, SQLAlchemy, Alembic, and Psycopg remain the architecture direction; selecting Django/allauth would replace that framework/ORM/migration set before Step 3A. React, Indigo & Apricot, local PostgreSQL, Supabase deployment, and the security requirements remain the same.
+The [authentication decision](authentication-options.md) selects Supabase Auth on Free with FastAPI. Python 3.14.9, uv 0.13.5, and the scaffold dependency tree are pinned. SQLAlchemy, Alembic, and Psycopg arrive with the database increments. React, Indigo & Apricot, local PostgreSQL, and hosted Supabase PostgreSQL remain selected.
 
 ## Result and boundaries
 
@@ -12,11 +12,11 @@ Accounts, holdings, financial transactions, real statement ingestion, provider c
 
 ## Proposed increments
 
-All increments below are planned. Each delivers its tests, relevant documentation, a conventional commit on `dev`, and a focused PR into `main`. Larger findings are split further instead of combining unrelated capabilities.
+Step 3A below is implemented; later increments are planned. Each delivers its tests, relevant documentation, a conventional commit on `dev`, and a focused PR into `main`. Larger findings are split further instead of combining unrelated capabilities.
 
 | Increment | Deliverable | Acceptance evidence | Conventional commit |
 | --- | --- | --- | --- |
-| 3A | Python API scaffold and safe configuration | Locked supported Python/dependencies; clean install; loopback binding; minimal liveness endpoint; malformed/unsafe configuration fails closed; sanitized errors/logs; no financial or authentication bypass endpoint | `feat(api): add secure application scaffold` |
+| 3A — implemented | [Python API scaffold and safe configuration](api-foundation.md) | Locked Python/dependencies; clean install; loopback binding; minimal liveness endpoint; malformed/unsafe configuration fails closed; sanitized errors/logs; no financial or authentication bypass endpoint | `feat(api): add secure application scaffold` |
 | 3B | Repeatable local checks and CI | Python lint/type/tests and dependency audit, frontend checks, secret scanning, pinned actions with minimal permissions, synthetic isolated tests; no deployment credentials or production access | `ci(security): add foundation verification checks` |
 | 3C | Local PostgreSQL and migration baseline | Reproducible local service, separate test database, explicit bootstrap/runtime/migrator identities; first schema migration and clean/upgrade/rollback-on-failure checks; runtime cannot perform DDL | `feat(database): add local postgres foundation` |
 | 3D | Ownership and database isolation | Minimal owner/identity mapping and workspace-preference schema; non-owner runtime role; RLS for reads/writes; two-owner negative tests, missing identity denial, pooled transaction cleanup and rollback; no public data routes | `feat(security): enforce workspace ownership boundaries` |
@@ -26,7 +26,7 @@ All increments below are planned. Each delivers its tests, relevant documentatio
 | 3F.2 | First persistent non-financial vertical slice | Read/update allowlisted display preferences through the authenticated API and RLS; validation, concurrent update policy, rollback and session-expiry tests; no client-provided owner assignment | `feat(settings): persist protected workspace preferences` |
 | 3G | Local packaging and Supabase readiness | Non-root application packaging, static frontend/proxy rehearsal, resource budgets, encrypted synthetic backup/restore, hosted compatibility checklist and explicit evidence gaps; no Oracle or production rollout | `chore(operations): prepare secure deployment foundation` |
 
-3A depends on the authentication/framework direction. 3B starts with available checks and gains real PostgreSQL tests in 3C–3D. 3D uses test-injected identities only inside the test harness; it exposes no development login route. 3E.1 and 3E.2 are both required before the frontend can access a workspace. Authentication tables and their limited session-lookup identity are introduced with the selected integration, rather than forcing premature provider-specific schema into 3C.
+3A records the selected Supabase Auth/FastAPI direction. 3B starts with available checks and gains real PostgreSQL tests in 3C–3D. 3D uses test-injected identities only inside the test harness; it exposes no development login route. 3E.1 and 3E.2 are both required before the frontend can access a workspace. Authentication tables and their limited session-lookup identity are introduced with the selected integration, rather than forcing premature provider-specific schema into 3C.
 
 ## Application and environment contract
 
@@ -35,7 +35,7 @@ flowchart LR
     Browser[Owner browser] --> Entry[Same-origin HTTPS entry]
     Entry --> Static[React static assets]
     Entry --> API[Python API and server sessions]
-    API --> Auth[Selected identity implementation]
+    API --> Auth[Supabase Auth]
     API --> DB[(Local PostgreSQL or Supabase PostgreSQL)]
     Migrate[Separate migration process] --> DB
     Restore[Isolated restore exercise] --> TestDB[(Synthetic recovery database)]
@@ -50,7 +50,7 @@ Keep one Python application with explicit authentication, database, and domain i
 | Local production rehearsal | Built frontend and Python service with TLS/cookie behavior, local restricted database roles, synthetic backup/restore | Exercises deployment settings without publishing a service |
 | Future deployment | Supabase PostgreSQL and selected identity provider; static frontend/API on Oracle | Dedicated configuration, verified TLS, private/gated entry, network restrictions, tested recovery; Stage 10 activation |
 
-Pin a supported stable Python release and dependency tree during 3A after compatibility checks. Match the local PostgreSQL major and required extensions to the selected supported Supabase target before 3C; do not assume the newest local release is available on the hosted project. Production must reject missing keys, debug/test identities, wildcard credentialed origins, insecure cookie settings, and unsafe database roles. Test commands must refuse non-test database names and hosted connection strings before destructive fixture cleanup.
+Step 3A pins Python 3.14.9, uv 0.13.5, and the compatible dependency tree. Match the local PostgreSQL major and required extensions to the selected supported Supabase target before 3C; do not assume the newest local release is available on the hosted project. Production must reject missing keys, debug/test identities, wildcard credentialed origins, insecure cookie settings, and unsafe database roles. Test commands must refuse non-test database names and hosted connection strings before destructive fixture cleanup.
 
 ## Ownership and schema contract
 
@@ -66,7 +66,7 @@ Initial persisted data is limited to owner/identity mapping, validated display p
 
 ## Authentication and session contract
 
-Select the provider with the [comparison](authentication-options.md), then record its exact enrollment, factor, recovery, SDK, and development-test design. Use maintained protocol and cryptographic libraries. No home-built password, TOTP, JWT signing, or encryption algorithms. Public signup, anonymous accounts, and unneeded social providers stay disabled; initial owner provisioning is an administrative operation.
+Use [the selected Supabase Auth Free direction](authentication-options.md), then record its exact enrollment, factor, recovery, SDK, and development-test design before Step 3E. Use maintained protocol and cryptographic libraries. No home-built password, TOTP, JWT signing, or encryption algorithms. Public signup, anonymous accounts, and unneeded social providers stay disabled; initial owner provisioning is an administrative operation.
 
 The proposed browser session is a random opaque identifier whose verifier is stored server-side. Hosted cookies use `Secure`, `HttpOnly`, a restricted path, no broad domain scope, and an appropriate SameSite policy. Prefer a `__Host-` cookie for the HTTPS application. A separately named loopback-only development cookie may be necessary; hosted configuration must reject that relaxation. Do not store provider tokens, passwords, MFA seeds, recovery codes, or session IDs in local storage, telemetry, URLs, or frontend bundles. Provider tokens retained by the backend require authenticated encryption and keys outside database/backups.
 
@@ -107,9 +107,9 @@ CI uses read-only repository permissions, commit-pinned actions, no production s
 
 ## Decisions before their dependent increment
 
-- Before 3A: authentication/framework selection and supported Python/tooling versions.
+- Settled in 3A: Supabase Auth Free with FastAPI; Python 3.14.9 and uv 0.13.5. Provider integration remains later work.
 - Before 3C: PostgreSQL major, local runtime availability, migration/role bootstrap design, and test database naming/cleanup boundaries.
 - Before 3E: provider tier, primary/secondary factors, recovery, email, session library, encryption-key custody, and development identity environment.
 - Before 3G/hosting: region, domain/private entry, Supabase route/limits, backup destination and retention, key recovery, resource budget, and hosted evidence availability.
 
-This plan commits to the security outcomes and small feature boundaries, not to a provider or control that has not been selected, configured, and verified. Next implementation increment: 3A after the authentication/framework direction is settled.
+Supabase Auth/FastAPI is selected, while future security controls remain planned until configured and verified. Next implementation increment: 3B, repeatable verification and CI.

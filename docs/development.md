@@ -22,9 +22,44 @@ From `frontend/`:
 
 The project `.npmrc` disables dependency lifecycle scripts. Keep that restriction unless a script has been inspected and a narrow build-time need documented. Both servers bind to loopback with strict ports; do not expose them to a LAN, tunnel, or public host. The backend and databases are not required for this prototype.
 
-## Planned Python and database foundation
+## Local Python API
 
-[Step 3](foundation-plan.md) adds the Python scaffold, locked dependencies, security/CI checks, isolated local PostgreSQL, migrations, restricted roles, and authenticated browser/API tests incrementally. Framework-specific setup follows the [authentication comparison](authentication-options.md); no backend install/run or database bootstrap commands exist yet. The current frontend commands remain valid.
+The [Step 3A scaffold](api-foundation.md) uses Python 3.14.9 and uv 0.13.5 with exact direct versions and `backend/uv.lock`. Supabase Auth with FastAPI is selected; no authentication/database credentials are needed. The frontend commands above remain valid independently.
+
+For a repository-local Windows setup, run from the repository root with an existing Python installation. This installs tooling into ignored directories and leaves the system Python and Windows registration unchanged:
+
+```powershell
+python -m venv .cache/api-tools
+& .cache/api-tools/Scripts/python.exe -m pip install --disable-pip-version-check --only-binary=:all: --index-url https://pypi.org/simple uv==0.13.5
+$env:UV_CACHE_DIR = Join-Path (Get-Location) '.cache/uv'
+$env:UV_PYTHON_INSTALL_DIR = Join-Path (Get-Location) '.cache/python'
+$uv = Join-Path (Get-Location) '.cache/api-tools/Scripts/uv.exe'
+& $uv python install 3.14.9 --no-bin --no-registry
+Set-Location backend
+& $uv sync --locked
+& $uv run --locked python -m trading_api
+```
+
+Open [API liveness](http://127.0.0.1:8000/api/v1/health/live), which returns only `{"status":"ok"}`. Stop with Ctrl+C. The API binds only to `127.0.0.1`; no UI connection or database is required. Do not substitute a public bind, reload/debug mode, or alternate server command. A port conflict fails startup rather than selecting another port.
+
+In a new shell, recreate `$uv` and the two `UV_` directory variables from the repository root before entering `backend/`. If the pinned uv is already on PATH, use `uv` in place of `& $uv`; keep the same pinned Python, lockfile, and local-only entry point. Initial downloads require network access. Subsequent checks can add `--offline` after `run` once the locked environment/cache exists.
+
+From `backend/` with the setup above:
+
+| Command | Purpose |
+| --- | --- |
+| `& $uv sync --locked` | Install exactly the committed lockfile; reject stale dependency declarations |
+| `& $uv run --locked python -m trading_api` | Start the local API |
+| `& $uv run --locked pytest` | Configuration, HTTP, error/log privacy, and real local process tests |
+| `& $uv run --locked ruff check .` | Python lint |
+| `& $uv run --locked ruff format --check .` | Formatting check |
+| `& $uv run --locked mypy` | Strict application type checks |
+
+`backend/.env.example` lists the two supported settings. It is not loaded automatically. Set `TRADING_API_ENVIRONMENT` to `development` or `test` and `TRADING_API_PORT` to a valid unprivileged port when needed. Unknown application settings and hosted modes fail closed. Error logs intentionally omit values; check spelling and the allowlist in [the scaffold contract](api-foundation.md#configuration-and-local-entry-point).
+
+## Planned database and authentication work
+
+[Step 3](foundation-plan.md) adds security/CI automation in 3B, isolated PostgreSQL and migrations in 3C, ownership isolation in 3D, and Supabase MFA/server sessions in 3E. No database bootstrap commands or provider integration exist yet.
 
 Tests must use explicitly named disposable databases and synthetic identities. Destructive test setup must reject hosted or non-test connection strings. Test authentication adapters stay outside the deployed runtime; no environment variable or debug endpoint may grant an owner identity in production. Hosted Supabase/identity checks, where needed, run separately from ordinary local/PR tests and report their actual evidence.
 

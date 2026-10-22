@@ -39,9 +39,13 @@ Trust boundaries include the browser and API, public network and application hos
 | Deleted data, ransomware, or provider loss | Independent encrypted backups, restricted deletion rights, and tested restoration | Restore into an isolated environment and reconcile records |
 | Overpowered broker integration | Prefer provider-enforced read-only scopes and separate execution credentials | Document and verify token capabilities before enabling a connector |
 
+## Implemented API scaffold boundary
+
+[Step 3A](api-foundation.md) adds a local-only Python process with a minimal liveness route. The documented entry point fixes loopback binding, disables proxy trust/access logs/server identification, rejects unsupported application settings and hosted modes, and exposes no debug/OpenAPI/login/data routes. Host checks, no-store/security headers, generic error responses, and allowlisted structured logs are covered by synthetic tests, including a real local subprocess. No external telemetry exporter is configured. These are scaffold controls, not authentication, database isolation, public-hosting protection, or proof of financial-data safety.
+
 ## Authentication and sessions
 
-The [foundation plan](foundation-plan.md) defines the required session and ownership contract. The [authentication comparison](authentication-options.md) evaluates Supabase Auth with FastAPI, Django/allauth, and Auth0; the provider remains unselected. Choose and verify a maintained implementation before adding authentication endpoints. Require MFA for the owner and administrative cloud accounts, disable public registration for the personal version, and review enrollment and recovery as part of authentication. Do not build custom cryptography.
+The [foundation plan](foundation-plan.md) defines the required session and ownership contract. [Supabase Auth on Free with FastAPI](authentication-options.md) is selected, with password plus authenticator-app TOTP as the initial factor direction. Authentication endpoints, mandatory-factor enforcement, recovery, and bounded server sessions remain unimplemented until Step 3E. Verify the maintained integration and actual provider entitlement before use. Require MFA for the owner and administrative cloud accounts, disable public registration for the personal version, and review enrollment and recovery as part of authentication. Do not build custom cryptography.
 
 Use short-lived or bounded sessions with server-side revocation and secure, HttpOnly, appropriately SameSite cookies. Protect state-changing requests against CSRF and validate origins. Keep credentials and refresh tokens out of browser local storage, URLs, and frontend bundles. Use exact CORS allowlists, rate limits, generic authentication errors, and documented expiry behavior.
 

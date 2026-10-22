@@ -596,4 +596,4 @@ Fictional screenshots:
 
 ## Next stage
 
-The import and connection prototype increments are complete. The [Step 3 foundation plan](foundation-plan.md) now describes the Python backend, local PostgreSQL, authentication/authorization, protected frontend transition, and deployment boundaries for Supabase. The [authentication comparison](authentication-options.md) precedes framework-specific scaffolding. Real statements, provider credentials, and execution remain outside the prototype. No next-stage implementation is included here.
+The import and connection prototype increments are complete. The [Step 3 foundation plan](foundation-plan.md) now describes the Python backend, local PostgreSQL, authentication/authorization, protected frontend transition, and deployment boundaries for Supabase. [Step 3A](api-foundation.md) implements a separate local FastAPI scaffold; [Supabase Auth on Free](authentication-options.md) is selected for later integration. The prototype does not call the API. Real statements, provider credentials, and execution remain outside the prototype.
