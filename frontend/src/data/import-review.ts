@@ -1,3 +1,5 @@
+import type { InvestmentReviews } from './investment-review'
+import type { InvestmentImportId } from './investment-imports'
 import { nativeGroups, normalizeImportRow, previewImport } from './imports'
 import type { ImportBatch, ImportId, IncomingRow, PreviewRow } from './imports'
 import type { Money } from './money'
@@ -14,12 +16,12 @@ export interface ImportReceipt {
 }
 interface BatchReview { decisions: Record<string, ImportDecision>; aside: boolean; receipt: ImportReceipt | null }
 type Reviews = Partial<Record<ImportId, BatchReview>>
-interface HistoryEntry { before: Reviews; batch: ImportId; label: string }
-export interface ImportReviewState { batches: Reviews; history: HistoryEntry[]; serial: number; message: string }
+interface HistoryEntry { before: Reviews; investmentsBefore: InvestmentReviews; batch: ImportId | InvestmentImportId; label: string }
+export interface ImportReviewState { batches: Reviews; investments: InvestmentReviews; history: HistoryEntry[]; serial: number; message: string }
 interface ReviewCounts { included: number; present: number; excluded: number; unresolved: number }
 export type ImportOperation = { type: 'row'; rowId: string; choice: ImportChoice | 'restore' } | { type: 'suggestions' | 'complete' | 'aside' | 'reopen' }
 export interface ImportProposal { batchId: ImportId; token: string; operation: ImportOperation }
-export const createImportReviewState = (): ImportReviewState => ({ batches: {}, history: [], serial: 0, message: '' })
+export const createImportReviewState = (): ImportReviewState => ({ batches: {}, investments: {}, history: [], serial: 0, message: '' })
 const initialBatch = (): BatchReview => ({ decisions: {}, aside: false, receipt: null })
 export const batchReview = (state: ImportReviewState, id: ImportId) => state.batches[id] ?? initialBatch()
 // In-memory evidence comparison, not a file hash, credential, or durable idempotency key.
@@ -135,11 +137,11 @@ export function changeImportReview(state: ImportReviewState, batch: ImportBatch,
     label = 'Completed sample review · No records saved'
   } else if (operation.type === 'aside') { next.aside = true; label = 'Set sample aside' }
   else { next.aside = false; label = 'Reopened sample review' }
-  return { batches: { ...state.batches, [batch.id]: next }, history: [...state.history, { before: state.batches, batch: batch.id, label }], serial: state.serial + 1, message: label }
+  return { ...state, batches: { ...state.batches, [batch.id]: next }, history: [...state.history, { before: state.batches, investmentsBefore: state.investments, batch: batch.id, label }], serial: state.serial + 1, message: label }
 }
 export function undoImportReview(state: ImportReviewState): ImportReviewState {
   const last = state.history.at(-1)
-  return last ? { batches: last.before, history: state.history.slice(0, -1), serial: state.serial + 1, message: `Undid review change in ${last.batch}.` } : state
+  return last ? { batches: last.before, investments: last.investmentsBefore, history: state.history.slice(0, -1), serial: state.serial + 1, message: `Undid review change in ${last.batch}.` } : state
 }
 export function resetImportReviews(state: ImportReviewState): ImportReviewState {
   return { ...createImportReviewState(), serial: state.serial + 1, message: 'Sample import reviews reset. Other workspace reviews are unchanged.' }

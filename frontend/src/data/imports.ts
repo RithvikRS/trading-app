@@ -1,3 +1,4 @@
+import type { InvestmentAccount, InvestmentImportId } from './investment-imports'
 import { bankNames, getBankTransactions } from './banking'
 import type { BankId, BankTransaction } from './banking'
 import { money } from './money'
@@ -153,11 +154,13 @@ export function nativeGroups(rows: readonly PreviewRow[]) {
   return { groups: groups.sort((a, b) => a.currency.localeCompare(b.currency) || b.status.localeCompare(a.status)), unreadable }
 }
 export interface ImportFilters { query: string; disposition: Disposition | 'all'; account: BankId | 'all' }
-export interface ImportControls { query: string; account: BankId | 'all'; batches: Partial<Record<ImportId, { filters: ImportFilters; selected: string | null }>> }
+export interface InvestmentControls { query: string; kind: 'all' | 'position' | 'activity' | 'cash' | 'lot'; disposition: Disposition | 'all'; selected: string | null }
+export const initialInvestmentControls: InvestmentControls = { query: '', kind: 'all', disposition: 'all', selected: null }
+export interface ImportControls { query: string; account: BankId | InvestmentAccount | 'all'; kind?: 'all' | 'bank' | 'investment'; investmentBatches?: Partial<Record<InvestmentImportId, InvestmentControls>>; batches: Partial<Record<ImportId, { filters: ImportFilters; selected: string | null }>> }
 export const initialImportFilters: ImportFilters = { query: '', disposition: 'all', account: 'all' }
-export function createImportControls(): ImportControls { return { query: '', account: 'all', batches: {} } }
-export function clearImportSearch(state: ImportControls): ImportControls { return { ...state, query: '', batches: Object.fromEntries(Object.entries(state.batches).map(([id, value]) => [id, value ? { ...value, filters: { ...value.filters, query: '' } } : value])) } }
-export function clearImportSelection(state: ImportControls): ImportControls { return { ...state, batches: Object.fromEntries(Object.entries(state.batches).map(([id, value]) => [id, value ? { ...value, selected: null } : value])) } }
+export function createImportControls(): ImportControls { return { query: '', account: 'all', kind: 'all', batches: {}, investmentBatches: {} } }
+export function clearImportSearch(state: ImportControls): ImportControls { return { ...state, query: '', investmentBatches: Object.fromEntries(Object.entries(state.investmentBatches ?? {}).map(([id, value]) => [id, { ...value, query: '' }])), batches: Object.fromEntries(Object.entries(state.batches).map(([id, value]) => [id, value ? { ...value, filters: { ...value.filters, query: '' } } : value])) } }
+export function clearImportSelection(state: ImportControls): ImportControls { return { ...state, investmentBatches: Object.fromEntries(Object.entries(state.investmentBatches ?? {}).map(([id, value]) => [id, { ...value, selected: null }])), batches: Object.fromEntries(Object.entries(state.batches).map(([id, value]) => [id, value ? { ...value, selected: null } : value])) } }
 export function selectImportRows(rows: readonly PreviewRow[], filters: ImportFilters) {
   const query = filters.query.slice(0, 80).trim().toLocaleLowerCase('en-US')
   return rows.filter(item => (filters.disposition === 'all' || filters.disposition === item.disposition) && (filters.account === 'all' || filters.account === item.row.original.account) && (!query || `${item.row.original.description} ${item.row.original.reference}`.toLocaleLowerCase('en-US').includes(query)))

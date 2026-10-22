@@ -161,3 +161,38 @@
     .import-review-toolbar .import-review-actions > button { width: 100%; justify-content: center; text-align: center; }
   }
 }
+
+@layer components {
+  .investment-scope { margin-top: 22px; overflow: clip; }
+  .investment-effect { padding: 20px 24px 0; font-size: 12px; }
+  .investment-effect p { font-size: 11px; color: var(--muted); line-height: 1.9; margin-top: 8px; }
+  .investment-money-groups { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 22px 24px; gap: 16px; }
+  .investment-money-groups > div { padding: 18px; background: var(--surface-soft); border: 1px solid var(--border); border-radius: 9px; }
+  .investment-money-groups h3 { font-size: 12px; line-height: 1.7; margin: 9px 0 12px; }
+  .investment-money-groups .reporting-amount { font-size: 19px; }
+  .investment-money-groups p { color: var(--muted); font-size: 10px; line-height: 1.8; margin-top: 9px; }
+  .investment-checks { margin: 0 24px 18px; border: 1px solid var(--border); border-radius: 9px; padding: 0 16px; font-size: 12px; }
+  .investment-checks > summary { min-height: 44px; padding-block: 14px; cursor: pointer; }
+  .investment-checks li { border-top: 1px solid var(--border); padding-block: 17px; }
+  .investment-checks li > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+  .investment-checks strong { font-weight: 550; overflow-wrap: anywhere; flex: 1; line-height: 1.9; }
+  .investment-checks dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-top: 15px; }
+  .investment-checks dt { color: var(--muted); font-size: 10px; margin-bottom: 8px; }
+  .investment-checks dd { font-size: 14px; overflow-wrap: anywhere; }
+  .investment-units { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .investment-import .import-confirm .investment-money-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-inline: 0; }
+  .investment-import .import-confirm .investment-effect { padding-inline: 0; }
+  .investment-import .import-confirm .investment-checks { margin-inline: 0; }
+  #import-review-title { scroll-margin-top: 100px; }
+}
+@layer responsive {
+  @media (max-width: 1000px) { .investment-money-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 650px) {
+    .investment-money-groups, .investment-import .import-confirm .investment-money-groups { grid-template-columns: 1fr; }
+    .investment-money-groups, .investment-effect { padding-inline: 18px; }
+    .investment-checks { margin-inline: 18px; }
+    .investment-checks dl { grid-template-columns: 1fr; }
+    .investment-checks dl > div { display: flex; justify-content: space-between; gap: 18px; }
+    .investment-checks dd { text-align: right; }
+  }
+}

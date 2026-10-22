@@ -12,6 +12,8 @@ Budgets adds October category limits, exact INR editing, separate undo/reset, an
 
 Connections adds six source inspectors with separate financial, statement, quote/NAV, and FX dates. Two local connector walkthroughs demonstrate successful, missing, partial, failed, rate-limited, expired, and revoked scenarios; four statement examples have no simulated authorization. Attempts and receipts never change financial records or other review decisions. Sample imports adds seven HDFC/SBI examples with source coverage, whole-batch counts, posted/pending totals, and read-only row inspection. Original and normalized fields, duplicate/overlap evidence, conflicting versions, and invalid values remain distinct. No records are imported or saved.
 
+Investment samples distinguish positions, activity, cash, and remaining lots. Same-folio source preferences retain one snapshot; regular/direct funds and Accenture positions at different accounts remain separate. Missing fees, acquisition history, and tax basis stay unknown. Completion records only a scoped sample receipt, and bank/investment reviews share undo/reset without changing portfolio totals.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
@@ -22,7 +24,7 @@ npm ci
 npm run dev
 ```
 
-Open [the local prototype](http://127.0.0.1:5173), [Investments](http://127.0.0.1:5173/#/investments), [Banking](http://127.0.0.1:5173/#/banking), [Budgets](http://127.0.0.1:5173/#/budgets), [Connections](http://127.0.0.1:5173/#/connections), a [bank sample preview](http://127.0.0.1:5173/#/connections/imports/i01), or a [sample transaction](http://127.0.0.1:5173/#/banking/t08). The server binds to loopback only. Use **Explore the demo** at the bottom to switch fixture states. Theme, currency, and amount masking are saved locally; financial records and search/filter state are not stored in browser storage. Masking also hides units, quotes, purchase amounts, fees, bank activity values, and raw narration/reference in transaction inspection. Import masking also removes source descriptions, all original source fields, matching financial evidence, and search text.
+Open [the local prototype](http://127.0.0.1:5173), [Investments](http://127.0.0.1:5173/#/investments), [Banking](http://127.0.0.1:5173/#/banking), [Budgets](http://127.0.0.1:5173/#/budgets), [Connections](http://127.0.0.1:5173/#/connections), a [bank sample preview](http://127.0.0.1:5173/#/connections/imports/i01), an [investment sample](http://127.0.0.1:5173/#/connections/imports/i10), or a [sample transaction](http://127.0.0.1:5173/#/banking/t08). The server binds to loopback only. Use **Explore the demo** at the bottom to switch fixture states. Theme, currency, and amount masking are saved locally; financial records and search/filter state are not stored in browser storage. Masking also hides units, quotes, purchase amounts, fees, bank activity values, and raw narration/reference in transaction inspection. Import masking also removes source descriptions, all original source fields, matching financial evidence, and search text.
 
 ```sh
 npm run check       # tests, TypeScript checks, and production build
@@ -33,7 +35,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 
 ## Direction
 
-[Step 2D](docs/budgets-prototype-plan.md) provides monthly category budgets, historical cash-flow analysis, and recurring-expense review (2D.1–2D.3). [Step 2E.1](docs/imports-prototype-plan.md#step-2e1-connections-and-source-coverage) provides source coverage and connection-status walkthroughs. [Step 2E.2](docs/import-samples.md) provides bank sample previews and row inspection. Step 2E.3 adds reversible bank review decisions, independent reconciliation, and sample-only completion receipts. Investment statement walkthroughs (2E.4) remain planned.
+[Step 2D](docs/budgets-prototype-plan.md) provides monthly category budgets, historical cash-flow analysis, and recurring-expense review (2D.1–2D.3). [Step 2E.1](docs/imports-prototype-plan.md#step-2e1-connections-and-source-coverage) provides source coverage and connection-status walkthroughs. [Step 2E.2](docs/import-samples.md) provides bank sample previews and row inspection. Step 2E.3 adds reversible bank review decisions, independent reconciliation, and sample-only completion receipts. Step 2E.4 adds seven investment examples with typed snapshots, activity, cash, and lots; bounded fund-source preferences; independent position/cash checks; and the same reversible review history.
 
 - Indian and US stocks, ETFs, and direct/regular mutual funds.
 - UBS Accenture ESPP lots, dividends, and cash movements.

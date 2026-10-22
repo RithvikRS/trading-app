@@ -2,7 +2,7 @@
 
 Research baseline: 21 October 2026. Public documentation identifies possible interfaces; authenticated access, scopes, data coverage, and automation behavior still need verification against the owner's accounts. No provider connection has been established.
 
-The implemented [connection-status walkthroughs](ui-prototype.md#connections-and-source-coverage-step-2e1) illustrate coverage and recovery using bundled fictional evidence. [Bank samples](import-samples.md) provide fictional evidence inspection, reversible review decisions, and session-only completion receipts. Investment samples remain planned. They do not verify a provider API/export format, establish a connection, or change the research baseline below. Simulated permissions and attempts must remain labeled separately from actual capabilities.
+The implemented [connection-status walkthroughs](ui-prototype.md#connections-and-source-coverage-step-2e1) illustrate coverage and recovery using bundled fictional evidence. [Bank and investment samples](import-samples.md) provide fictional evidence inspection, reversible review decisions, and session-only completion receipts. They do not verify a provider API/export format, establish a connection, or change the research baseline below. Simulated permissions and attempts must remain labeled separately from actual capabilities.
 
 ## Provider coverage
 
@@ -51,4 +51,4 @@ Fallback order is a supported provider interface, a supported export/statement i
 
 ## Bank sample review boundary
 
-Step 2E.3 completes only bundled bank sample reviews. Row choices, suggested-choice previews, and receipts stay in memory and never receive files or credentials, invoke a provider, or insert financial records. The supplied account/provider identity is fixed; incompatible owner or account data cannot be repaired by choosing another bank. Source formats and actual import/connection permissions remain unverified. Investment examples are reserved for Step 2E.4. See [sample outcomes](import-samples.md#reversible-review-expectations-step-2e3).
+Step 2E.3 completes only bundled bank sample reviews. Row choices, suggested-choice previews, and receipts stay in memory and never receive files or credentials, invoke a provider, or insert financial records. The supplied account/provider identity is fixed; incompatible owner or account data cannot be repaired by choosing another bank. Source formats and actual import/connection permissions remain unverified. Step 2E.4 adds investment examples with the same isolation boundary. Generic snapshots, fund overlap, regular-plan funds, employee lots, and bounded activity examples do not verify INDmoney, consolidated-statement, advisor, or UBS export formats. Supplied openings and zero fees in i14 are fictional walkthrough evidence, not an inference about provider history. See [sample outcomes](import-samples.md#reversible-review-expectations-step-2e3).

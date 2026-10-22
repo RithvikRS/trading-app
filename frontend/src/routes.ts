@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { isImportId } from './data/imports'
+import { isInvestmentImportId } from './data/investment-imports'
 import { isHoldingId } from './data/holdings'
 import { isBankTransactionId } from './data/banking'
 
@@ -12,7 +13,7 @@ export function readRoute(hash: string): Route {
   if (hash === '#/connections') return { screen: 'connections' }
   if (hash === '#/budgets') return { screen: 'budgets' }
   const batch = /^#\/connections\/imports\/(i\d{2})$/.exec(hash)
-  if (batch && isImportId(batch[1]!)) return { screen: 'import', importId: batch[1]! }
+  if (batch && (isImportId(batch[1]!) || isInvestmentImportId(batch[1]!))) return { screen: 'import', importId: batch[1]! }
   const transaction = /^#\/banking\/(t\d{2})$/.exec(hash)
   if (transaction && isBankTransactionId(transaction[1]!)) return { screen: 'transaction', transactionId: transaction[1]! }
   const match = /^#\/investments\/(h\d{2})$/.exec(hash)
@@ -72,7 +73,7 @@ export function useScreen() {
   return {
     screen: route.screen, route, transactionOrigin: transactionOrigin.current,
     navigate: (screen: 'overview' | 'investments' | 'banking' | 'budgets' | 'connections') => transition({ screen }, true),
-    openImport: (importId: string) => { if (isImportId(importId)) transition({ screen: 'import', importId }, true) },
+    openImport: (importId: string) => { if (isImportId(importId) || isInvestmentImportId(importId)) transition({ screen: 'import', importId }, true) },
     openHolding: (holdingId: string) => { if (isHoldingId(holdingId)) transition({ screen: 'holding', holdingId }, true) },
     openTransaction: (transactionId: string) => { if (isBankTransactionId(transactionId)) transition({ screen: 'transaction', transactionId }, true) },
   }
