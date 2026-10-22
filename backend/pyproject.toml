@@ -1,0 +1,42 @@
+[project]
+name = "trading-api"
+version = "0.1.0"
+description = "Private portfolio application's Python API"
+requires-python = ">=3.14.9,<3.15"
+dependencies = [
+    "fastapi==0.161.0",
+    "pydantic==2.14.1",
+    "starlette==1.9.0",
+    "uvicorn==0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx2==2.16.0",
+    "mypy==2.4.0",
+    "pytest==9.1.1",
+    "ruff==0.17.1",
+]
+
+[tool.uv]
+package = false
+required-version = "==0.13.5"
+no-build = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q --strict-config --strict-markers"
+filterwarnings = ["error"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+files = ["trading_api"]

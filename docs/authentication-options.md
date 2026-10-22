@@ -1,6 +1,8 @@
 # Authentication options
 
-Research snapshot: 22 October 2026. This is a design comparison, not a configured authentication service. The provider remains undecided. Local PostgreSQL for development and Supabase PostgreSQL for deployment remain selected regardless of the authentication choice.
+Research snapshot: 22 October 2026; selection and Free-plan availability checked 23 October 2026. **Selected: Supabase Auth with FastAPI**, using the Free plan's basic MFA capability. Local PostgreSQL remains the development database and Supabase PostgreSQL the hosted database. Step 3A adds the local Python scaffold only; no identity project, credentials, login, or MFA flow is configured yet.
+
+The initial factor direction is password plus authenticator-app TOTP. Application-controlled server sessions, expiry, revocation, and recovery are still required in Step 3E. The choice does not depend on paid provider session controls or phone MFA. Free-plan quotas, inactivity pausing, limited default email delivery, and separately supplied recovery email remain operational constraints; no paid plan or add-on is enabled. Verify current entitlements again before integration. [Supabase pricing](https://supabase.com/pricing).
 
 ## Requirements shared by every option
 
@@ -46,8 +48,8 @@ Use hosted login with Authorization Code and PKCE through a maintained Python in
 
 Do not infer that Free passkey availability establishes the exact required mandatory-factor and recovery policy. Verify user verification, fallback paths, factor removal, and actual assurance evidence. Its current MFA pricing makes it a less economical starting point for one personal owner. Provider features never replace database ownership checks.
 
-## Recommendation and selection boundary
+## Selection and remaining design
 
-Supabase Auth remains the recommended fit for the current FastAPI direction when managed identity and low VM overhead are the priorities. This is an architectural judgment, not a claim that its free tier supplies every security control. Django/allauth is the strongest alternative here if owning the authentication lifecycle matters more than reducing operational responsibility. Auth0 is a reasonable managed alternative when hosted login and its paid feature set justify the recurring cost.
+Supabase Auth is selected for its fit with FastAPI, managed credential verification, basic MFA on Free, and low VM overhead. This is an architectural judgment, not a claim that its free tier supplies every security control. The alternatives above remain comparison context; Django/allauth and Auth0 are not part of the implementation.
 
-Choose the authentication and framework direction before Step 3A, since choosing Django changes the scaffold and migration tooling. Then record one short decision with provider/tier, primary factors, recovery method, local test approach, session implementation, and key custody. The [foundation plan](foundation-plan.md) defines the shared security contract and implementation increments; it does not provision any of these options.
+FastAPI, SQLAlchemy, Alembic, and Psycopg remain the application/database direction. Before Step 3E, settle secondary-factor recovery, SMTP, the maintained Python integration, local provider testing, the session implementation, and encryption-key custody. The [foundation plan](foundation-plan.md) defines these increments; the [API scaffold](api-foundation.md) records the implemented local boundary.

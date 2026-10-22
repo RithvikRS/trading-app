@@ -1,13 +1,13 @@
 # Architecture
 
-Planning baseline: 21 October 2026. Development uses local PostgreSQL; deployment uses Supabase PostgreSQL. The frontend prototype has locked dependency versions; the remaining components guide later implementation. Neither database is provisioned by the prototype. The [Step 3 foundation plan](foundation-plan.md) defines implementation increments and security contracts. [Authentication options](authentication-options.md) remain under comparison; the framework direction below is provisional until that choice is settled.
+Planning baseline: 21 October 2026. Development uses local PostgreSQL; deployment uses Supabase PostgreSQL. The frontend prototype has locked dependency versions; the remaining components guide later implementation. Neither database is provisioned by the prototype. The [Step 3 foundation plan](foundation-plan.md) defines implementation increments and security contracts. [Supabase Auth on Free with FastAPI](authentication-options.md) is selected. The [Step 3A API scaffold](api-foundation.md) is implemented locally; identity integration, database persistence, and hosted use remain later work.
 
 ## Components
 
 | Component | Direction | Responsibility |
 | --- | --- | --- |
 | Web interface | React, TypeScript, Vite | Responsive dashboard and reviewed imports; production output served as static files |
-| API | Python, FastAPI direction | Authentication, authorization, validation, financial queries, and connector coordination |
+| API | Python, FastAPI | Authentication, authorization, validation, financial queries, and connector coordination |
 | Persistence | PostgreSQL, SQLAlchemy, Alembic | Exact stored values, constraints, transaction boundaries, and versioned migrations |
 | Background work | A small Python worker with durable job records | Imports, price refreshes, retries, and reconciliation |
 | Hosting | Oracle AMD VM, Docker Compose, Caddy | Application services, HTTPS, and constrained runtime resources |
