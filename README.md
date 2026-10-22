@@ -33,7 +33,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 
 ## Direction
 
-[Step 2D](docs/budgets-prototype-plan.md) provides monthly category budgets, historical cash-flow analysis, and recurring-expense review (2D.1–2D.3). [Step 2E.1](docs/imports-prototype-plan.md#step-2e1-connections-and-source-coverage) provides source coverage and connection-status walkthroughs. [Step 2E.2](docs/import-samples.md) provides bank sample previews and row inspection. Reversible review decisions (2E.3) and investment statement walkthroughs (2E.4) remain planned.
+[Step 2D](docs/budgets-prototype-plan.md) provides monthly category budgets, historical cash-flow analysis, and recurring-expense review (2D.1–2D.3). [Step 2E.1](docs/imports-prototype-plan.md#step-2e1-connections-and-source-coverage) provides source coverage and connection-status walkthroughs. [Step 2E.2](docs/import-samples.md) provides bank sample previews and row inspection. Step 2E.3 adds reversible bank review decisions, independent reconciliation, and sample-only completion receipts. Investment statement walkthroughs (2E.4) remain planned.
 
 - Indian and US stocks, ETFs, and direct/regular mutual funds.
 - UBS Accenture ESPP lots, dividends, and cash movements.

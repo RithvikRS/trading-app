@@ -1,6 +1,6 @@
 # Import review and connection status prototype plan
 
-Status: Step 2E.1 is implemented with six source inspectors and isolated connection-status simulations. Step 2E.2 adds the bank sample catalog, read-only batch previews, and row inspection. Steps 2E.3–2E.4 remain planned. See the [current prototype](ui-prototype.md), [integration research](integrations.md), and [security requirements](security.md).
+Status: Step 2E.1 is implemented with six source inspectors and isolated connection-status simulations. Step 2E.2 adds the bank sample catalog, read-only batch previews, and row inspection. Step 2E.3 adds reversible bank review decisions and sample completion. Step 2E.4 remains planned. See the [current prototype](ui-prototype.md), [integration research](integrations.md), and [security requirements](security.md).
 
 The next screens should explain where records come from, what periods they cover, what an incoming batch would change, and why some records need review. Security and financial accuracy take priority over automation. Continue the Indigo & Apricot themes, shared INR/USD and privacy controls, visible sample labels, and loopback-only runtime.
 
@@ -10,7 +10,7 @@ The next screens should explain where records come from, what periods they cover
 | --- | --- | --- | --- |
 | 2E.1 | Connections workspace, source coverage/details, and simulated status/recovery walkthroughs | Implemented | `feat(connections): add source status walkthrough` |
 | 2E.2 | Bank sample catalog, batch previews, issue summaries, and original/normalized row inspection | Implemented | `feat(imports): add bank statement review previews` |
-| 2E.3 | Reversible bank review decisions, duplicate/conflict handling, reconciliation, and sample review completion | Planned | `feat(imports): add reversible sample review decisions` |
+| 2E.3 | Reversible bank review decisions, duplicate/conflict handling, reconciliation, and sample review completion | Implemented | `feat(imports): add reversible sample review decisions` |
 | 2E.4 | Investment review examples for INDmoney, mutual-fund overlap, and UBS employee shares | Planned | `feat(imports): add investment statement walkthroughs` |
 
 Each increment includes meaningful tests, documentation, and fictional light/dark desktop/mobile evidence in a focused `dev` to `main` PR. Features scheduled for later increments remain visibly planned until functional. Activity remains outside Step 2E.
@@ -56,7 +56,7 @@ Use explicit fixture timestamps and deterministic scenario outcomes, not the cur
 
 ## Step 2E.2: Bank import previews
 
-Implemented with seven fixed HDFC/SBI examples. [Sample expectations](import-samples.md) document every row-count partition, native amount group, and reconciliation result; [implementation notes](ui-prototype.md#bank-sample-import-previews-step-2e2) describe navigation, privacy, and verification. No decisions or completion controls are enabled.
+Implemented with seven fixed HDFC/SBI examples. [Sample expectations](import-samples.md) document every row-count partition, native amount group, and reconciliation result; [implementation notes](ui-prototype.md#bank-sample-import-previews-step-2e2) describe navigation, privacy, and verification. Step 2E.2 established inspection; Step 2E.3 now supplies decisions and completion controls.
 
 Add a small HDFC/SBI sample catalog and a read-only batch review flow: **Choose sample → Inspect source and rows → Review issues**. Each batch identifies its fictional source, account, owner, statement period, source revision, original currency, row count, and supplied opening/closing balances where available. Describe the examples as illustrative statement data rather than tested CSV/PDF parsers.
 
@@ -75,9 +75,11 @@ Each incoming row has a stable batch/row identity independent of its array posit
 
 Provide filters for disposition, account, and a bounded literal search over fictional descriptions/references. Keep whole-batch counts and coverage distinct from filtered results. A row-count identity must account for every source row exactly once. Monetary summaries group by original currency and posted/pending status; mixed-currency totals require explicitly labeled display conversion rather than native reconciliation through FX.
 
-This increment provides inspection only. Resolution and completion controls remain planned until 2E.3; no enabled button should appear to save an import.
+Step 2E.2 delivered inspection only. The following increment adds reversible decisions and sample-only completion without saving financial records.
 
 ## Step 2E.3: Review decisions and completion
+
+Implemented with an independent session history, explicit row choices, an atomic suggested-choice preview, set-aside/reopen, and sample-only receipts. See [expected outcomes](import-samples.md#reversible-review-expectations-step-2e3) and [implementation notes](ui-prototype.md#reversible-bank-review-step-2e3). Existing fixtures have exactly one supported account mapping; incompatible ownership or institution evidence remains blocked.
 
 Add explicit per-row decisions for **Include candidate**, **Skip as duplicate** with its evidence link, **Exclude from this sample review** with a fixed reason, and **Restore row decision**. A possible overlap may be treated as a distinct record only when the supplied evidence supports separate identities; otherwise it remains blocked. Demonstrate the existing same-day café payments as distinct records, not a reason to deduplicate equal amounts.
 
