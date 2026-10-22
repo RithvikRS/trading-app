@@ -35,6 +35,8 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 
 ## Direction
 
+[Step 3: Secure application foundation](docs/foundation-plan.md) is planned as small increments for the Python API, security checks, local PostgreSQL, ownership isolation, MFA/sessions, the protected UI, and deployment readiness. The [authentication comparison](docs/authentication-options.md) leaves the provider open; FastAPI remains the provisional direction. No foundation implementation or cloud provisioning is included yet.
+
 [Step 2D](docs/budgets-prototype-plan.md) provides monthly category budgets, historical cash-flow analysis, and recurring-expense review (2D.1–2D.3). [Step 2E.1](docs/imports-prototype-plan.md#step-2e1-connections-and-source-coverage) provides source coverage and connection-status walkthroughs. [Step 2E.2](docs/import-samples.md) provides bank sample previews and row inspection. Step 2E.3 adds reversible bank review decisions, independent reconciliation, and sample-only completion receipts. Step 2E.4 adds seven investment examples with typed snapshots, activity, cash, and lots; bounded fund-source preferences; independent position/cash checks; and the same reversible review history.
 
 - Indian and US stocks, ETFs, and direct/regular mutual funds.
@@ -56,6 +58,8 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Bank import samples](docs/import-samples.md) | Fixed comparison baselines, expected row dispositions, native amounts, and source arithmetic |
 | [Prototype implementation](docs/ui-prototype.md) | Behavior, calculations, security boundaries, verification |
 | [Architecture](docs/architecture.md) | Components, database decisions, financial data rules |
+| [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
+| [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |
 | [Integrations](docs/integrations.md) | Provider options and verification |
 | [Operations](docs/operations.md) | Hosting, backups, recovery, incident handling |

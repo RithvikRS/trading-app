@@ -1,6 +1,6 @@
 # Deployment and recovery plan
 
-The intended hosted topology is a Python application and static frontend on Oracle Cloud, with PostgreSQL hosted by Supabase. Deployment, accounts, secrets, and automation have not been provisioned. All settings below are implementation requirements or provisional targets.
+The intended hosted topology is a Python application and static frontend on Oracle Cloud, with PostgreSQL hosted by Supabase. Deployment, accounts, secrets, and automation have not been provisioned. All settings below are implementation requirements or provisional targets. [Step 3G](foundation-plan.md#supabase-and-recovery-readiness) prepares local production-style packaging and an encrypted synthetic restore exercise; Stage 10 remains the hosted rollout. Dedicated non-production Supabase checks are recorded separately from local tests, and remain unperformed until the actual project/network/credentials are available.
 
 ## Oracle application host
 
@@ -16,7 +16,7 @@ Always Free instances can be reclaimed under Oracle's inactivity policy. Recover
 
 ## Supabase configuration
 
-Use a dedicated production project and local PostgreSQL for development. Select a suitable region near the application host while considering data residency and provider availability. Confirm the actual plan and limits before creation.
+Use a dedicated production project and local PostgreSQL for development. Keep any provider integration-test project separate from production; a local application database does not automatically provide the selected managed identity service. Authentication service, recovery email, and account-session features must be budgeted separately according to the [authentication decision](authentication-options.md). Select a suitable region near the application host while considering data residency and provider availability. Confirm the actual plan and limits before creation.
 
 Configure source address restrictions for database and pooler access, certificate-verified TLS, unexposed financial tables, disabled unused Data API access, and separate runtime/migration/backup roles. Enable MFA on the administrative account. Verify restrictions with negative tests from an unauthorized source as well as successful application connections.
 
