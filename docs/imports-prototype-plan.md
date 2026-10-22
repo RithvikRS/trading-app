@@ -1,6 +1,6 @@
 # Import review and connection status prototype plan
 
-Status: Step 2E.1 is implemented with six source inspectors and isolated connection-status simulations. Step 2E.2 adds the bank sample catalog, read-only batch previews, and row inspection. Step 2E.3 adds reversible bank review decisions and sample completion. Step 2E.4 remains planned. See the [current prototype](ui-prototype.md), [integration research](integrations.md), and [security requirements](security.md).
+Status: Step 2E.1 is implemented with six source inspectors and isolated connection-status simulations. Step 2E.2 adds the bank sample catalog, read-only batch previews, and row inspection. Step 2E.3 adds reversible bank review decisions and sample completion. Step 2E.4 adds seven investment walkthroughs with shared reversible review decisions and scope-specific completion checks. See the [current prototype](ui-prototype.md), [integration research](integrations.md), and [security requirements](security.md).
 
 The next screens should explain where records come from, what periods they cover, what an incoming batch would change, and why some records need review. Security and financial accuracy take priority over automation. Continue the Indigo & Apricot themes, shared INR/USD and privacy controls, visible sample labels, and loopback-only runtime.
 
@@ -11,7 +11,7 @@ The next screens should explain where records come from, what periods they cover
 | 2E.1 | Connections workspace, source coverage/details, and simulated status/recovery walkthroughs | Implemented | `feat(connections): add source status walkthrough` |
 | 2E.2 | Bank sample catalog, batch previews, issue summaries, and original/normalized row inspection | Implemented | `feat(imports): add bank statement review previews` |
 | 2E.3 | Reversible bank review decisions, duplicate/conflict handling, reconciliation, and sample review completion | Implemented | `feat(imports): add reversible sample review decisions` |
-| 2E.4 | Investment review examples for INDmoney, mutual-fund overlap, and UBS employee shares | Planned | `feat(imports): add investment statement walkthroughs` |
+| 2E.4 | Investment review examples for INDmoney, mutual-fund overlap, and UBS employee shares | Implemented | `feat(imports): add investment statement walkthroughs` |
 
 Each increment includes meaningful tests, documentation, and fictional light/dark desktop/mobile evidence in a focused `dev` to `main` PR. Features scheduled for later increments remain visibly planned until functional. Activity remains outside Step 2E.
 
@@ -108,7 +108,7 @@ The final review summary shows included, already-present, excluded, and unresolv
 
 ## Step 2E.4: Investment statement walkthroughs
 
-Extend the same catalog, evidence inspection, review decisions, and receipt behavior to a bounded set of INDmoney India/US, mutual-fund, and UBS examples. These are generic normalized statement scenarios, not claims about accepted provider file layouts. Unsupported events remain visibly outside the walkthrough rather than silently normalized.
+Implemented with seven fixed investment examples at `i08`–`i14`; see [independent expectations](import-samples.md#investment-sample-expectations-step-2e4) and [implementation notes](ui-prototype.md#investment-statement-walkthroughs-step-2e4). The same catalog, evidence inspection, review decisions, and receipt behavior now cover a bounded set of INDmoney India/US, mutual-fund, and UBS examples. These are generic normalized statement scenarios, not claims about accepted provider file layouts. Unsupported events remain visibly outside the walkthrough rather than silently normalized.
 
 | Scenario | Identity and reconciliation requirements |
 | --- | --- |

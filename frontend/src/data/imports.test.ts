@@ -1,3 +1,5 @@
+import { getInvestmentBatches } from './investment-imports'
+import { changeInvestmentReview, proposeInvestment } from './investment-review'
 import { createImportReviewState, changeImportReview, proposeImport, resetImportReviews, undoImportReview } from './import-review'
 import { describe, expect, it } from 'vitest'
 import { getImportBatches, previewImport, normalizeImportRow, selectImportRows, initialImportFilters, isImportId, isDisposition, clearImportSearch, clearImportSelection } from './imports'
@@ -129,6 +131,15 @@ describe('Bank sample import evidence', () => {
       importState = changeImportReview(importState, sample, proposeImport(sample, importState, { type: 'reopen' }))
       importState = changeImportReview(importState, sample, proposeImport(sample, importState, { type: 'row', rowId: sample.rows[0]!.id, choice: 'exclude' }))
     }
+    const investmentSamples = getInvestmentBatches(), investmentBefore = structuredClone(investmentSamples)
+    for (const investment of investmentSamples) {
+      importState = changeInvestmentReview(importState, investment, proposeInvestment(investment, importState, { type: 'suggestions' }))
+      if (investment.id === 'i10') importState = changeInvestmentReview(importState, investment, proposeInvestment(investment, importState, { type: 'row', rowId: 'position-h11', choice: 'incoming' }))
+      importState = changeInvestmentReview(importState, investment, proposeInvestment(investment, importState, { type: 'complete' }))
+      importState = changeInvestmentReview(importState, investment, proposeInvestment(investment, importState, { type: 'reopen' }))
+      importState = changeInvestmentReview(importState, investment, proposeInvestment(investment, importState, { type: 'row', rowId: investment.rows[0]!.id, choice: 'exclude' }))
+    }
+    expect(investmentSamples).toEqual(investmentBefore)
     undoImportReview(importState); resetImportReviews(importState)
     expect(samples).toEqual(original); expect(financialSnapshot(snapshot())).toBe(before)
     const connection = changeConnections(createConnectionState(), { type: 'scenario', id: 'ind-in', scenario: 'revoked' })
