@@ -17,7 +17,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.tooling import ROOT, CheckFailure, get_tool  # noqa: E402
 
 
-def run(label: str, command: list[str], cwd: Path = ROOT, quiet: bool = False) -> str:
+def run(
+    label: str,
+    command: list[str],
+    cwd: Path = ROOT,
+    quiet: bool = False,
+    timeout: int = 1200,
+) -> str:
     print(f"Checking {label}...", flush=True)
     try:
         result = subprocess.run(
@@ -27,7 +33,7 @@ def run(label: str, command: list[str], cwd: Path = ROOT, quiet: bool = False) -
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=1200,
+            timeout=timeout,
             stdout=subprocess.PIPE if quiet else None,
             stderr=subprocess.PIPE if quiet else None,
         )
@@ -79,6 +85,13 @@ def frontend() -> None:
     npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
     if not node or not npm:
         raise CheckFailure("Install the pinned Node/npm versions from docs/verification.md.")
+    npm_command = [npm]
+    if os.name == "nt":
+        # Invoke Node directly so an install timeout kills npm, not just its .cmd wrapper.
+        cli = Path(npm).parent / "node_modules/npm/bin/npm-cli.js"
+        if not cli.is_file():
+            raise CheckFailure("Cannot locate npm's CLI beside its Windows launcher.")
+        npm_command = [node, str(cli)]
     expected = (ROOT / "frontend/.node-version").read_text().strip()
     if run("Node version", [node, "--version"], quiet=True).strip() != f"v{expected}":
         raise CheckFailure(f"Use Node {expected}; tool versions are pinned.")
@@ -86,16 +99,20 @@ def frontend() -> None:
 
     package = json.loads((ROOT / "frontend/package.json").read_text())
     if (
-        run("npm version", [npm, "--version"], quiet=True).strip()
+        run("npm version", [*npm_command, "--version"], quiet=True).strip()
         != package["packageManager"].split("@")[1]
     ):
         raise CheckFailure("npm version differs from frontend/package.json.")
-    for label, args in [
-        ("locked frontend installation", ["ci", "--ignore-scripts", "--no-audit", "--no-fund"]),
-        ("frontend tests, types, and build", ["run", "check"]),
-        ("frontend dependency advisories", ["audit", "--audit-level=low", "--include=dev"]),
+    for label, args, timeout in [
+        (
+            "locked frontend installation",
+            ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+            2700,
+        ),
+        ("frontend tests, types, and build", ["run", "check"], 1200),
+        ("frontend dependency advisories", ["audit", "--audit-level=low", "--include=dev"], 1200),
     ]:
-        run(label, [npm, *args], ROOT / "frontend")
+        run(label, [*npm_command, *args], ROOT / "frontend", timeout=timeout)
 
 
 @contextmanager

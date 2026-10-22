@@ -8,6 +8,7 @@ import unittest
 import zipfile
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import yaml
@@ -66,6 +67,39 @@ class RunnerTests(unittest.TestCase):
             (root / "README.md").write_text("[Missing](docs/missing.md)")
             with self.assertRaises(CheckFailure):
                 checks.documentation_links(root)
+
+
+class FrontendInvocationTests(unittest.TestCase):
+    def test_windows_install_uses_node_directly_with_bounded_timeout(self):
+        with checks.scratch() as root:
+            cli = root / "node_modules/npm/bin/npm-cli.js"
+            cli.parent.mkdir(parents=True)
+            cli.write_text("// fixture")
+            (root / "frontend").mkdir()
+            (root / "frontend/.node-version").write_text("22.23.2")
+            (root / "frontend/package.json").write_text('{"packageManager":"npm@12.0.2"}')
+            with (
+                patch("scripts.checks.ROOT", root),
+                patch("scripts.checks.os", SimpleNamespace(name="nt")),
+                patch("scripts.checks.shutil.which", side_effect=["node", str(root / "npm.cmd")]),
+                patch("scripts.checks.run", side_effect=["v22.23.2", "12.0.2", "", "", ""]) as run,
+            ):
+                checks.frontend()
+            install = run.call_args_list[2]
+            self.assertEqual(install.args[1][:3], ["node", str(cli), "ci"])
+            self.assertIn("--ignore-scripts", install.args[1])
+            self.assertEqual(install.kwargs["timeout"], 2700)
+
+    def test_missing_windows_cli_fails_before_running_commands(self):
+        with checks.scratch() as root:
+            with (
+                patch("scripts.checks.os", SimpleNamespace(name="nt")),
+                patch("scripts.checks.shutil.which", side_effect=["node", str(root / "npm.cmd")]),
+                patch("scripts.checks.run") as run,
+            ):
+                with self.assertRaises(CheckFailure):
+                    checks.frontend()
+            run.assert_not_called()
 
 
 class ToolIntegrityTests(unittest.TestCase):
