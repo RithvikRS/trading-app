@@ -22,6 +22,12 @@ From `frontend/`:
 
 The project `.npmrc` disables dependency lifecycle scripts. Keep that restriction unless a script has been inspected and a narrow build-time need documented. Both servers bind to loopback with strict ports; do not expose them to a LAN, tunnel, or public host. The backend and databases are not required for this prototype.
 
+## Planned Python and database foundation
+
+[Step 3](foundation-plan.md) adds the Python scaffold, locked dependencies, security/CI checks, isolated local PostgreSQL, migrations, restricted roles, and authenticated browser/API tests incrementally. Framework-specific setup follows the [authentication comparison](authentication-options.md); no backend install/run or database bootstrap commands exist yet. The current frontend commands remain valid.
+
+Tests must use explicitly named disposable databases and synthetic identities. Destructive test setup must reject hosted or non-test connection strings. Test authentication adapters stay outside the deployed runtime; no environment variable or debug endpoint may grant an owner identity in production. Hosted Supabase/identity checks, where needed, run separately from ordinary local/PR tests and report their actual evidence.
+
 ## Feature cycle
 
 1. Define the user-visible result, security implications, and acceptance criteria.

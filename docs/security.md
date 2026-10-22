@@ -41,13 +41,15 @@ Trust boundaries include the browser and API, public network and application hos
 
 ## Authentication and sessions
 
-Choose a maintained authentication solution during foundation planning. Require MFA for the owner and administrative cloud accounts, disable public registration for the personal version, and review enrollment and recovery as part of authentication. Do not build custom cryptography.
+The [foundation plan](foundation-plan.md) defines the required session and ownership contract. The [authentication comparison](authentication-options.md) evaluates Supabase Auth with FastAPI, Django/allauth, and Auth0; the provider remains unselected. Choose and verify a maintained implementation before adding authentication endpoints. Require MFA for the owner and administrative cloud accounts, disable public registration for the personal version, and review enrollment and recovery as part of authentication. Do not build custom cryptography.
 
 Use short-lived or bounded sessions with server-side revocation and secure, HttpOnly, appropriately SameSite cookies. Protect state-changing requests against CSRF and validate origins. Keep credentials and refresh tokens out of browser local storage, URLs, and frontend bundles. Use exact CORS allowlists, rate limits, generic authentication errors, and documented expiry behavior.
 
 Restrict the personal deployment through a private network or identity-aware gateway as well as application authentication. The gateway is an additional boundary, not a replacement for API authorization. Its product and recovery method remain to be selected.
 
 ## Database access
+
+Step 3 proves API and database isolation with two synthetic owners, missing identity, attempted ownership changes, and transaction/connection reuse after success, failure, and cancellation. Direct Python database access must establish trusted transaction-local owner context; Supabase authentication helpers are not assumed to receive a browser identity automatically. Session lookup uses a separate narrowly scoped path before that owner context exists. These controls are planned, not active in the current prototype.
 
 - Permit hosted database access only from explicitly allowed application and administrative network addresses, covering the actual IPv4/IPv6 and pooler routes used.
 - Enforce TLS and verify the server certificate and hostname. Connection failures must not trigger an unencrypted fallback.

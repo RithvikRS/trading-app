@@ -2,7 +2,7 @@
 
 Planning baseline: 21 October 2026.
 
-Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. Banking activity/inspection, transfer matching, and category corrections through Step 2C.3 are also merged into `main`. See the [implementation notes](ui-prototype.md) for current behavior and verification. [Step 2D.1](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) adds monthly category budgets. Cash-flow trends (2D.2) are implemented. Recurring-expense review (2D.3) completes Step 2D, now merged into `main`. [Step 2E.1](imports-prototype-plan.md#step-2e1-connections-and-source-coverage) implements connection status and source coverage using isolated local walkthroughs. [Step 2E.2](import-samples.md) implements the bank sample catalog, read-only previews, and source row inspection. Step 2E.3 adds reversible bank review choices and sample completion receipts, with exact source/combined reconciliation and isolated undo/reset. Step 2E.4 adds investment statement walkthroughs for Indian/US snapshots, fund overlap, regular-plan funds, and UBS employee shares. All review decisions remain isolated from financial records.
+Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. Banking activity/inspection, transfer matching, and category corrections through Step 2C.3 are also merged into `main`. See the [implementation notes](ui-prototype.md) for current behavior and verification. [Step 2D.1](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) adds monthly category budgets. Cash-flow trends (2D.2) are implemented. Recurring-expense review (2D.3) completes Step 2D, now merged into `main`. [Step 2E.1](imports-prototype-plan.md#step-2e1-connections-and-source-coverage) implements connection status and source coverage using isolated local walkthroughs. [Step 2E.2](import-samples.md) implements the bank sample catalog, read-only previews, and source row inspection. Step 2E.3 adds reversible bank review choices and sample completion receipts, with exact source/combined reconciliation and isolated undo/reset. Step 2E.4 adds investment statement walkthroughs for Indian/US snapshots, fund overlap, regular-plan funds, and UBS employee shares. All review decisions remain isolated from financial records. Step 2 is merged into `main`. [Step 3](foundation-plan.md) is planned; [authentication options](authentication-options.md) are compared before choosing the backend authentication/framework direction.
 
 Build a personal finance application that provides a trustworthy view of investments and banking activity with as little manual maintenance as supported integrations allow. Security takes priority over convenience, cost optimization, and delivery speed. Financial accuracy and recoverability are part of that requirement.
 
@@ -56,7 +56,7 @@ Deliver each stage through small features with concrete acceptance criteria. The
 | --- | --- | --- |
 | 1 | Planning documentation | Scope, architecture, security, integrations, operations, and workflow recorded in a conventional commit |
 | 2 | UI prototype | [Overview first](ui-prototype-plan.md), followed by holdings, bank activity, budgets, and import/connection walkthroughs; synthetic data and reviewed interaction states |
-| 3 | Application foundation | Python API, frontend, local PostgreSQL, migrations, authentication, and ownership checks, split into small changes |
+| 3 | [Secure application foundation](foundation-plan.md) | Python API, security checks, local PostgreSQL, migrations, ownership/RLS, MFA and revocable sessions, protected frontend, and local recovery/deployment readiness in small increments |
 | 4 | Portfolio foundation | Accounts, instruments, transaction history, snapshots, and reviewed import batches with deduplication |
 | 5 | First complete investment flow | One detailed mutual fund CAS format, reconciliation, NAV updates, and a working portfolio view |
 | 6 | INDmoney integration | Verify official authorization and permissions, then add supported Indian and US data one capability at a time |
@@ -73,7 +73,7 @@ Multiple users require enrollment, recovery, authorization, database policy, bac
 
 ## Decisions still to make
 
-- App name and authentication provider; the current visual direction is Indigo & Apricot in light and dark modes.
+- App name and [authentication/framework selection](authentication-options.md); the current visual direction is Indigo & Apricot in light and dark modes.
 - Private access method, domain, Oracle region, Supabase region, and available storage.
 - Actual provider exports, history depth, consent scopes, and supported unattended renewal.
 - Refresh cadence and any market-data budget; daily valuations are the starting proposal.

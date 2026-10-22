@@ -1,13 +1,13 @@
 # Architecture
 
-Planning baseline: 21 October 2026. Development uses local PostgreSQL; deployment uses Supabase PostgreSQL. The frontend prototype has locked dependency versions; the remaining components guide later implementation. Neither database is provisioned by the prototype.
+Planning baseline: 21 October 2026. Development uses local PostgreSQL; deployment uses Supabase PostgreSQL. The frontend prototype has locked dependency versions; the remaining components guide later implementation. Neither database is provisioned by the prototype. The [Step 3 foundation plan](foundation-plan.md) defines implementation increments and security contracts. [Authentication options](authentication-options.md) remain under comparison; the framework direction below is provisional until that choice is settled.
 
 ## Components
 
 | Component | Direction | Responsibility |
 | --- | --- | --- |
 | Web interface | React, TypeScript, Vite | Responsive dashboard and reviewed imports; production output served as static files |
-| API | Python, FastAPI | Authentication, authorization, validation, financial queries, and connector coordination |
+| API | Python, FastAPI direction | Authentication, authorization, validation, financial queries, and connector coordination |
 | Persistence | PostgreSQL, SQLAlchemy, Alembic | Exact stored values, constraints, transaction boundaries, and versioned migrations |
 | Background work | A small Python worker with durable job records | Imports, price refreshes, retries, and reconciliation |
 | Hosting | Oracle AMD VM, Docker Compose, Caddy | Application services, HTTPS, and constrained runtime resources |
@@ -30,6 +30,8 @@ flowchart LR
     Backup[Restricted backup process] --> DB
     Backup --> Archive[Encrypted independent backup storage]
 ```
+
+The protected frontend will use the API through the same HTTPS origin, with opaque server-side sessions and no provider tokens in browser storage. Initial persistence is limited to owner identity, sessions/security events, and non-financial preferences; financial records follow in Stage 4. A separate demo build retains fictional UI walkthroughs and never supplies fallback balances to the authenticated application.
 
 The frontend accesses financial records through the API. It receives no database passwords, broker credentials, or administrative keys. The API and worker use restricted runtime roles. Administrative migrations and backups use separate identities.
 
