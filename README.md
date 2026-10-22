@@ -35,7 +35,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 
 ## Direction
 
-[Step 3A](docs/api-foundation.md) implements the local FastAPI scaffold with locked Python dependencies, loopback-only startup, validated configuration, and sanitized errors/logs. [Supabase Auth on Free](docs/authentication-options.md) is selected for later MFA integration. Follow the [Python setup commands](docs/development.md#local-python-api) to run `GET /api/v1/health/live`; the frontend remains independent. [Step 3B](docs/foundation-plan.md) is next. No database, identity service, CI workflow, or cloud resource is configured.
+[Step 3A](docs/api-foundation.md) implements the local FastAPI scaffold with locked Python dependencies, loopback-only startup, validated configuration, and sanitized errors/logs. [Supabase Auth on Free](docs/authentication-options.md) is selected for later MFA integration. Follow the [Python setup commands](docs/development.md#local-python-api) to run `GET /api/v1/health/live`; the frontend remains independent. [Step 3B](docs/verification.md) adds shared local checks and CI for Python, the frontend, and repository security. No database, identity service, or cloud resource is configured. Step 3C is next.
 
 [Step 2D](docs/budgets-prototype-plan.md) provides monthly category budgets, historical cash-flow analysis, and recurring-expense review (2D.1–2D.3). [Step 2E.1](docs/imports-prototype-plan.md#step-2e1-connections-and-source-coverage) provides source coverage and connection-status walkthroughs. [Step 2E.2](docs/import-samples.md) provides bank sample previews and row inspection. Step 2E.3 adds reversible bank review decisions, independent reconciliation, and sample-only completion receipts. Step 2E.4 adds seven investment examples with typed snapshots, activity, cash, and lots; bounded fund-source preferences; independent position/cash checks; and the same reversible review history.
 
@@ -58,6 +58,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Bank import samples](docs/import-samples.md) | Fixed comparison baselines, expected row dispositions, native amounts, and source arithmetic |
 | [Prototype implementation](docs/ui-prototype.md) | Behavior, calculations, security boundaries, verification |
 | [Architecture](docs/architecture.md) | Components, database decisions, financial data rules |
+| [Verification](docs/verification.md) | Shared local/CI commands, tool integrity, secret scanning, and workflow boundaries |
 | [API scaffold](docs/api-foundation.md) | Implemented local HTTP/configuration/logging boundary and limits |
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |

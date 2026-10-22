@@ -54,4 +54,4 @@ Local evidence includes clean locked installation, lint/format/type checks, the 
 
 Verification on 23 October 2026 with Windows and Python 3.14.9: 48 backend tests passed; Ruff lint/format and strict mypy checks passed; a fresh runtime-only locked environment successfully created the application. pip-audit 2.10.1 reported no known vulnerabilities in the installed backend dependencies. The real-socket test requires local loopback access; a network-restricted runner cannot supply that evidence. Frontend checks were not repeated because its source, dependencies, and configuration did not change.
 
-Next increment: 3B, repeatable verification and CI. Local PostgreSQL and migrations remain 3C; Supabase login/MFA and server sessions remain 3E.
+[Step 3B](verification.md) now provides the shared local/CI verification commands. Local PostgreSQL and migrations remain the next increment, 3C; Supabase login/MFA and server sessions remain 3E.
