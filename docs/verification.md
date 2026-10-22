@@ -21,6 +21,8 @@ The launcher needs Python 3.11 or newer. Backend commands run with the pinned Py
 
 Dependencies are installed from committed lockfiles. Python audit tooling and its transitive dependencies are locked as development dependencies and are excluded from runtime-only installs. Gitleaks 8.30.1 and actionlint 1.7.12 are fetched from official release archives into ignored `.cache/check-tools/`. Archive hashes are checked before reading the binary, and the binary hash is checked on every invocation, including cache hits. `scripts/tools.json` records both hashes for Windows/Linux x86_64. Other platforms fail explicitly until verified pins are added.
 
+Frontend test files run with one worker to keep DOM-heavy integration tests from competing for resources on local machines and CI. Per-file isolation, test assertions, and their time limits remain active.
+
 The commands need network access for initial downloads, dependency installation, and fresh advisory queries. The API suite needs loopback socket access. An unavailable audit service, missing tool, stale lock, checksum mismatch, scan error, or shallow Git history is a failure; there is no offline-success or skip switch. For a shallow checkout, fetch its complete history before running repository checks. Tool commands have a 20-minute timeout, except the clean frontend install, which allows 45 minutes for slower local filesystems. Windows invokes npm through Node directly so an install timeout terminates npm instead of leaving it behind a terminated command wrapper. Hosted CI jobs retain their independent 20-minute limit.
 
 ## Secret detection and privacy
