@@ -15,7 +15,7 @@ Planning baseline: 21 October 2026. Development uses local PostgreSQL; deploymen
 
 Keep domain modules for accounts, investments, banking, imports, valuations, and integrations within one application. This preserves clear boundaries without requiring separate services for each feature. No continuously running Node server is needed for the static frontend build. See [Vite deployment](https://vite.dev/guide/static-deploy.html) and [FastAPI](https://fastapi.tiangolo.com/).
 
-The local database tool is separate from API startup. Bootstrap owns the database; the migrator owns `app_meta` and `app`; runtime receives connection and schema-usage privileges only. Alembic runs in a verified, advisory-locked transaction. No API route reads or writes the database yet.
+The local database tool is separate from API startup. Bootstrap owns the database; the migrator owns `app_meta` and `app`; runtime receives connection/schema usage and explicit owner-scoped preference privileges only. Alembic runs in a verified, advisory-locked transaction. [Step 3D](ownership-isolation.md) adds internal owners, exact issuer/subject mappings, and constrained preferences. Forced row policies and parameterized transaction context enforce ownership; pool cleanup removes residual identity. No API route reads or writes the database yet.
 
 ## Data flow
 

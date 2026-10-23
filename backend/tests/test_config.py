@@ -21,6 +21,8 @@ def test_defaults_require_no_credentials_or_external_services():
         {"TRADING_API_HOST": "0.0.0.0"},
         {"TRADING_API_DEBUG": "true"},
         {"TRADING_API_AUTH_BYPASS": "true"},
+        {"TRADING_API_OWNER_ID": "10000000-0000-4000-8000-000000000001"},
+        {"TRADING_API_TEST_IDENTITY": "enabled"},
         {"TRADING_API_CORS_ORIGINS": "*"},
         {"TRADING_API_POTR": "8000"},
         {"trading_api_port": "8000"},

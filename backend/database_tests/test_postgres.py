@@ -1,3 +1,5 @@
+"""Keep the original 0001 baseline contract independent of later revisions."""
+
 import shutil
 
 import pytest
@@ -20,8 +22,8 @@ def scalar(url, statement):
 def test_clean_upgrade_repeat_and_round_trip(database):
     url, project = database
     assert migrate.revision(url(), project) == "base"
-    migrate.apply(url(), project)
-    migrate.apply(url(), project)
+    migrate.apply(url(), project, target="0001_private_schema")
+    migrate.apply(url(), project, target="0001_private_schema")
     assert migrate.revision(url(), project) == "0001_private_schema"
     assert (
         scalar(url(), "SELECT pg_get_userbyid(nspowner) FROM pg_namespace WHERE nspname='app'")
@@ -31,7 +33,7 @@ def test_clean_upgrade_repeat_and_round_trip(database):
     migrate.apply(url(), project, direction="downgrade", target="base")
     assert migrate.revision(url(), project) == "base"
     assert scalar(url(), "SELECT count(*) FROM pg_namespace WHERE nspname='app'") == 0
-    migrate.apply(url(), project)
+    migrate.apply(url(), project, target="0001_private_schema")
     assert migrate.revision(url(), project) == "0001_private_schema"
 
 
@@ -39,9 +41,14 @@ def test_clean_upgrade_repeat_and_round_trip(database):
 def test_failed_revision_rolls_back_schema_and_version(database, tmp_path, existing):
     url, project = database
     if existing:
-        migrate.apply(url(), project)
+        migrate.apply(url(), project, target="0001_private_schema")
     directory = tmp_path / "migrations"
-    shutil.copytree(migrate.MIGRATIONS, directory)
+    (directory / "versions").mkdir(parents=True)
+    shutil.copyfile(migrate.MIGRATIONS / "env.py", directory / "env.py")
+    shutil.copyfile(
+        migrate.MIGRATIONS / "versions/0001_private_schema.py",
+        directory / "versions/0001_private_schema.py",
+    )
     (directory / "versions/0002_failure.py").write_text(
         'from alembic import op\nrevision = "0002_failure"\n'
         'down_revision = "0001_private_schema"\n'
@@ -79,7 +86,7 @@ def test_failed_revision_rolls_back_schema_and_version(database, tmp_path, exist
 )
 def test_runtime_cannot_administer_or_migrate_even_with_dml_grants(database, statement):
     url, project = database
-    migrate.apply(url(), project)
+    migrate.apply(url(), project, target="0001_private_schema")
     owner = engine_for(url(), migration=True)
     try:
         with owner.begin() as connection:
@@ -110,7 +117,7 @@ def test_runtime_cannot_administer_or_migrate_even_with_dml_grants(database, sta
 
 def test_runtime_role_defaults_and_future_objects_are_closed(database):
     url, project = database
-    migrate.apply(url(), project)
+    migrate.apply(url(), project, target="0001_private_schema")
     assert not scalar(
         url("runtime"),
         "SELECT rolsuper OR rolcreatedb OR rolcreaterole OR rolreplication OR rolbypassrls "
@@ -184,7 +191,7 @@ def test_migration_refuses_runtime_and_bootstrap_identities(database):
 
 def test_downgrade_refuses_unexpected_objects_without_cascade(database):
     url, project = database
-    migrate.apply(url(), project)
+    migrate.apply(url(), project, target="0001_private_schema")
     engine = engine_for(url(), migration=True)
     try:
         with engine.begin() as connection:
@@ -205,10 +212,10 @@ def test_competing_migration_times_out_without_changing_schema(database):
         with engine.begin() as connection:
             connection.execute(text("SELECT pg_advisory_xact_lock(714039231)"))
             with pytest.raises(DBAPIError) as error:
-                migrate.apply(url(), project)
+                migrate.apply(url(), project, target="0001_private_schema")
             assert error.value.orig.sqlstate == "55P03"
             assert migrate.revision(url(), project) == "base"
-        migrate.apply(url(), project)
+        migrate.apply(url(), project, target="0001_private_schema")
         assert migrate.revision(url(), project) == "0001_private_schema"
     finally:
         engine.dispose()
@@ -217,5 +224,5 @@ def test_competing_migration_times_out_without_changing_schema(database):
 def test_libpq_environment_cannot_redirect_local_connection(database, monkeypatch):
     url, project = database
     monkeypatch.setenv("PGHOSTADDR", "192.0.2.1")
-    migrate.apply(url(), project)
+    migrate.apply(url(), project, target="0001_private_schema")
     assert migrate.revision(url(), project) == "0001_private_schema"

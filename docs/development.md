@@ -50,7 +50,7 @@ From `backend/` with the setup above:
 | --- | --- |
 | `& $uv sync --locked` | Install exactly the committed lockfile; reject stale dependency declarations |
 | `& $uv run --locked python -m trading_api` | Start the local API |
-| `& $uv run --locked pytest` | Configuration, HTTP, error/log privacy, and real local process tests |
+| `& $uv run --locked pytest` | Configuration, HTTP, error/log privacy, internal workspace validation, and real local process tests |
 | `& $uv run --locked ruff check .` | Python lint |
 | `& $uv run --locked ruff format --check .` | Formatting check |
 | `& $uv run --locked mypy` | Strict application type checks |
@@ -65,7 +65,7 @@ Run `python scripts/checks.py all` from the repository root after the setup abov
 
 [Step 3C](database-foundation.md) provides `python scripts/database.py up`, `migrate`, `status`, and `down` from the repository root. Run `up` then `migrate`; the service binds to `127.0.0.1:55432`. `down` retains the volume and generated credentials. `python scripts/checks.py database` creates its own disposable cluster and does not need the development service. Read the database runbook before changing local credential files or storage.
 
-Ownership isolation remains Step 3D; Supabase MFA/server sessions remain Step 3E. No provider integration or financial persistence exists yet.
+[Step 3D](ownership-isolation.md) implements the internal ownership and row-policy boundary. `migrate` now reaches `0002_workspace_ownership` without seeding owners. Supabase MFA/server sessions remain Step 3E. No provider integration or financial persistence exists yet.
 
 Tests must use explicitly named disposable databases and synthetic identities. Destructive test setup must reject hosted or non-test connection strings. Test authentication adapters stay outside the deployed runtime; no environment variable or debug endpoint may grant an owner identity in production. Hosted Supabase/identity checks, where needed, run separately from ordinary local/PR tests and report their actual evidence.
 
