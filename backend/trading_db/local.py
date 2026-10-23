@@ -21,7 +21,7 @@ from trading_db.connections import DatabaseFailure, Role
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / ".cache/postgres"
-ROLES: tuple[Role, ...] = ("bootstrap", "migrator", "runtime")
+ROLES: tuple[Role, ...] = ("bootstrap", "migrator", "runtime", "auth")
 
 
 def execute(command: list[str], *, env: dict[str, str] | None = None) -> str:
@@ -98,8 +98,10 @@ class LocalService:
         (self.directory / "project.json").write_text(
             json.dumps({"project": self.project, "kind": self.kind}), encoding="utf-8"
         )
-        paths = [self.directory / role for role in ROLES]
+        paths = [self.directory / role for role in ROLES[:3]]
         present = [path.exists() for path in paths]
+        if not any(present) and (self.directory / "auth").exists():
+            raise DatabaseFailure("Incomplete local credentials; restore the original files.")
         if any(present) and not all(present):
             raise DatabaseFailure("Incomplete local credentials; restore the original files.")
         if not any(present):
@@ -108,6 +110,13 @@ class LocalService:
                 with path.open("x", encoding="ascii") as stream:
                     stream.write(secrets.token_hex(32))
                 path.chmod(0o600)
+        # Upgrade the existing three-role development service without rotating
+        # any password. A missing new auth credential is created independently.
+        auth_path = self.directory / "auth"
+        if not auth_path.exists():
+            with auth_path.open("x", encoding="ascii") as stream:
+                stream.write(secrets.token_hex(32))
+            auth_path.chmod(0o600)
         for role in ROLES:
             self.password(role)
         (self.directory / "compose.env").write_text("", encoding="ascii")

@@ -8,7 +8,7 @@ from sqlalchemy import URL, Connection, Engine, create_engine, event, text
 from sqlalchemy.exc import DisconnectionError
 from sqlalchemy.pool import ConnectionPoolEntry, NullPool, PoolResetState
 
-Role = Literal["bootstrap", "migrator", "runtime"]
+Role = Literal["bootstrap", "migrator", "runtime", "auth"]
 
 
 class DatabaseFailure(ValueError):
@@ -20,7 +20,8 @@ def validate_url(url: URL, *, test: bool = False) -> None:
         url.drivername != "postgresql+psycopg"
         or url.host != "127.0.0.1"
         or url.database not in ({"trading_test"} if test else {"trading_dev", "trading_test"})
-        or url.username not in {"trading_bootstrap", "trading_migrator", "trading_runtime"}
+        or url.username
+        not in {"trading_bootstrap", "trading_migrator", "trading_runtime", "trading_auth"}
         or url.port is None
         or not 1024 <= url.port <= 65535
         or not url.password

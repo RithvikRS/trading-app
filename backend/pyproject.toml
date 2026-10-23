@@ -6,8 +6,10 @@ requires-python = ">=3.14.9,<3.15"
 dependencies = [
     "alembic==1.20.1",
     "fastapi==0.161.0",
+    "httpx2==2.16.0",
     "psycopg[binary]==3.3.6",
     "pydantic==2.14.1",
+    "pyjwt[crypto]==2.15.1",
     "sqlalchemy==2.1.6",
     "starlette==1.9.0",
     "uvicorn==0.54.0",
@@ -15,7 +17,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "httpx2==2.16.0",
     "mypy==2.4.0",
     "pip-audit==2.10.1",
     "pyyaml==6.0.3",
@@ -44,4 +45,4 @@ select = ["E", "F", "I", "UP", "B", "ASYNC"]
 [tool.mypy]
 python_version = "3.14"
 strict = true
-files = ["trading_api", "trading_db"]
+files = ["trading_api", "trading_db", "trading_auth"]
