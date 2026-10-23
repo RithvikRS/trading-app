@@ -109,3 +109,7 @@ The local UI prototype uses fictional data only. Before handling real data, veri
 7. Dependencies, server configuration, patching, resource limits, and alerts have been reviewed; known material security failures are resolved.
 
 Record evidence and remaining limitations with the relevant feature or deployment documentation. Passing checks reduces risk; it does not constitute a guarantee of security or a compliance certification. Public multi-user access and real trade execution require expanded threat models and a separate security review before activation.
+
+## Protected browser shell
+
+[Step 3F.1](protected-workspace.md) adds a separate build with no financial fixtures or browser persistence, strict bounded response validation, same-origin CSRF requests, and closed session gates. Locking/sign-out discards earlier requests; offline or uncertain verification hides the workspace. Static assets receive no-store and a CSP without inline scripts/styles. The prototype remains isolated. No financial data endpoint or stored preference is added, and local UI tests do not establish hosted provider or deployment security.

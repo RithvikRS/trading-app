@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc --noEmit",
-    "build": "npm run typecheck && vite build",
+    "build": "npm run typecheck && vite build && npm run build:workspace",
+    "build:workspace": "vite build --config workspace.config.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

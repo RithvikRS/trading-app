@@ -1,6 +1,6 @@
 # Step 3A: Local Python API scaffold
 
-The API in `backend/` is a local development foundation. Supabase Auth on Free with FastAPI is the [selected authentication direction](authentication-options.md); [Step 3E.2](browser-sessions.md) adds opt-in authentication and sessions. This document records the original liveness-only default. The frontend still runs independently with fictional data. The API scaffold itself creates no database, provider connection, user account, cloud resource, or deployment. Later [verification](verification.md) and [local database](database-foundation.md) tools run independently.
+The API in `backend/` is a local development foundation. Supabase Auth on Free with FastAPI is the [selected authentication direction](authentication-options.md); [Step 3E.2](browser-sessions.md) adds opt-in authentication and sessions. This document records the original liveness-only default. The fictional prototype still runs independently. [Step 3F.1](protected-workspace.md) adds a separate opt-in static shell on the API origin. The API scaffold itself creates no database, provider connection, user account, cloud resource, or deployment. Later [verification](verification.md) and [local database](database-foundation.md) tools run independently.
 
 ## Runtime and dependencies
 
@@ -34,6 +34,7 @@ Run `python -m trading_api` through the locked environment using the [developmen
 | `TRADING_API_ENVIRONMENT` | `development` | `development` or `test` |
 | `TRADING_API_PORT` | `8000` | ASCII integer from 1024 through 65535, without whitespace or leading zeroes |
 | `TRADING_API_AUTH_ENABLED` | `false` | `true` or `false`; enabled mode requires the [session setup](browser-sessions.md#local-setup-and-verification) |
+| `TRADING_API_FRONTEND_ENABLED` | `false` | `true` or `false`; enabled mode requires the separate [protected build](protected-workspace.md) |
 
 An unknown `TRADING_API_` setting, misspelling, invalid value, or unsupported command-line argument stops startup with exit code 2 and a generic `configuration_invalid` event. Supplied values are never printed. `.env.example` is reference material; the application does not discover or load `.env` files. Default liveness mode needs no credentials; opt-in authentication fails startup when provider configuration or its private key is missing.
 
