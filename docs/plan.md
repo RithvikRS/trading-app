@@ -4,7 +4,7 @@ Planning baseline: 21 October 2026.
 
 Steps 2A, 2B.1, and 2B.2, covering the responsive Overview, searchable holdings list, and holding detail pages, are merged into `main`. Banking activity/inspection, transfer matching, and category corrections through Step 2C.3 are also merged into `main`. See the [implementation notes](ui-prototype.md) for current behavior and verification. [Step 2D.1](budgets-prototype-plan.md#step-2d1-monthly-category-budgets) adds monthly category budgets. Cash-flow trends (2D.2) are implemented. Recurring-expense review (2D.3) completes Step 2D, now merged into `main`. [Step 2E.1](imports-prototype-plan.md#step-2e1-connections-and-source-coverage) implements connection status and source coverage using isolated local walkthroughs. [Step 2E.2](import-samples.md) implements the bank sample catalog, read-only previews, and source row inspection. Step 2E.3 adds reversible bank review choices and sample completion receipts, with exact source/combined reconciliation and isolated undo/reset. Step 2E.4 adds investment statement walkthroughs for Indian/US snapshots, fund overlap, regular-plan funds, and UBS employee shares. All review decisions remain isolated from financial records. Step 2 is merged into `main`. [Step 3A](api-foundation.md) implements the local Python API scaffold. [Supabase Auth on Free with FastAPI](authentication-options.md) is selected; its internal integration is described below. [Step 3B](verification.md) adds shared local checks and CI. [Step 3C](database-foundation.md) implements local PostgreSQL, isolated database checks, restricted roles, and a transactional migration baseline. [Step 3D](ownership-isolation.md) adds owner/identity mapping, forced row-level security, and isolated non-financial preference transactions. [Step 3E.1](authentication-foundation.md) adds server-side Supabase password/TOTP verification and restricted enrollment, tested locally without a hosted project. [Step 3E.2](browser-sessions.md) implements browser sessions, recovery, revocation, and security events using local tests. [Step 3F.1](protected-workspace.md) adds a separate protected frontend shell with authentication/recovery and empty-workspace states. [Step 3F.2](display-preferences.md) implements authenticated display preference persistence with versioned saves and explicit conflict review. [Step 3G](local-packaging.md) implements the local HTTPS package, resource measurements, and encrypted synthetic recovery. [Supabase readiness](supabase-readiness.md) records hosted compatibility work and unperformed checks. [Step 4](financial-data-plan.md) is planned in small increments for exact financial contracts, accounts/instruments, provenance, events/lots, snapshots, reviewed persistence, and protected reads; implementation has not started.
 
-Build a personal finance application that provides a trustworthy view of investments and banking activity with as little manual maintenance as supported integrations allow. Security takes priority over convenience, cost optimization, and delivery speed. Financial accuracy and recoverability are part of that requirement.
+Build a personal finance application that provides a trustworthy view of investments, banking activity and credit cards with as little manual maintenance as supported integrations allow. Security takes priority over convenience, cost optimization, and delivery speed. Financial accuracy and recoverability are part of that requirement.
 
 ## Scope
 
@@ -14,18 +14,20 @@ Build a personal finance application that provides a trustworthy view of investm
 | Mutual funds | INDmoney purchases and regular funds purchased through an advisor, with direct and regular plans distinguished |
 | Employee shares | Accenture ESPP holdings, purchase lots, dividends, fees, and sales from UBS |
 | Banking | HDFC and SBI balances, transactions, income, spending categories, recurring payments, transfers, and budgets |
+| Credit cards | HDFC first: statement imports, billing cycles, dues, liability/activity views, payment matching and spending; a separate Step 9 |
 | Reporting | INR reporting view with original INR and USD amounts, allocation, cash flow, and returns when history is complete |
 | Updates | Supported automatic imports, statement imports as a fallback, scheduled valuations, and visible freshness |
 
 The first version serves one owner. Every account and financial record will still have an ownership boundary so future multi-user access does not require guessing who owns existing data.
 
-Trade execution, public registration, multi-user onboarding, tax filing, and investment recommendations are outside the first version. Preserve source information useful for later reporting without describing portfolio calculations as tax calculations. Credit cards, loans, and other account products can extend banking coverage after the first HDFC and SBI formats are confirmed.
+Trade execution, public registration, multi-user onboarding, tax filing, and investment recommendations are outside the first version. Preserve source information useful for later reporting without describing portfolio calculations as tax calculations. [HDFC credit cards](credit-cards-plan.md) have a dedicated stage after banking and budgets; loans and other account products remain future extensions.
 
 ## Success criteria
 
 - The owner can inspect investments and bank activity together and trace each imported value to its source.
 - Holdings and transactions reconcile to representative statements; overlaps do not inflate balances.
 - Bank transfers and investment funding do not inflate income or spending.
+- Credit card purchases and bill payments do not double-count spending; statement dues, current outstanding and available credit remain distinct, dated values.
 - Importing the same data twice leaves totals unchanged, while legitimate identical transactions remain distinct.
 - Failed imports preserve the last valid state and explain what needs attention.
 - Price freshness and holdings freshness are shown separately; stale or missing values are never presented as current zeros.
@@ -40,6 +42,7 @@ Use clear typography, consistent spacing, compact readable tables, and charts th
 | Overview | Tracked assets, cash, allocation, performance where available, and data freshness |
 | Investments | Searchable holdings with account, asset class, currency, fund plan, and transaction detail |
 | Banking | Account balances, searchable activity, transfer matching, and category corrections |
+| Credit Cards | HDFC card accounts, statement history, dues, activity, import review and bank-payment matching; planned Step 9 |
 | Budgets | Monthly category budgets, actual spending, recurring commitments, and cash-flow trends |
 | Activity | Transactions, import batches, reconciliations, and corrections |
 | Connections | Provider permissions, last successful sync, failures, renewal needs, and disconnect controls |
@@ -62,10 +65,11 @@ Deliver each stage through small features with concrete acceptance criteria. The
 | 6 | INDmoney integration | Verify official authorization and permissions, then add supported Indian and US data one capability at a time |
 | 7 | UBS integration | Verify available statements, import ESPP lots, and reconcile shares and cash |
 | 8 | Banking and budgets | HDFC import, SBI import, transfer matching, categorization, recurring items, and budgets as separate features |
-| 9 | Automation and analytics | Durable schedules, retries, renewal handling, valuation history, and tested return calculations |
-| 10 | Hosted deployment | Supabase hardening, Oracle configuration, access protection, resource checks, backup restoration, and security acceptance |
+| 9 | [Credit cards](credit-cards-plan.md) | HDFC first: dedicated prototype, liability/statement persistence, one verified import format, reviewed completion, bank-payment matching and spending integration |
+| 10 | Automation and analytics | Durable schedules, retries, renewal handling, valuation history, and tested return calculations; card acquisition only where supported access is verified |
+| 11 | Hosted deployment | Supabase hardening, Oracle configuration, access protection, resource checks, backup restoration, and security acceptance |
 
-Authentication and security foundations can progress alongside the synthetic UI. No live credentials or real statements may be connected to an unprotected prototype. Each later feature inherits the security requirements rather than deferring them to Stage 10.
+Authentication and security foundations can progress alongside the synthetic UI. No live credentials or real statements may be connected to an unprotected prototype. Each later feature inherits the security requirements rather than deferring them to Stage 11.
 
 ## Future extensions
 
@@ -76,6 +80,7 @@ Multiple users require enrollment, recovery, authorization, database policy, bac
 - App name; the visual direction is Indigo & Apricot in light and dark modes. [Authentication/framework selection](authentication-options.md) and local session/recovery behavior are implemented; hosted provider/SMTP evidence and production key custody remain outstanding.
 - Private access method, domain, Oracle region, Supabase region, and available storage.
 - Actual provider exports, history depth, consent scopes, and supported unattended renewal.
+- HDFC card product/export layout, account versus add-on/replacement mapping, and statement/payment coverage for the first credit card parser.
 - Refresh cadence and any market-data budget; daily valuations are the starting proposal.
 - Backup destination, retention, recovery targets, and statement retention preferences.
 

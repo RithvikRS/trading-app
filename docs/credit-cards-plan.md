@@ -1,0 +1,62 @@
+# Step 9: HDFC credit cards
+
+Status: planned as a separate stage after banking and budgets (Step 8). The first issuer is HDFC. No card screen, schema, parser, connection, or personal data is introduced by this planning change. Step 4 continues with its existing scope; automation and hosted rollout follow as Steps 10 and 11.
+
+## Scope and interface
+
+Add a dedicated **Credit Cards** section in the Indigo & Apricot light/dark interface. Support card summaries, account detail, statement history, searchable activity, source-row inspection, and import review. Reuse responsive tables, keyboard navigation, amount masking, source freshness, and explicit empty, loading, failed, stale and incomplete states. Masking must cover monetary chart geometry, limits, available credit, narration, and accessible labels as well as visible amounts. The protected application must never substitute demo records for missing data.
+
+Start with HDFC statements imported by the owner. Record only the information available in a supported source:
+
+| Information | Display and interpretation |
+| --- | --- |
+| Account/card identity | Safe nickname, issuer, currency, optional last four digits, lifecycle and source mapping; last four digits alone are not a unique identity |
+| Billing cycle | Statement period and date, payment due date, source-reported total amount due and minimum amount due |
+| Balances and limits | Statement closing balance, separately dated current outstanding/unbilled evidence, and reported credit limit/available credit where supplied |
+| Activity | Purchases, payments, refunds/reversals, fees, interest, taxes and supported instalment entries, each with original description and dates subject to privacy rules |
+| Review and coverage | Reconciliation, possible duplicates, payment matches, category decisions, imported periods, missing history and unresolved rows |
+
+Do not infer live outstanding or available credit from an old monthly statement. Unbilled and pending activity need their own dated evidence. Never add total due, statement closing balance and current outstanding together as separate liabilities. Available credit is not cash or an asset. An imported limit is not a recommendation to borrow.
+
+## Delivery increments
+
+Each increment has focused tests, updated documentation, a conventional commit on `dev`, and a PR into `main`. Define detailed acceptance cases for each slice before its implementation.
+
+| Increment | Deliverable | Acceptance boundary |
+| --- | --- | --- |
+| 9A | Credit Cards prototype and statement/detail walkthrough | Fabricated HDFC-shaped examples only; both themes, desktop/mobile, keyboard access, masking, missing-data states and source inspection; no files or credentials |
+| 9B | Owned credit accounts, billing statements, liability movements and source mappings | Exact values, separate statement/current snapshots, primary/add-on/replacement card identity, owner isolation, constraints, migrations and encrypted restore coverage |
+| 9C.1 | One verified HDFC export format, safe ingestion, preview and row inspection | Format selected from sanitized representative evidence; bounded isolated parser, correct dates/signs/identifiers, no financial writes from preview, malformed/encrypted/unsupported input handled safely |
+| 9C.2 | Reviewed import completion and connected statement views | Atomic writes, replay/overlap protection, source and combined reconciliation, immutable corrections, receipts, protected reads and durable UI state after reload |
+| 9D | Bank-payment matching, card spending categories and budget/cash-flow integration | Reviewable/reversible matches, partial and multiple payments, refunds, separate spending and bank-cash views, no duplicated expenses, incomplete coverage visible |
+
+Additional HDFC formats and other issuers are separate parser increments after the first end-to-end flow. Automatic acquisition is later Step 10 work only where supported access, actual permissions, freshness and renewal are verified. Paying bills, initiating transfers, changing autopay, credit applications, rewards optimization, interest forecasting and credit-score advice are outside this stage. Supplied instalment details may be inspected; a future instalment schedule or amortization engine needs its own design and evidence.
+
+## Source capability and format selection
+
+HDFC's [mobile banking FAQ](https://www.hdfc.bank.in/need-help/mobile-banking-faqs) describes downloadable credit card statements in PDF, XLS and CSV. This is evidence of an export option, not a verified schema or an integration entitlement for this application. Research checked 24 October 2026; no account was accessed and no export was inspected.
+
+Before selecting the first parser, verify the available format for the actual HDFC card product, whether it includes statement totals and transaction history or only one of them, password behavior, dates, debit/credit semantics, references, refund and EMI presentation, and coverage. Prefer a structured export when it supplies the required evidence; support PDF separately when needed. Never assume that a bank-account parser can parse a credit card statement or that every co-branded HDFC product shares a layout. Do not promise a daily balance from monthly statement imports.
+
+## Financial rules
+
+- Model a credit account as a liability, distinct from a bank deposit or brokerage cash account. Use an explicit sign convention: positive outstanding means owed, negative outstanding means credit in the owner's favor. Preserve source signs and labels alongside the normalized meaning. Initial billing currency is INR; retain supported original purchase currencies and separately supplied conversion/fee evidence without inventing an FX rate.
+- Reconcile a complete posted statement as opening liability + posted debits that increase the liability − posted credits that reduce it = closing liability. Validate the issuer-specific components instead of counting summary totals and their detailed rows twice. Pending authorizations are excluded; cash advances and balance transfers affect liability but are not automatically ordinary spending or income.
+- Preserve transaction date, posting date, billing period, statement date and due date independently. A billing cycle is not necessarily a calendar month. Statement balances are checkpoints, never synthetic purchases. Missing statements cannot be filled with zero, and importing an older statement cannot overwrite newer observations silently.
+- Card purchases contribute to categorized spending once. A payment from a tracked bank account reduces bank cash and card liability; it is a settlement, not a second expense. The bank-cash timeline still shows that outflow, with a bridge to purchase-based spending. Payments from an untracked source retain an unknown counterpart and are not invented as income. Cross-period payments do not shift purchase dates into the payment month.
+- Keep source-reported due amounts immutable. A derived remaining-to-pay view requires complete post-statement evidence and a documented allocation rule. Minimum due is not full settlement. A passed due date, a candidate bank debit, or a refund alone must not label a statement paid or overdue with certainty. Show the source as-of date and an unknown/needs-review state when payment coverage is insufficient.
+- Match a posted bank debit to a posted card payment credit using owner, mapped account, currency, exact amount, dates and available references. Similarity only proposes candidates. Confirmation rechecks current revisions and exclusive membership atomically; unlinking keeps both original records. Split/grouped payments need explicit allocation and exact totals, otherwise remain unresolved. A shared amount and date cannot automatically pair two payments.
+- Link refunds/reversals to their original purchase when evidence supports it, preserving both posting periods. Do not label a refund as income or let a repayment reverse purchase spending. EMI conversion, original purchase, principal instalment, interest, fees and taxes need explicit roles so principal is not counted twice. Unsupported or ambiguous treatment stays blocked or clearly incomplete; never guess an interest schedule or reward value.
+- Credit account identity differs from the physical card. Primary/add-on cards and replacements may share a billing account or credit limit. Preserve explicit mappings and validity periods; do not duplicate liabilities/limits, merge solely on last four digits, or assume all cards from HDFC share an account. Closed/replaced cards retain historical evidence.
+- Reuse Step 4's immutable observations, scoped identifiers, review revisions, idempotency and correction history. Different legitimate purchases may have identical merchant/date/amount. Exact reimports change no totals; overlapping statements, changed source payloads and stale/concurrent decisions require deterministic outcomes.
+- Keep tracked assets and card liabilities separately labeled. A net-worth claim still requires adequate account coverage and compatible as-of dates; adding a card balance does not prove complete liabilities.
+
+## Security, recovery and verification
+
+Apply the existing [security requirements](security.md), [financial persistence contracts](financial-data-plan.md), session boundary and owner-scoped RLS to cards, statements, transactions, allocations, categories and receipts. Use composite ownership references, server-derived ownership, bounded reads/writes, exact-origin/CSRF protection, no-store responses, safe errors and sanitized security events. Each schema increment extends the recovery manifest and separate-cluster restore tests immediately; old sessions stay invalid after restore.
+
+Do not request card PINs, CVVs, OTPs, full card numbers or issuer login credentials in application forms. Persist safe labels/optional last four digits and protected account references only when required, using the existing identifier custody design. Never retain full card numbers in normalized fields, descriptions, original-row inspection payloads, filenames, logs, URLs, browser storage, fixtures or backups. Imported documents/text can contain sensitive identifiers: redact them before durable evidence storage and UI inspection. If a format cannot be safely minimized, reject it. Retained originals must meet the same minimization policy; default to no raw-original retention for card imports.
+
+If an encrypted PDF needs a password, accept it only for the current authenticated parse attempt, without echo in logs, command arguments, persistent storage or background retries. Give the isolated parser bounded memory/time/pages, no network access and no provider credentials. Keep transient uploads/decrypted material in protected temporary storage and clean it on success, failure and interrupted-job recovery; review swap/crash-dump exposure before real-data use. Treat document text as untrusted data and never execute links, scripts or spreadsheet formulas. No automatic mailbox access or credential scraping is introduced.
+
+Acceptance uses fabricated fixtures and disposable databases: two-owner isolation; unknown versus zero; statement/currency/date/sign precision; overpayments/credit balances; incomplete/current/pending distinctions; repeated and overlapping purchases; late, partial and grouped payments; refunds across cycles; add-on/replacement cards and shared limits; unsupported EMI interpretation; atomic failure/retry/correction; protected routes and masking in both themes; malicious/oversized/wrong-password input; leakage checks; and restore of statements, matches and lineage. Real exports, hosted access and operating capacity remain unverified until separately exercised under the relevant security controls.

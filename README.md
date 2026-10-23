@@ -42,6 +42,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 - Indian and US stocks, ETFs, and direct/regular mutual funds.
 - UBS Accenture ESPP lots, dividends, and cash movements.
 - HDFC/SBI transactions, categories, transfers, cash flow, and budgets.
+- [HDFC credit cards in Step 9](docs/credit-cards-plan.md): a dedicated section, statement imports, dues, activity and payment matching; planned separately from Step 4.
 - Supported automatic imports, statement fallbacks, and separate holdings/price freshness.
 - Python API with local PostgreSQL for development and Supabase PostgreSQL for deployment.
 - Likely Oracle Cloud AMD hosting; resource, swap protection, and recovery checks precede hosted use.
@@ -67,6 +68,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Local packaging](docs/local-packaging.md) | Restricted HTTPS package, resource evidence, and encrypted synthetic recovery |
 | [Supabase readiness](docs/supabase-readiness.md) | Hosted compatibility work and evidence checklist |
 | [Financial data plan](docs/financial-data-plan.md) | Step 4 increments, identity/precision contracts, provenance, atomic persistence, isolation and recovery |
+| [Credit cards plan](docs/credit-cards-plan.md) | Step 9 HDFC scope, statement imports, liabilities/dues, payment matching, spending and security |
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |
