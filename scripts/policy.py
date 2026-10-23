@@ -40,7 +40,7 @@ def validate_workflow(document: dict) -> None:
     )
     require(document["permissions"] == {"contents": "read"}, "Workflow token must be read-only.")
     require(
-        set(document["jobs"]) == {"backend", "frontend", "repository"},
+        set(document["jobs"]) == {"backend", "frontend", "repository", "database"},
         "Every verification job must be present.",
     )
     for name, job in document["jobs"].items():
@@ -121,6 +121,7 @@ def validate_repository(root: Path = ROOT) -> None:
     # BaseLoader preserves YAML's `on` key and leaves scalar comparisons explicit.
     document = yaml.load(workflows[0].read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     validate_workflow(document)
+    validate_postgres(root)
     config = tomllib.loads((root / ".gitleaks.toml").read_text(encoding="utf-8"))
     require(
         config == {"title": "Repository secret detection", "extend": {"useDefault": True}},
@@ -128,6 +129,98 @@ def validate_repository(root: Path = ROOT) -> None:
     )
     require(
         not (root / ".gitleaksignore").exists(), "Secret baseline suppressions are not configured."
+    )
+
+
+def validate_postgres(root: Path = ROOT) -> None:
+    def read(name):
+        return yaml.safe_load((root / f"infra/postgres/{name}.yaml").read_text(encoding="utf-8"))
+
+    base = read("compose")
+    require(set(base) == {"services", "networks", "secrets"}, "Unexpected database composition.")
+    require(set(base["services"]) == {"postgres"}, "Only local PostgreSQL belongs in this stack.")
+    service = base["services"]["postgres"]
+    require(
+        set(service)
+        == {
+            "image",
+            "environment",
+            "secrets",
+            "command",
+            "healthcheck",
+            "restart",
+            "mem_limit",
+            "cpus",
+            "pids_limit",
+            "shm_size",
+            "security_opt",
+            "logging",
+        },
+        "Review added container privileges/mounts.",
+    )
+    require(
+        service["image"] == "postgres:17.11-bookworm@sha256:"
+        "858bb5e98eed02eb8cafbcdc007f9a65d1b613972028944a8ec2133ccaf80d27",
+        "Use the reviewed PostgreSQL image digest.",
+    )
+    require(
+        service["environment"]
+        == {
+            "POSTGRES_USER": "trading_bootstrap",
+            "POSTGRES_DB": "${TRADING_DB_NAME:?Use scripts/database.py}",
+            "POSTGRES_PASSWORD_FILE": "/run/secrets/bootstrap",
+            "POSTGRES_INITDB_ARGS": (
+                "--auth-host=scram-sha-256 --auth-local=scram-sha-256 --data-checksums"
+            ),
+        },
+        "Database initialization must use file credentials, SCRAM and checksums.",
+    )
+    require(
+        service["secrets"] == ["bootstrap"]
+        and base["secrets"]
+        == {"bootstrap": {"file": "${TRADING_DB_SECRET_FILE:?Use scripts/database.py}"}},
+        "Only the bootstrap password file is mounted into PostgreSQL.",
+    )
+    require(
+        service["security_opt"] == ["no-new-privileges:true"], "Keep privilege escalation disabled."
+    )
+    require(
+        base["networks"]
+        == {
+            "default": {
+                "driver": "bridge",
+                "driver_opts": {
+                    "com.docker.network.bridge.host_binding_ipv4": "127.0.0.1",
+                    "com.docker.network.bridge.enable_icc": "false",
+                },
+            }
+        },
+        "Keep a dedicated bridge with loopback publication and peer isolation.",
+    )
+    require(
+        read("development")
+        == {
+            "services": {
+                "postgres": {
+                    "ports": ["127.0.0.1:55432:5432"],
+                    "volumes": ["development-data:/var/lib/postgresql/data"],
+                }
+            },
+            "volumes": {"development-data": None},
+        },
+        "Development must keep its private port and dedicated persistent volume.",
+    )
+    require(
+        read("test")
+        == {
+            "services": {
+                "postgres": {
+                    "ports": ["127.0.0.1::5432"],
+                    "tmpfs": ["/var/lib/postgresql/data:rw,noexec,nosuid,size=256m"],
+                }
+            }
+        },
+        "Tests must use an ephemeral loopback port and disposable memory storage.",
     )
 
 

@@ -2,6 +2,7 @@ import copy
 import hashlib
 import io
 import json
+import shutil
 import subprocess
 import tarfile
 import unittest
@@ -197,6 +198,9 @@ class WorkflowPolicyTests(unittest.TestCase):
             lambda d: d["jobs"]["backend"]["steps"][-1].update(run="echo skipped"),
             lambda d: d["jobs"]["frontend"]["steps"][-1].update({"continue-on-error": "true"}),
             lambda d: d["jobs"].pop("frontend"),
+            lambda d: d["jobs"].pop("database"),
+            lambda d: d["jobs"]["database"].update({"services": {"database": "hosted"}}),
+            lambda d: d["jobs"]["database"]["steps"][-1].update(run="echo skipped"),
         ]
         for index, mutate in enumerate(mutations):
             with self.subTest(index=index):
@@ -204,6 +208,34 @@ class WorkflowPolicyTests(unittest.TestCase):
                 mutate(changed)
                 with self.assertRaises(CheckFailure):
                     policy.validate_workflow(changed)
+
+    def test_database_exposure_and_storage_regressions_fail(self):
+        changes = [
+            ("compose", lambda d: d["services"]["postgres"].update(privileged=True)),
+            ("compose", lambda d: d["services"]["postgres"].update(image="postgres:latest")),
+            (
+                "compose",
+                lambda d: d["services"]["postgres"]["environment"].update(
+                    POSTGRES_HOST_AUTH_METHOD="trust"
+                ),
+            ),
+            ("development", lambda d: d["services"]["postgres"].update(ports=["55432:5432"])),
+            (
+                "test",
+                lambda d: d["services"]["postgres"].update(
+                    volumes=["development-data:/var/lib/postgresql/data"]
+                ),
+            ),
+        ]
+        for name, mutate in changes:
+            with self.subTest(name=name), checks.scratch() as root:
+                shutil.copytree(ROOT / "infra", root / "infra")
+                path = root / f"infra/postgres/{name}.yaml"
+                document = yaml.safe_load(path.read_text())
+                mutate(document)
+                path.write_text(yaml.safe_dump(document))
+                with self.assertRaises(CheckFailure):
+                    policy.validate_postgres(root)
 
 
 if __name__ == "__main__":

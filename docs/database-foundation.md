@@ -1,0 +1,69 @@
+# Step 3C: Local PostgreSQL and migrations
+
+The database foundation runs only on the development computer or a disposable CI runner. Security takes priority: separate credentials, restricted roles, explicit migrations, and guarded test cleanup are established before storing application records. The API still serves only liveness and does not connect to PostgreSQL. Owner tables, row-level security, authentication, and financial data remain later increments.
+
+## Runtime and compatibility
+
+The service uses the official PostgreSQL **17.11 bookworm** image, pinned by its multi-platform SHA-256 digest in `infra/postgres/compose.yaml`. PostgreSQL 17 is a supported Supabase upgrade target. No extensions beyond PostgreSQL's default `plpgsql` are required. The selected hosted project's exact version, extensions, TLS, roles, and grants must still be verified before deployment; a local PostgreSQL container does not reproduce Supabase's managed environment. [Supabase upgrades](https://supabase.com/docs/guides/platform/upgrading), [official PostgreSQL image](https://hub.docker.com/_/postgres).
+
+SQLAlchemy 2.1.6, Alembic 1.20.1, and Psycopg 3.3.6 with its binary distribution are pinned in `backend/pyproject.toml` and `uv.lock`. The binary driver includes its client libraries; dependency updates must account for those as well as Python packages. The current release supports Python 3.14. [SQLAlchemy releases](https://www.sqlalchemy.org/download.html), [Psycopg installation](https://www.psycopg.org/psycopg3/docs/basic/install.html).
+
+Use a running local Docker Engine 28 or newer with Linux containers and Docker Compose. Windows uses Docker Desktop's Linux engine. Remote Docker contexts and endpoint overrides are rejected. Engine 28 is the minimum because older engines have documented limitations around loopback port isolation. The tested development versions are Engine 29.6.1 and Compose 5.3.0. [Docker port publishing](https://docs.docker.com/engine/network/port-publishing/).
+
+## Commands and lifecycle
+
+After the [Python setup](development.md#local-python-api), run from the repository root:
+
+```powershell
+python scripts/database.py up
+python scripts/database.py migrate
+python scripts/database.py status
+python scripts/checks.py database
+python scripts/database.py down
+```
+
+| Command | Effect |
+| --- | --- |
+| `up` | Generate private local credentials once, start PostgreSQL, and provision the local roles and migration metadata schema; does not run application migrations |
+| `migrate` | Upgrade to the committed Alembic head with the migrator identity in one transaction |
+| `status` | Check server identity and print only the current schema revision |
+| `checks.py database` | Start a fresh independent test cluster, run destructive migration/permission tests, then stop and remove its temporary files |
+| `down` | Stop/remove the development container and network; retain its named volume and credentials |
+
+Development uses project `trading-development`, database `trading_dev`, and `127.0.0.1:55432`. Its named volume is `trading-development_development-data`. Repeating `up` preserves data and reapplies the bootstrap grants with the existing credentials. Repeating `migrate` at the current head is a no-op. No automatic migrations run during API startup, and the browser has no database connection.
+
+Each test run uses a random `trading-test-â€¦` project, database `trading_test`, fresh passwords, a dynamically assigned IPv4 loopback port, and a 256 MiB tmpfs data directory. It cannot mount the development volume. Test cleanup validates the URL's driver, literal host, database, user, port, and absence of query overrides before connecting. Explicit driver addresses also prevent libpq environment/service settings from redirecting a validated loopback target. It then checks PostgreSQL's database name, major version, and unique cluster marker before destructive SQL; the administrator connection repeats that check. Cleanup rejects an unexpected project name. Failed Docker cleanup is a failed check and retains the local credential directory for recovery.
+
+## Credentials and privilege boundaries
+
+Three independent 256-bit random passwords live in ignored `.cache/postgres/development/` files. Test credentials live under `.cache/postgres/tests/` only for that run. Unix directories/files use 0700/0600; Windows disables directory inheritance and grants the current user and SYSTEM access. Only the bootstrap file is mounted into PostgreSQL through a Compose file secret. Passwords are not command arguments, committed environment values, Docker configuration environment values, or printed connection strings. The official entry point reads the file into the container process environment during initialization; Docker administrators and the local account remain trusted.
+
+These local files are not a production secret store, and Compose secrets do not encrypt their host files. Protect the development computer and its disk. Never put personal records into these services. Do not delete the credential directory while retaining its database volume: replacement passwords cannot authenticate to the existing cluster.
+
+| Identity | Granted responsibilities | Important restrictions |
+| --- | --- | --- |
+| `trading_bootstrap` | Local cluster administrator and database owner; provisions roles/grants | Used only by the explicit local provisioning tool and disposable fixtures; never passed to the API |
+| `trading_migrator` | Owns `app_meta`, migration metadata, and application schema; can create schema objects | Not a superuser; cannot create roles/databases, replicate, or bypass RLS |
+| `trading_runtime` | Connect to its application database and use the `app` schema | Owns no schema/table; no DDL, temporary tables, role membership/escalation, migration-table access, or implicit table/function grants |
+
+PUBLIC loses database connection/temporary privileges and access to `public`. Future migrator-created tables, sequences, functions, and types do not grant PUBLIC access. Runtime table privileges must be added explicitly with the later owner policies. Search paths use `pg_catalog`; migration SQL qualifies application objects. These role boundaries do not implement per-owner authorization or RLS yet. [PostgreSQL privileges](https://www.postgresql.org/docs/17/ddl-priv.html).
+
+Host and Unix-socket authentication use SCRAM-SHA-256, including bootstrap initialization. Data checksums are enabled. The dedicated bridge publishes only loopback and disables communication between peer containers; it is not an outbound traffic firewall. The container has no Docker socket or host networking. It has a 512 MiB memory limit, one CPU, 100-process limit, bounded logs, and no privilege escalation. PostgreSQL has 30 connections and 64 MiB shared buffers. These are local development limits, not measured Oracle capacity.
+
+SQLAlchemy uses at most two pooled connections with no overflow, a five-second checkout/connect/lock limit, and 15-second statement/idle-transaction limits. Migrations use unpooled connections. SQL echo is off and parameters are hidden. CLI failures omit driver exceptions, SQL, credentials, and tracebacks; database statement and parameter logging are disabled. These settings reduce disclosure but do not turn local database logs into safe public artifacts.
+
+## Migration and recovery contract
+
+Bootstrap creates only `app_meta`, owned by the migrator, for Alembic's version table. Revision `0001_private_schema` creates the empty `app` schema and grants runtime schema usage. There are no financial, preference, owner, or session tables. The local migration metadata schema is separate from any Supabase-managed schema.
+
+The migration runner verifies the target and role attributes, takes a transaction-scoped advisory lock shared with bootstrap, and supplies that transaction to Alembic. Both schema changes and the revision record roll back if a revision fails, including a failed initial upgrade. Concurrent migrators wait only up to the lock timeout. There is no automatic stamp, table creation, or retry that can conceal a partial migration. [Alembic connection sharing](https://alembic.sqlalchemy.org/en/latest/cookbook.html#connection-sharing).
+
+Downgrades and alternative migration directories are accepted only against a verified disposable test cluster. The baseline downgrade uses `DROP SCHEMA` without `CASCADE`; unexpected objects stop it. Normal development recovery uses a corrected forward migration. Existing applied revisions should not be edited after shared use. Backups, restoration drills, and deployed rollback procedures remain Step 3G and later operations work.
+
+If a command fails, check that Docker is running on a local Linux context, port 55432 is free, and the original three credential files still exist. `docker ps --filter label=com.docker.compose.project=trading-development` shows container state without credentials. Do not paste Docker inspection environments, database logs, or password files into issues. If a disposable run is interrupted, identify its exact `trading-test-â€¦` project using Docker's Compose labels and its matching ignored directory before stopping it. Never remove the development volume as part of test cleanup. There is deliberately no development reset command.
+
+## Verification and remaining scope
+
+The shared [verification runner](verification.md) adds a **Database checks** job using the same fresh-cluster procedure locally and in CI. Tests cover clean/repeated upgrades, downgrade/re-upgrade, initial and subsequent migration failure rollback, unexpected-object downgrade refusal, SCRAM and wrong-password rejection, restricted runtime privileges even when test-only DML grants exist, closed future object grants, server-marker mismatch, concurrent migration lock timeouts, failed-cleanup credential retention, libpq address overrides, and rejected unsafe targets before network access. Source policy checks reject public ports, unpinned images, trusted authentication, privileged containers, and persistent test storage.
+
+Local Windows evidence on 23 October 2026: development startup, repeated migration/status, and 25 real PostgreSQL tests passed. The backend suite has 71 passing tests; Ruff, strict mypy, and the Python dependency audit passed. Hosted Supabase, authentication, owner isolation/RLS, backup restore, and Oracle resource behavior have not been tested or implemented here. Step 3D is the next increment.

@@ -1,0 +1,4 @@
+services:
+  postgres:
+    ports: ["127.0.0.1::5432"]
+    tmpfs: ["/var/lib/postgresql/data:rw,noexec,nosuid,size=256m"]
