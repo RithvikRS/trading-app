@@ -226,6 +226,15 @@ def validate_postgres(root: Path = ROOT) -> None:
     )
 
 
+def validate_package_ports(configured: dict, effective: dict) -> None:
+    expected = {"8443/tcp": [{"HostIp": "127.0.0.1", "HostPort": "8443"}]}
+    require(configured == expected, "Public gateway port.")
+    # Linux engines may retain image EXPOSE entries with null/empty bindings.
+    # They are not published. The actual HTTPS mapping must still be present.
+    published = {port: bindings for port, bindings in effective.items() if bindings}
+    require(published == expected, "Gateway mapping did not take effect or exposes extra ports.")
+
+
 def validate_packaging(root: Path = ROOT) -> None:
     document = yaml.safe_load((root / "infra/application/compose.yaml").read_text(encoding="utf-8"))
     require(set(document) == {"services", "networks", "secrets"}, "Unexpected package resources.")

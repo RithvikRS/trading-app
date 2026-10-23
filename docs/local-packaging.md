@@ -63,6 +63,6 @@ No financial tables, source documents, Supabase-managed identities, role passwor
 
 ## Verification record
 
-Local checks on 24 October 2026 passed: 264 Python tests, 186 real PostgreSQL tests (including the separate-cluster restore), 556 frontend tests, 16 verification-helper tests, Ruff, strict application typing, both frontend builds, package/TLS/resource checks, documentation links, workflow validation, and repository secret scans. Python/npm audits reported no known dependency vulnerabilities. The demo build retains its existing bundle-size warning; the protected build succeeds separately. These results do not include an OS image advisory scan or hosted Supabase checks.
+Local checks on 24 October 2026 passed: 264 Python tests, 186 real PostgreSQL tests (including the separate-cluster restore), 556 frontend tests, 17 verification-helper tests, Ruff, strict application typing, both frontend builds, package/TLS/resource checks, documentation links, workflow validation, and repository secret scans. Python/npm audits reported no known dependency vulnerabilities. The demo build retains its existing bundle-size warning; the protected build succeeds separately. These results do not include an OS image advisory scan or hosted Supabase checks.
 
 GitHub runs the same five check groups against the pushed revision and proposed merge. Actual CI results are recorded in the PR, independently of this local record. Step 4 remains future work; no financial domain model or data ingestion is introduced here.

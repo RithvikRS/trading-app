@@ -240,6 +240,21 @@ class WorkflowPolicyTests(unittest.TestCase):
 
 
 class PackagingPolicyTests(unittest.TestCase):
+    def test_port_mapping_allows_only_unpublished_image_metadata(self):
+        expected = {"8443/tcp": [{"HostIp": "127.0.0.1", "HostPort": "8443"}]}
+        for effective in [expected, {**expected, "80/tcp": None}, {**expected, "80/tcp": []}]:
+            policy.validate_package_ports(expected, effective)
+        for effective in [
+            {},
+            {"8443/tcp": []},
+            {"8443/tcp": None},
+            {"8443/tcp": [{"HostIp": "0.0.0.0", "HostPort": "8443"}]},
+            {**expected, "80/tcp": [{"HostIp": "127.0.0.1", "HostPort": "8080"}]},
+            {"8443/tcp": [*expected["8443/tcp"], {"HostIp": "::", "HostPort": "8443"}]},
+        ]:
+            with self.subTest(effective=effective), self.assertRaises(CheckFailure):
+                policy.validate_package_ports(expected, effective)
+
     def test_privilege_network_and_secret_regressions_fail(self):
         changes = [
             lambda d: d["services"]["api"].update(user="0:0"),

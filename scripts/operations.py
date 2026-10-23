@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT / "backend"))
 from trading_db.connections import DatabaseFailure  # noqa: E402
 from trading_db.local import local_context, private_directory  # noqa: E402
 
-from scripts.policy import require, validate_packaging  # noqa: E402
+from scripts.policy import require, validate_package_ports, validate_packaging  # noqa: E402
 from scripts.tooling import CheckFailure  # noqa: E402
 
 CACHE = ROOT / ".cache/operations"
@@ -200,14 +200,7 @@ def inspect_runtime(docker, compose, run=command):
             "Writable host mount.",
         )
         if name == "gateway":
-            require(
-                host["PortBindings"] == {"8443/tcp": [{"HostIp": "127.0.0.1", "HostPort": "8443"}]},
-                "Public gateway port.",
-            )
-            require(
-                info["NetworkSettings"]["Ports"] == host["PortBindings"],
-                "Gateway mapping did not take effect.",
-            )
+            validate_package_ports(host["PortBindings"], info["NetworkSettings"]["Ports"])
             for network in info["NetworkSettings"]["Networks"].values():
                 network_info = json.loads(
                     run([*docker, "network", "inspect", network["NetworkID"]])
