@@ -32,5 +32,5 @@ export default defineConfig({
     headers: { ...headers, 'Content-Security-Policy': contentPolicy + "; frame-ancestors 'none'" },
   },
   build: { sourcemap: false },
-  test: { environment: 'jsdom', setupFiles: './src/test/setup.ts', restoreMocks: true },
+  test: { environment: 'jsdom', setupFiles: './src/test/setup.ts', restoreMocks: true, maxWorkers: 1 },
 })

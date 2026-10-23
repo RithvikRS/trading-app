@@ -1,6 +1,6 @@
 # Step 3: Secure application foundation
 
-Status: Step 3A implemented; 3B–3G remain planned. Step 2 and the Step 3 planning PR #20 are merged into `main`. The [local API scaffold](api-foundation.md) provides a liveness endpoint, validated configuration, conservative server settings, and sanitized error/log handling. Databases, authentication, CI, and hosting remain unimplemented. Security is the first acceptance criterion.
+Status: Steps 3A and 3B implemented; 3C–3G remain planned. Step 2 and the Step 3 planning PR #20 are merged into `main`. The [local API scaffold](api-foundation.md) provides a liveness endpoint, validated configuration, conservative server settings, and sanitized error/log handling. [Step 3B](verification.md) adds shared local checks and CI. Databases, authentication, and hosting remain unimplemented. Security is the first acceptance criterion.
 
 The [authentication decision](authentication-options.md) selects Supabase Auth on Free with FastAPI. Python 3.14.9, uv 0.13.5, and the scaffold dependency tree are pinned. SQLAlchemy, Alembic, and Psycopg arrive with the database increments. React, Indigo & Apricot, local PostgreSQL, and hosted Supabase PostgreSQL remain selected.
 
@@ -12,12 +12,12 @@ Accounts, holdings, financial transactions, real statement ingestion, provider c
 
 ## Proposed increments
 
-Step 3A below is implemented; later increments are planned. Each delivers its tests, relevant documentation, a conventional commit on `dev`, and a focused PR into `main`. Larger findings are split further instead of combining unrelated capabilities.
+Steps 3A and 3B below are implemented; later increments are planned. Each delivers its tests, relevant documentation, a conventional commit on `dev`, and a focused PR into `main`. Larger findings are split further instead of combining unrelated capabilities.
 
 | Increment | Deliverable | Acceptance evidence | Conventional commit |
 | --- | --- | --- | --- |
 | 3A — implemented | [Python API scaffold and safe configuration](api-foundation.md) | Locked Python/dependencies; clean install; loopback binding; minimal liveness endpoint; malformed/unsafe configuration fails closed; sanitized errors/logs; no financial or authentication bypass endpoint | `feat(api): add secure application scaffold` |
-| 3B | Repeatable local checks and CI | Python lint/type/tests and dependency audit, frontend checks, secret scanning, pinned actions with minimal permissions, synthetic isolated tests; no deployment credentials or production access | `ci(security): add foundation verification checks` |
+| 3B — implemented | [Repeatable local checks and CI](verification.md) | Python lint/type/tests and dependency audit, frontend checks, secret scanning, pinned actions with minimal permissions, synthetic isolated tests; no deployment credentials or production access | `ci(security): add foundation verification checks` |
 | 3C | Local PostgreSQL and migration baseline | Reproducible local service, separate test database, explicit bootstrap/runtime/migrator identities; first schema migration and clean/upgrade/rollback-on-failure checks; runtime cannot perform DDL | `feat(database): add local postgres foundation` |
 | 3D | Ownership and database isolation | Minimal owner/identity mapping and workspace-preference schema; non-owner runtime role; RLS for reads/writes; two-owner negative tests, missing identity denial, pooled transaction cleanup and rollback; no public data routes | `feat(security): enforce workspace ownership boundaries` |
 | 3E.1 | Selected authentication integration and restricted enrollment | Closed registration, explicit owner provisioning, verified primary identity and MFA enrollment/challenge; partial authentication grants no workspace access; secret-redaction and rate-limit tests | `feat(auth): add owner authentication and mfa` |
@@ -112,4 +112,4 @@ CI uses read-only repository permissions, commit-pinned actions, no production s
 - Before 3E: provider tier, primary/secondary factors, recovery, email, session library, encryption-key custody, and development identity environment.
 - Before 3G/hosting: region, domain/private entry, Supabase route/limits, backup destination and retention, key recovery, resource budget, and hosted evidence availability.
 
-Supabase Auth/FastAPI is selected, while future security controls remain planned until configured and verified. Next implementation increment: 3B, repeatable verification and CI.
+Supabase Auth/FastAPI is selected, while future security controls remain planned until configured and verified. Next implementation increment: 3C, local PostgreSQL and migrations.
