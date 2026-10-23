@@ -11,7 +11,9 @@ from scripts.tooling import ROOT, CheckFailure  # noqa: E402
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["provision-owner", "smoke"])
+    parser.add_argument(
+        "action", choices=["provision-owner", "smoke", "init-session-key", "revoke-owner"]
+    )
     args = parser.parse_args()
     try:
         uv = uv_command()

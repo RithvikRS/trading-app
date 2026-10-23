@@ -192,7 +192,15 @@ def test_failed_later_migration_rolls_back_identity_changes(database, tmp_path, 
     if start != "base":
         migrate.apply(url(), project, target=start)
     directory = tmp_path / "migrations"
-    shutil.copytree(migrate.MIGRATIONS, directory)
+    (directory / "versions").mkdir(parents=True)
+    for name in (
+        "env.py",
+        "script.py.mako",
+        "versions/0001_private_schema.py",
+        "versions/0002_workspace_ownership.py",
+        "versions/0003_auth_identity_lookup.py",
+    ):
+        shutil.copyfile(migrate.MIGRATIONS / name, directory / name)
     (directory / "versions/0004_failure.py").write_text(
         'from alembic import op\nrevision="0004_failure"\n'
         'down_revision="0003_auth_identity_lookup"\n'

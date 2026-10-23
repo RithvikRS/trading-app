@@ -1,6 +1,6 @@
 # Step 3C: Local PostgreSQL and migrations
 
-The database foundation runs only on the development computer or a disposable CI runner. Security takes priority: separate credentials, restricted roles, explicit migrations, and guarded test cleanup are established before storing application records. The API still serves only liveness and does not connect to PostgreSQL. [Step 3D](ownership-isolation.md) extends this baseline with owner tables and row-level security. [Step 3E.1](authentication-foundation.md) adds the identity-lookup role. Browser sessions and financial data remain later increments.
+The database foundation runs only on the development computer or a disposable CI runner. Security takes priority: separate credentials, restricted roles, explicit migrations, and guarded test cleanup are established before storing application records. The default API mode serves liveness without a database connection; opt-in browser authentication uses the restricted registry described below. [Step 3D](ownership-isolation.md) extends this baseline with owner tables and row-level security. [Step 3E.1](authentication-foundation.md) adds the identity-lookup role. [Step 3E.2](browser-sessions.md) adds the private session/security registry. Financial data remains a later increment.
 
 ## Runtime and compatibility
 
@@ -55,7 +55,7 @@ SQLAlchemy uses at most two pooled connections with no overflow, a five-second c
 
 ## Migration and recovery contract
 
-Bootstrap creates only `app_meta`, owned by the migrator, for Alembic's version table. Revision `0001_private_schema` creates the empty `app` schema and grants runtime schema usage. That baseline revision adds no tables beyond migration metadata. Revision `0002_workspace_ownership` adds owner/identity mapping and non-financial preferences. The current head, `0003_auth_identity_lookup`, adds restricted identity lookup and the MFA marker; there are no financial or session tables. The local migration metadata schema is separate from any Supabase-managed schema.
+Bootstrap creates only `app_meta`, owned by the migrator, for Alembic's version table. Revision `0001_private_schema` creates the empty `app` schema and grants runtime schema usage. That baseline revision adds no tables beyond migration metadata. Revision `0002_workspace_ownership` adds owner/identity mapping and non-financial preferences. Revision `0003_auth_identity_lookup` adds restricted identity lookup and the MFA marker. The current head, `0004_browser_sessions`, adds private session, revocation, admission, and security-event tables; there are no financial tables. The local migration metadata schema is separate from any Supabase-managed schema.
 
 The migration runner verifies the target and role attributes, takes a transaction-scoped advisory lock shared with bootstrap, and supplies that transaction to Alembic. Both schema changes and the revision record roll back if a revision fails, including a failed initial upgrade. Concurrent migrators wait only up to the lock timeout. There is no automatic stamp, table creation, or retry that can conceal a partial migration. [Alembic connection sharing](https://alembic.sqlalchemy.org/en/latest/cookbook.html#connection-sharing).
 

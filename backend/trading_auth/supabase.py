@@ -3,7 +3,7 @@
 import json
 import re
 import time
-from typing import Any, cast
+from typing import Any, Literal, cast
 from uuid import UUID
 
 import httpx2 as httpx
@@ -118,7 +118,14 @@ class SupabaseProvider:
         ):
             raise AuthenticationUnavailable()
 
-    def _identity(self, token: SecretStr, *, mfa: bool) -> Identity:
+    def _identity(
+        self,
+        token: SecretStr,
+        *,
+        mfa: bool,
+        primary: Literal["password", "otp"] = "password",
+        fresh: bool = True,
+    ) -> Identity:
         raw = token.get_secret_value()
         if not 32 <= len(raw) <= 16384:
             raise AuthenticationDenied()
@@ -173,12 +180,12 @@ class SupabaseProvider:
             methods = claims["amr"]
             if not isinstance(methods, list) or not 1 <= len(methods) <= 10:
                 raise AuthenticationDenied()
-            for required in ("password", "totp") if mfa else ("password",):
+            for required in (primary, "totp") if mfa else (primary,):
                 if not any(
                     isinstance(item, dict)
                     and item.get("method") == required
                     and type(item.get("timestamp")) is int
-                    and now - 300 <= item["timestamp"] <= now
+                    and now - (300 if fresh else 28800) <= item["timestamp"] <= now
                     for item in methods
                 ):
                     raise AuthenticationDenied()
@@ -192,7 +199,14 @@ class SupabaseProvider:
         except jwt.PyJWTError, ValueError, TypeError, KeyError, OverflowError:
             raise AuthenticationDenied() from None
 
-    def _tokens(self, data: dict[str, Any], *, mfa: bool) -> Tokens:
+    def _tokens(
+        self,
+        data: dict[str, Any],
+        *,
+        mfa: bool,
+        primary: Literal["password", "otp"] = "password",
+        fresh: bool = True,
+    ) -> Tokens:
         access, refresh = data.get("access_token"), data.get("refresh_token")
         if (
             data.get("token_type") != "bearer"
@@ -203,7 +217,16 @@ class SupabaseProvider:
         ):
             raise AuthenticationDenied()
         secret = SecretStr(access)
-        return Tokens(secret, SecretStr(refresh), self._identity(secret, mfa=mfa))
+        return Tokens(
+            secret,
+            SecretStr(refresh),
+            self._identity(
+                secret,
+                mfa=mfa,
+                primary=primary,
+                fresh=fresh,
+            ),
+        )
 
     def password(self, email: str, password: SecretStr) -> Tokens:
         self._closed_registration()
@@ -244,12 +267,17 @@ class SupabaseProvider:
             raise AuthenticationDenied()
         return tuple(result)
 
-    def enroll(self, tokens: Tokens) -> Enrollment:
+    def enroll(self, tokens: Tokens, *, backup: bool = False) -> Enrollment:
         data = self._request(
             "POST",
             "/factors",
             token=tokens.access,
-            payload={"factor_type": "totp", "friendly_name": "Portfolio authenticator"},
+            payload={
+                "factor_type": "totp",
+                "friendly_name": (
+                    "Portfolio backup authenticator" if backup else "Portfolio authenticator"
+                ),
+            },
         )
         totp = data.get("totp")
         if (
@@ -261,7 +289,14 @@ class SupabaseProvider:
             raise AuthenticationDenied()
         return Enrollment(uuid_value(data.get("id")), SecretStr(totp["secret"]))
 
-    def verify(self, tokens: Tokens, factor: UUID, code: SecretStr) -> Tokens:
+    def verify(
+        self,
+        tokens: Tokens,
+        factor: UUID,
+        code: SecretStr,
+        *,
+        primary: Literal["password", "otp"] = "password",
+    ) -> Tokens:
         challenge = self._request(
             "POST", f"/factors/{factor}/challenge", token=tokens.access, payload={}
         )
@@ -277,6 +312,7 @@ class SupabaseProvider:
                 payload={"challenge_id": str(identifier), "code": code.get_secret_value()},
             ),
             mfa=True,
+            primary=primary,
         )
         if (result.identity.subject, result.identity.session_id) != (
             tokens.identity.subject,
@@ -285,5 +321,59 @@ class SupabaseProvider:
             raise AuthenticationDenied()
         return result
 
-    def discard(self, tokens: Tokens) -> None:
-        self._request("POST", "/logout?scope=local", token=tokens.access, empty=True)
+    def discard(self, tokens: Tokens, *, all_sessions: bool = False) -> None:
+        scope = "global" if all_sessions else "local"
+        self._request("POST", f"/logout?scope={scope}", token=tokens.access, empty=True)
+
+    def refresh(
+        self, tokens: Tokens, *, primary: Literal["password", "otp"] = "password"
+    ) -> Tokens:
+        result = self._tokens(
+            self._request(
+                "POST",
+                "/token?grant_type=refresh_token",
+                payload={"refresh_token": tokens.refresh.get_secret_value()},
+            ),
+            mfa=tokens.identity.aal == "aal2",
+            primary=primary,
+            fresh=False,
+        )
+        if (result.identity.issuer, result.identity.subject, result.identity.session_id) != (
+            tokens.identity.issuer,
+            tokens.identity.subject,
+            tokens.identity.session_id,
+        ):
+            raise AuthenticationDenied()
+        return result
+
+    def request_recovery(self, email: str) -> None:
+        self._closed_registration()
+        self._request("POST", "/recover", payload={"email": email}, empty=True)
+
+    def verify_recovery(self, email: str, code: SecretStr) -> Tokens:
+        self._closed_registration()
+        return self._tokens(
+            self._request(
+                "POST",
+                "/verify",
+                payload={
+                    "type": "recovery",
+                    "email": email,
+                    "token": code.get_secret_value(),
+                },
+            ),
+            mfa=False,
+            primary="otp",
+        )
+
+    def change_password(self, tokens: Tokens, password: SecretStr) -> None:
+        data = self._request(
+            "PUT", "/user", token=tokens.access, payload={"password": password.get_secret_value()}
+        )
+        if uuid_value(data.get("id")) != tokens.identity.subject:
+            raise AuthenticationDenied()
+
+    def remove_factor(self, tokens: Tokens, factor: UUID) -> None:
+        data = self._request("DELETE", f"/factors/{factor}", token=tokens.access)
+        if uuid_value(data.get("id")) != factor:
+            raise AuthenticationDenied()

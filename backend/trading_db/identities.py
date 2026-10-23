@@ -1,8 +1,10 @@
 """Pre-owner identity lookup with separate credentials and no workspace access."""
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from uuid import UUID
 
-from sqlalchemy import URL, text
+from sqlalchemy import URL, Connection, text
 
 from trading_auth.models import AuthenticationDenied, AuthenticationUnavailable, OwnerBinding
 from trading_db.connections import DatabaseFailure, engine_for, verify_server
@@ -17,7 +19,8 @@ class IdentityDatabase:
     def close(self) -> None:
         self._engine.dispose()
 
-    def _query(self, issuer: str, subject: UUID, owner: UUID | None) -> OwnerBinding | None:
+    @contextmanager
+    def _transaction(self) -> Iterator[Connection]:
         try:
             with self._engine.begin() as connection:
                 verify_server(connection, str(self._engine.url.database), self._project)
@@ -37,28 +40,32 @@ class IdentityDatabase:
                 ).scalar_one()
                 if not valid:
                     raise AuthenticationUnavailable()
-                if owner is not None:
-                    row = connection.execute(
-                        text("""
+                yield connection
+        except AuthenticationDenied, AuthenticationUnavailable:
+            raise
+        except Exception:
+            raise AuthenticationUnavailable() from None
+
+    def _query(self, issuer: str, subject: UUID, owner: UUID | None) -> OwnerBinding | None:
+        with self._transaction() as connection:
+            if owner is not None:
+                row = connection.execute(
+                    text("""
                         UPDATE app.owner_identities SET mfa_enrolled=true
                         WHERE issuer=:issuer AND subject=:subject AND owner_id=:owner
                         RETURNING owner_id, mfa_enrolled
                     """),
-                        {"issuer": issuer, "subject": str(subject), "owner": owner},
-                    ).one_or_none()
-                else:
-                    row = connection.execute(
-                        text("""
+                    {"issuer": issuer, "subject": str(subject), "owner": owner},
+                ).one_or_none()
+            else:
+                row = connection.execute(
+                    text("""
                         SELECT owner_id, mfa_enrolled FROM app.owner_identities
                         WHERE issuer=:issuer AND subject=:subject
                     """),
-                        {"issuer": issuer, "subject": str(subject)},
-                    ).one_or_none()
-                return OwnerBinding(row.owner_id, row.mfa_enrolled) if row is not None else None
-        except AuthenticationUnavailable:
-            raise
-        except Exception:
-            raise AuthenticationUnavailable() from None
+                    {"issuer": issuer, "subject": str(subject)},
+                ).one_or_none()
+            return OwnerBinding(row.owner_id, row.mfa_enrolled) if row is not None else None
 
     def lookup(self, issuer: str, subject: UUID) -> OwnerBinding | None:
         return self._query(issuer, subject, None)

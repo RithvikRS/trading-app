@@ -23,9 +23,14 @@ def main() -> int:
     # Reject invalid configuration before importing the HTTP application stack.
     from trading_api.application import create_app
 
+    try:
+        application = create_app(settings)
+    except Exception:
+        logger.error("configuration_invalid")
+        return 2
     logger.info("server_starting")
     uvicorn.run(
-        create_app(settings),
+        application,
         host="127.0.0.1",
         port=settings.port,
         workers=1,
