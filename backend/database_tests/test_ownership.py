@@ -22,7 +22,7 @@ UNKNOWN = UUID("10000000-0000-4000-8000-000000000004")
 @pytest.fixture
 def workspace(database):
     url, project = database
-    migrate.apply(url(), project)
+    migrate.apply(url(), project, target="0002_workspace_ownership")
     admin = engine_for(url("bootstrap"), migration=True)
     with admin.begin() as connection:
         for owner, active in ((OWNER_A, True), (OWNER_B, True), (DISABLED, False)):

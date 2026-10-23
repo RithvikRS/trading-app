@@ -126,3 +126,20 @@ def test_partial_credentials_fail_without_replacing_existing_file(monkeypatch, t
         service.initialize()
     assert (tmp_path / "bootstrap").read_text() == "synthetic-original"
     assert not (tmp_path / "runtime").exists()
+
+
+def test_auth_credential_upgrade_preserves_original_passwords(monkeypatch, tmp_path):
+    monkeypatch.setattr(local, "private_directory", lambda path: None)
+    service = LocalService("development", "trading-development", tmp_path, "default")
+    originals = {
+        role: str(index) * 64 for index, role in enumerate(("bootstrap", "migrator", "runtime"), 1)
+    }
+    for role, value in originals.items():
+        (tmp_path / role).write_text(value)
+    service.initialize()
+    for role, value in originals.items():
+        assert service.password(role) == value
+    auth = service.password("auth")
+    assert len(auth) == 64 and auth not in originals.values()
+    service.initialize()
+    assert service.password("auth") == auth

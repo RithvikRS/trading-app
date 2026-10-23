@@ -11,7 +11,7 @@ HEAD = "0002_workspace_ownership"
 
 def test_fresh_head_and_disposable_downgrade_reupgrade(database):
     url, project = database
-    migrate.apply(url(), project)
+    migrate.apply(url(), project, target=HEAD)
     assert migrate.revision(url(), project) == HEAD
     migrate.apply(url(), project, direction="downgrade", target="0001_private_schema")
     owner = engine_for(url(), migration=True)
@@ -25,7 +25,7 @@ def test_fresh_head_and_disposable_downgrade_reupgrade(database):
                 ).scalar_one()
                 == 0
             )
-        migrate.apply(url(), project)
+        migrate.apply(url(), project, target=HEAD)
         assert migrate.revision(url(), project) == HEAD
         with owner.connect() as connection:
             assert (
@@ -51,7 +51,7 @@ def test_upgrade_from_baseline_and_repeat_preserve_existing_data(database):
         with owner.begin() as connection:
             connection.execute(text("CREATE TABLE app.migration_probe (id integer PRIMARY KEY)"))
             connection.execute(text("INSERT INTO app.migration_probe VALUES (1)"))
-        migrate.apply(url(), project)
+        migrate.apply(url(), project, target=HEAD)
         with admin.begin() as connection:
             connection.execute(
                 text("""
@@ -69,7 +69,7 @@ def test_upgrade_from_baseline_and_repeat_preserve_existing_data(database):
             """)
             )
             original = connection.execute(text("SELECT * FROM app.workspace_preferences")).one()
-        migrate.apply(url(), project)
+        migrate.apply(url(), project, target=HEAD)
         with admin.connect() as connection:
             assert (
                 connection.execute(text("SELECT * FROM app.workspace_preferences")).one()
@@ -88,7 +88,13 @@ def test_failure_after_ownership_revision_rolls_back_to_start(database, tmp_path
     if start != "base":
         migrate.apply(url(), project, target=start)
     directory = tmp_path / "migrations"
-    shutil.copytree(migrate.MIGRATIONS, directory)
+    (directory / "versions").mkdir(parents=True)
+    for name in (
+        "env.py",
+        "versions/0001_private_schema.py",
+        "versions/0002_workspace_ownership.py",
+    ):
+        shutil.copyfile(migrate.MIGRATIONS / name, directory / name)
     (directory / "versions/0003_failure.py").write_text(
         'from alembic import op\nrevision = "0003_failure"\n'
         'down_revision = "0002_workspace_ownership"\n'

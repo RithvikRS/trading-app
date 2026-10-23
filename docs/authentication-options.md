@@ -1,6 +1,6 @@
 # Authentication options
 
-Research snapshot: 22 October 2026; selection and Free-plan availability checked 23 October 2026. **Selected: Supabase Auth with FastAPI**, using the Free plan's basic MFA capability. Local PostgreSQL remains the development database and Supabase PostgreSQL the hosted database. Step 3A adds the local Python scaffold only; no identity project, credentials, login, or MFA flow is configured yet.
+Research snapshot: 22 October 2026; selection and Free-plan availability checked 23 October 2026. **Selected: Supabase Auth with FastAPI**, using the Free plan's basic MFA capability. Local PostgreSQL remains the development database and Supabase PostgreSQL the hosted database. [Step 3E.1](authentication-foundation.md) now implements the server-only password/TOTP integration and controlled local enrollment. No identity project or hosted credentials are configured; browser authentication remains Step 3E.2.
 
 The initial factor direction is password plus authenticator-app TOTP. Application-controlled server sessions, expiry, revocation, and recovery are still required in Step 3E. The choice does not depend on paid provider session controls or phone MFA. Free-plan quotas, inactivity pausing, limited default email delivery, and separately supplied recovery email remain operational constraints; no paid plan or add-on is enabled. Verify current entitlements again before integration. [Supabase pricing](https://supabase.com/pricing).
 

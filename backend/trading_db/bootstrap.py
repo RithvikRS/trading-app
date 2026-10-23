@@ -32,7 +32,7 @@ def provision(url: URL, passwords: Mapping[Role, str], project: str) -> None:
             raise DatabaseFailure("Bootstrap database identity does not match.")
         # Serialize bootstrap and migrations with the same transaction-scoped lock.
         connection.execute("SELECT pg_advisory_xact_lock(714039231)")
-        for role in ("migrator", "runtime"):
+        for role in ("migrator", "runtime", "auth"):
             name = f"trading_{role}"
             if not connection.execute(
                 "SELECT 1 FROM pg_roles WHERE rolname = %s", (name,)
@@ -60,9 +60,9 @@ def provision(url: URL, passwords: Mapping[Role, str], project: str) -> None:
                 sql.SQL("REVOKE ALL ON DATABASE {} FROM PUBLIC").format(sql.Identifier(database))
             )
         connection.execute(
-            sql.SQL("GRANT CONNECT ON DATABASE {} TO trading_migrator, trading_runtime").format(
-                sql.Identifier(url.database)
-            )
+            sql.SQL(
+                "GRANT CONNECT ON DATABASE {} TO trading_migrator, trading_runtime, trading_auth"
+            ).format(sql.Identifier(url.database))
         )
         connection.execute(
             sql.SQL("GRANT CREATE ON DATABASE {} TO trading_migrator").format(
@@ -71,7 +71,9 @@ def provision(url: URL, passwords: Mapping[Role, str], project: str) -> None:
         )
         connection.execute("REVOKE ALL ON SCHEMA public FROM PUBLIC")
         connection.execute("CREATE SCHEMA IF NOT EXISTS app_meta AUTHORIZATION trading_migrator")
-        connection.execute("REVOKE ALL ON SCHEMA app_meta FROM PUBLIC, trading_runtime")
+        connection.execute(
+            "REVOKE ALL ON SCHEMA app_meta FROM PUBLIC, trading_runtime, trading_auth"
+        )
         for objects, privilege in (
             ("TABLES", "ALL"),
             ("SEQUENCES", "ALL"),
