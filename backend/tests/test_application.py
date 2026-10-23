@@ -50,6 +50,9 @@ def test_liveness_has_only_minimal_non_dependency_status(client):
         "/openapi.json",
         "/api/v1/auth/login",
         "/api/v1/holdings",
+        "/api/v1/workspace",
+        "/api/v1/preferences",
+        "/api/v1/auth/test-login",
         "/health/ready",
     ],
 )

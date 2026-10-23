@@ -1,10 +1,12 @@
 """Strict local targets and bounded, non-logging database connections."""
 
 import re
-from typing import Literal
+from typing import Any, Literal
 
-from sqlalchemy import URL, Connection, Engine, create_engine, text
-from sqlalchemy.pool import NullPool
+import psycopg
+from sqlalchemy import URL, Connection, Engine, create_engine, event, text
+from sqlalchemy.exc import DisconnectionError
+from sqlalchemy.pool import ConnectionPoolEntry, NullPool, PoolResetState
 
 Role = Literal["bootstrap", "migrator", "runtime"]
 
@@ -40,19 +42,44 @@ def engine_for(url: URL, *, migration: bool = False) -> Engine:
             "pool_recycle": 300,
         }
     )
-    return create_engine(
+    runtime = url.username == "trading_runtime"
+    engine = create_engine(
         url,
         **options,
         echo=False,
         hide_parameters=True,
+        isolation_level="READ COMMITTED",
+        pool_reset_on_return=None if runtime else "rollback",
         connect_args={
             "hostaddr": "127.0.0.1",  # Override libpq's PGHOSTADDR/service-file redirects too.
             "connect_timeout": 5,
             "sslmode": "disable",  # Only the validated literal loopback address is accepted.
             "options": "-c statement_timeout=15000 -c lock_timeout=5000 "
-            "-c idle_in_transaction_session_timeout=15000 -c search_path=pg_catalog",
+            "-c idle_in_transaction_session_timeout=15000 -c search_path=pg_catalog "
+            "-c timezone=UTC" + (" -c app.owner_id=" if runtime else ""),
         },
     )
+    if runtime:
+        event.listen(engine, "reset", _reset_owner_context)
+    return engine
+
+
+def _reset_owner_context(
+    connection: psycopg.Connection[tuple[Any, ...]],
+    record: ConnectionPoolEntry,
+    state: PoolResetState,
+) -> None:
+    if state.terminate_only:
+        return
+    try:
+        # Roll back first: cleanup must never commit unfinished application writes.
+        connection.rollback()
+        connection.execute("SELECT pg_catalog.set_config('app.owner_id', '', false)")
+        connection.commit()
+    except BaseException:
+        # Never return an uncertain session to the pool or log driver payloads.
+        record.invalidate()
+        raise DisconnectionError("Runtime connection reset failed.") from None
 
 
 def verify_server(connection: Connection, database: str, project: str) -> None:
