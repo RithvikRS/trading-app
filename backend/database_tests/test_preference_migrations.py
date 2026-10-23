@@ -29,8 +29,8 @@ def test_preference_upgrade_downgrade_and_reupgrade_preserve_values(database):
         with store.transaction(owner) as unit:
             unit.save_preferences(preferences)
         for _ in range(2):
-            migrate.apply(url(), project)
-            migrate.apply(url(), project)
+            migrate.apply(url(), project, target=HEAD)
+            migrate.apply(url(), project, target=HEAD)
             assert migrate.revision(url(), project) == HEAD
             with store.transaction(owner) as unit:
                 assert unit.preference_snapshot().model_dump() == {
