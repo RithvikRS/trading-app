@@ -10,7 +10,7 @@ Planning baseline: 21 October 2026. Development uses local PostgreSQL; deploymen
 | API | Python, FastAPI | Authentication, authorization, validation, financial queries, and connector coordination |
 | Persistence | PostgreSQL, SQLAlchemy, Alembic | Exact stored values, constraints, transaction boundaries, and versioned migrations |
 | Background work | A small Python worker with durable job records | Imports, price refreshes, retries, and reconciliation |
-| Hosting | Oracle AMD VM, Docker Compose, Caddy | Application services, HTTPS, and constrained runtime resources |
+| Hosting | Oracle AMD VM, Docker Compose, HTTPS proxy; Nginx in the local rehearsal | Application services, HTTPS, and constrained runtime resources |
 | Hosted database | Supabase PostgreSQL | Managed database reached through restricted, verified TLS connections |
 
 Keep domain modules for accounts, investments, banking, imports, valuations, and integrations within one application. This preserves clear boundaries without requiring separate services for each feature. No continuously running Node server is needed for the static frontend build. See [Vite deployment](https://vite.dev/guide/static-deploy.html) and [FastAPI](https://fastapi.tiangolo.com/).
@@ -48,6 +48,8 @@ The frontend accesses financial records through the API. It receives no database
 Supabase Free is the initial candidate. Its current limits include 500 MB database storage and pausing after inactivity; capacity and backup needs must be checked before deployment. Supabase manages infrastructure, but application permissions, schema, and security configuration remain shared responsibilities. See [pricing](https://supabase.com/pricing) and [responsibility model](https://supabase.com/docs/guides/deployment/shared-responsibility-model).
 
 ## Financial records
+
+The [Step 4 plan](financial-data-plan.md) defines the proposed account/source/instrument identities, exact numeric contracts, immutable evidence and corrections, atomic review completion, protected reads, and recovery coverage. These financial tables and routes remain planned. Existing authentication and display preferences remain the only implemented application persistence.
 
 Model owners, institutions, accounts, instruments, transactions and cash movements, purchase lots, holdings snapshots, prices, exchange rates, import batches, source mappings, budgets, category rules, sync jobs, and audit events.
 
