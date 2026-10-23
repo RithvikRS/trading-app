@@ -48,7 +48,7 @@ Exploitable findings, unauthorized access, leaked credentials, and financial cor
 
 Applicable checks must pass on the final revision: source checks, meaningful tests, production builds, browser verification, dependency/security checks, and documentation consistency. Documentation-only PRs do not need unrelated tests.
 
-[Step 3B verification](verification.md) defines four CI checks: Python checks, Database checks, Frontend checks, and Repository security. Run `python scripts/checks.py all` locally and inspect all four GitHub results on the final revision before merging. The workflow uses read-only repository permissions, no production secrets, and no path-based skips. Repository branch protection/ruleset settings are separate and are not configured by the workflow; do not infer enforced merge gates from a green run.
+[Step 3B verification](verification.md) defines five CI checks: Python checks, Database checks, Frontend checks, Repository security, and Local package checks. Run `python scripts/checks.py all` locally and inspect all five GitHub results on the final revision before merging. The workflow uses read-only repository permissions, no production secrets, and no path-based skips. Repository branch protection/ruleset settings are separate and are not configured by the workflow; do not infer enforced merge gates from a green run.
 
 Merge after review, passing checks, resolved findings, and satisfied security requirements. Use a merge commit with a conventional title to preserve ancestry between `dev` and `main`; do not squash or rebase this branch pair. Fetch and fast-forward `dev` to `origin/main` afterward, resolving divergence without rewriting shared history. Verify the resulting branches.
 

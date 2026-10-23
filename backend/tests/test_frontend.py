@@ -130,3 +130,42 @@ def test_bootstrap_reports_only_recovery_capability_and_sets_no_session(enabled)
         assert "trading_dev_session" not in client.cookies
         assert response.headers["cache-control"] == "no-store"
         browser.start.assert_not_called()
+
+
+def test_rehearsal_rejects_plaintext_and_uses_secure_cookie_policy(build):
+    browser = Mock(spec=BrowserAuth)
+    browser.recovery_email = False
+    browser.vault = Mock(csrf_secret="synthetic-csrf-signing-key")
+    app = create_app(Settings(frontend_enabled=True), rehearsal=True, browser=browser)
+    with TestClient(app, base_url="https://127.0.0.1:8443") as client:
+        assert client.get("/").status_code == 200
+        client.cookies.clear()
+        response = client.get("/api/v1/auth/bootstrap")
+        assert response.status_code == 200
+        assert "__Host-portfolio-csrf" in response.headers["set-cookie"]
+        assert "Secure" in response.headers["set-cookie"]
+        assert "SameSite=strict" in response.headers["set-cookie"]
+        assert "Domain=" not in response.headers["set-cookie"]
+        assert (
+            client.get("http://127.0.0.1:8443/", headers={"X-Forwarded-Proto": "https"}).status_code
+            == 403
+        )
+        assert (
+            client.post(
+                "/api/v1/auth/login", headers={"Origin": "http://127.0.0.1:8443"}, json={}
+            ).status_code
+            == 403
+        )
+        browser.start.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "settings", [Settings(), Settings(frontend_enabled=True, auth_enabled=True)]
+)
+def test_rehearsal_cannot_enable_auth_or_load_ambient_credentials(settings, monkeypatch):
+    def denied():
+        pytest.fail("Rehearsal attempted local credential access")
+
+    monkeypatch.setattr("trading_auth.local.local_browser", denied)
+    with pytest.raises(ValueError, match="locked frontend"):
+        create_app(settings, rehearsal=True)

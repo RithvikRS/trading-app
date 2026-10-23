@@ -69,4 +69,4 @@ Local Windows verification on 24 October 2026 passed all four shared check group
 
 The local development database was upgraded to `0005_preference_revisions`; all seven application tables retained their existing empty row counts. No test identity or preference row was seeded into development.
 
-Hosted Supabase authentication/database TLS and pooling, cross-device delivery against a live provider, assistive-technology review on physical devices, and deployment remain unverified. No real identity or financial data is introduced. Step 3G remains future work.
+Hosted Supabase authentication/database TLS and pooling, cross-device delivery against a live provider, assistive-technology review on physical devices, and deployment remain unverified. No real identity or financial data is introduced. The subsequent [Step 3G](local-packaging.md) adds local packaging and recovery evidence; hosted checks remain outstanding.

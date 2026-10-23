@@ -61,8 +61,9 @@ def error_response(status: int, request_id: str) -> JSONResponse:
 class HTTPBoundary:
     """Wrap even framework error responses; never pass exception details to logs."""
 
-    def __init__(self, app: ASGIApp) -> None:
+    def __init__(self, app: ASGIApp, *, require_https: bool = False) -> None:
         self.app = app
+        self.require_https = require_https
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -94,7 +95,10 @@ class HTTPBoundary:
                 completed = True
 
         try:
-            await self.app(scope, receive, safe_send)
+            if self.require_https and scope.get("scheme") != "https":
+                await error_response(403, request_id)(scope, receive, safe_send)
+            else:
+                await self.app(scope, receive, safe_send)
         except Exception:
             logger.error("request_failed", extra={"request_id": request_id, "status": status})
             if not started:
@@ -113,10 +117,13 @@ def create_app(
     *,
     browser: BrowserAuth | None = None,
     workspace: WorkspaceDatabase | None = None,
+    rehearsal: bool = False,
 ) -> HTTPBoundary:
     config = load_settings() if settings is None else settings
     # Revalidate injected settings as well as process configuration at startup.
     Settings.model_validate(config.model_dump())
+    if rehearsal and (config.auth_enabled or not config.frontend_enabled):
+        raise ValueError("The local package requires the locked frontend configuration.")
     if config.auth_enabled and browser is None:
         from trading_auth.local import local_browser
 
@@ -128,7 +135,11 @@ def create_app(
         workspace = WorkspaceDatabase(local.url("runtime"), local.project)
     if workspace is not None and browser is None:
         raise ValueError("Workspace routes require authentication.")
-    policy = CookiePolicy(f"http://127.0.0.1:{config.port}")
+    policy = (
+        CookiePolicy("https://127.0.0.1:8443", secure=True)
+        if rehearsal
+        else CookiePolicy(f"http://127.0.0.1:{config.port}")
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -203,5 +214,6 @@ def create_app(
             app,
             allowed_hosts=["127.0.0.1", "localhost"],
             www_redirect=False,
-        )
+        ),
+        require_https=rehearsal,
     )
