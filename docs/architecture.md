@@ -53,6 +53,8 @@ The [Step 4 plan](financial-data-plan.md) defines the proposed account/source/in
 
 Model owners, institutions, accounts, instruments, transactions and cash movements, purchase lots, holdings snapshots, prices, exchange rates, import batches, source mappings, budgets, category rules, sync jobs, and audit events.
 
+[Step 9 credit cards](credit-cards-plan.md) will add owned credit accounts, billing statements, liability movements and payment allocations. Keep liability balances distinct from assets and available credit, and match bank repayments without counting purchases twice as spending. Card-specific schema and routes are outside Step 4.
+
 - Use PostgreSQL exact numeric types and Python decimal arithmetic for money, prices, rates, and fractional units. Specify scale and rounding rules for each operation; binary floating point must not be the accounting representation.
 - Identify instruments with stable identifiers such as ISIN, exchange, and provider mappings. A display name or ticker alone is insufficient. Keep mutual fund scheme, direct/regular plan, growth/distribution option, and folio identity distinct.
 - Preserve trade date, settlement date where supplied, source timezone, effective date, and import time. Store event timestamps consistently and display local time deliberately. A statement date is not an ingestion timestamp.

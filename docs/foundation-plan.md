@@ -8,7 +8,7 @@ The [authentication decision](authentication-options.md) selects Supabase Auth o
 
 At completion, the owner can authenticate with MFA, open a protected empty application workspace, save non-financial display preferences, sign out, and recover access through a tested procedure. The API and database independently enforce ownership. Development, automated tests, and a local production-style rehearsal use synthetic data.
 
-Accounts, holdings, financial transactions, real statement ingestion, provider connectors, scheduled sync, trading, and public registration remain later work. The existing fictional prototype remains available as an explicitly separate demo build/entry point. A failed or empty API response must never fall back to demo balances. The authenticated build does not bundle demonstration financial fixtures. Stage 4 introduces real domain records; Stage 10 covers hosted rollout.
+Accounts, holdings, financial transactions, real statement ingestion, provider connectors, scheduled sync, trading, and public registration remain later work. The existing fictional prototype remains available as an explicitly separate demo build/entry point. A failed or empty API response must never fall back to demo balances. The authenticated build does not bundle demonstration financial fixtures. Stage 4 introduces real domain records; Stage 11 covers hosted rollout.
 
 ## Proposed increments
 
@@ -48,7 +48,7 @@ Keep one Python application with explicit authentication, database, and domain i
 | Local development | Local PostgreSQL with fabricated records. Selected authentication may use a local provider stack or a dedicated non-production identity project | Explicit configuration; loopback/private container network; never production credentials or owner records |
 | Automated tests | Disposable PostgreSQL and deterministic identity adapter; real-provider contract tests are separate | No internet or hosted credentials required for normal test runs; no runtime option that enables a fake identity |
 | Local production rehearsal | Locked built frontend/Python service through a local HTTPS gateway; cookie behavior and database roles tested separately; synthetic encrypted recovery | Loopback only; packaged hosted authentication/database integration remains unconfigured |
-| Future deployment | Supabase PostgreSQL and selected identity provider; static frontend/API on Oracle | Dedicated configuration, verified TLS, private/gated entry, network restrictions, tested recovery; Stage 10 activation |
+| Future deployment | Supabase PostgreSQL and selected identity provider; static frontend/API on Oracle | Dedicated configuration, verified TLS, private/gated entry, network restrictions, tested recovery; Stage 11 activation |
 
 Step 3A pins Python 3.14.9, uv 0.13.5, and the compatible dependency tree. Step 3C selects PostgreSQL 17, a supported Supabase target, with no additional extensions. Verify the selected hosted project’s actual version and privileges before integration; local compatibility is not hosted evidence. Production must reject missing keys, debug/test identities, wildcard credentialed origins, insecure cookie settings, and unsafe database roles. Test commands must refuse non-test database names and hosted connection strings before destructive fixture cleanup.
 
