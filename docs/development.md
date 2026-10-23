@@ -62,7 +62,7 @@ From `backend/` with the setup above:
 
 ## Repeatable local checks and CI
 
-Run `python scripts/checks.py all` from the repository root after the setup above and selecting Node 22.23.2/npm 12.0.2. The launcher also accepts `backend`, `frontend`, `repository`, or `database`. Start a local Docker Engine 28+ with Compose before database or all checks. It performs locked installs and fails on incomplete checks. See [verification](verification.md) for tool pins, network/loopback requirements, secret-scan scope, and the matching four CI jobs.
+Run `python scripts/checks.py all` from the repository root after the setup above and selecting Node 22.23.2/npm 12.0.2. The launcher also accepts `backend`, `frontend`, `repository`, `database`, or `operations`. Start a local Docker Engine 28+ with Compose before database, operations, or all checks. It performs locked installs and fails on incomplete checks. See [verification](verification.md) for tool pins, network/loopback requirements, secret-scan scope, and the matching five CI jobs.
 
 ## Local PostgreSQL
 

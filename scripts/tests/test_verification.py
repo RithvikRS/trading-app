@@ -199,6 +199,7 @@ class WorkflowPolicyTests(unittest.TestCase):
             lambda d: d["jobs"]["frontend"]["steps"][-1].update({"continue-on-error": "true"}),
             lambda d: d["jobs"].pop("frontend"),
             lambda d: d["jobs"].pop("database"),
+            lambda d: d["jobs"].pop("operations"),
             lambda d: d["jobs"]["database"].update({"services": {"database": "hosted"}}),
             lambda d: d["jobs"]["database"]["steps"][-1].update(run="echo skipped"),
         ]
@@ -236,6 +237,51 @@ class WorkflowPolicyTests(unittest.TestCase):
                 path.write_text(yaml.safe_dump(document))
                 with self.assertRaises(CheckFailure):
                     policy.validate_postgres(root)
+
+
+class PackagingPolicyTests(unittest.TestCase):
+    def test_port_mapping_allows_only_unpublished_image_metadata(self):
+        expected = {"8443/tcp": [{"HostIp": "127.0.0.1", "HostPort": "8443"}]}
+        for effective in [expected, {**expected, "80/tcp": None}, {**expected, "80/tcp": []}]:
+            policy.validate_package_ports(expected, effective)
+        for effective in [
+            {},
+            {"8443/tcp": []},
+            {"8443/tcp": None},
+            {"8443/tcp": [{"HostIp": "0.0.0.0", "HostPort": "8443"}]},
+            {**expected, "80/tcp": [{"HostIp": "127.0.0.1", "HostPort": "8080"}]},
+            {"8443/tcp": [*expected["8443/tcp"], {"HostIp": "::", "HostPort": "8443"}]},
+        ]:
+            with self.subTest(effective=effective), self.assertRaises(CheckFailure):
+                policy.validate_package_ports(expected, effective)
+
+    def test_privilege_network_and_secret_regressions_fail(self):
+        changes = [
+            lambda d: d["services"]["api"].update(user="0:0"),
+            lambda d: d["services"]["api"].update(read_only=False),
+            lambda d: d["services"]["api"].update(privileged=True),
+            lambda d: d["services"]["api"].update(environment={"TRADING_API_AUTH_ENABLED": "true"}),
+            lambda d: d["services"]["api"].update(memswap_limit="512m"),
+            lambda d: d["services"]["api"].update(network_mode="host"),
+            lambda d: d["services"]["gateway"].update(ports=["8443:8443"]),
+            lambda d: d["services"]["gateway"].update(image="nginx:latest"),
+            lambda d: d["services"]["gateway"].update(volumes=["/:/host"]),
+        ]
+        for index, mutate in enumerate(changes):
+            with self.subTest(change=index), checks.scratch() as root:
+                shutil.copytree(ROOT / "infra/application", root / "infra/application")
+                shutil.copyfile(ROOT / ".dockerignore", root / ".dockerignore")
+                path = root / "infra/application/compose.yaml"
+                document = yaml.safe_load(path.read_text())
+                mutate(document)
+                path.write_text(yaml.safe_dump(document))
+                with self.assertRaises(CheckFailure):
+                    policy.validate_packaging(root)
+        with checks.scratch() as root:
+            shutil.copytree(ROOT / "infra/application", root / "infra/application")
+            (root / ".dockerignore").write_text("**\n!.cache/**\n")
+            with self.assertRaises(CheckFailure):
+                policy.validate_packaging(root)
 
 
 if __name__ == "__main__":

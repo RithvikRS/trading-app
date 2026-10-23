@@ -113,3 +113,9 @@ Record evidence and remaining limitations with the relevant feature or deploymen
 ## Protected browser shell
 
 [Step 3F.1](protected-workspace.md) adds a separate build with no financial fixtures or browser persistence, strict bounded response validation, same-origin CSRF requests, and closed session gates. Locking/sign-out discards earlier requests; offline or uncertain verification hides the workspace. Static assets receive no-store and a CSP without inline scripts/styles. The prototype remains isolated. No financial data endpoint or stored preference is added, and local UI tests do not establish hosted provider or deployment security.
+
+## Local packaging and recovery evidence
+
+[Step 3G](local-packaging.md) verifies non-root/read-only containers, dropped capabilities, bounded memory/CPU/PIDs/logs, no container swap or core dumps, loopback-only ingress, exact proxy Host/scheme handling, certificate/hostname rejection, and plaintext denial. The fixed package loads no database/provider credentials and has no authentication bypass. The bridge disables container peer traffic but does not block outbound access. Hosted egress policy, OS image advisory review, signed release provenance, and protected host swap are still required before hosting.
+
+The bounded encrypted foundation export omits sessions/provider state and reconstructs permissions from committed migrations. Wrong keys, tampering, unsupported formats, nonempty targets, and transactional failures deny restoration. Separate-cluster tests verify preserved rows, grants/policies, owner isolation, and rejection of old sessions. This is synthetic local evidence, not a production financial backup or independent off-site key recovery. See the [hosted checklist](supabase-readiness.md) for outstanding controls.

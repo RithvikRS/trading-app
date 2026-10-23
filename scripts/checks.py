@@ -125,6 +125,24 @@ def database() -> None:
     )
 
 
+def operations() -> None:
+    uv = uv_command()
+    sync_backend(uv)
+    run(
+        "local package and HTTPS rehearsal",
+        [
+            uv,
+            "run",
+            "--project",
+            "backend",
+            "--locked",
+            "--no-sync",
+            "python",
+            "scripts/operations.py",
+        ],
+    )
+
+
 @contextmanager
 def scratch(root: Path = ROOT):
     parent = root / ".cache/verification"
@@ -294,13 +312,16 @@ def repository() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("scope", choices=["all", "backend", "frontend", "repository", "database"])
+    parser.add_argument(
+        "scope", choices=["all", "backend", "frontend", "repository", "database", "operations"]
+    )
     args = parser.parse_args()
     phases = {
         "repository": repository,
         "backend": backend,
         "database": database,
         "frontend": frontend,
+        "operations": operations,
     }
     try:
         for name in phases if args.scope == "all" else [args.scope]:

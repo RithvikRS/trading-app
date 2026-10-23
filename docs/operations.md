@@ -1,6 +1,6 @@
 # Deployment and recovery plan
 
-The intended hosted topology is a Python application and static frontend on Oracle Cloud, with PostgreSQL hosted by Supabase. Deployment, accounts, secrets, and automation have not been provisioned. All settings below are implementation requirements or provisional targets. [Step 3G](foundation-plan.md#supabase-and-recovery-readiness) prepares local production-style packaging and an encrypted synthetic restore exercise; Stage 10 remains the hosted rollout. Dedicated non-production Supabase checks are recorded separately from local tests, and remain unperformed until the actual project/network/credentials are available.
+The intended hosted topology is a Python application and static frontend on Oracle Cloud, with PostgreSQL hosted by Supabase. Deployment, accounts, secrets, and automation have not been provisioned. Hosted settings below remain requirements or provisional targets. [Step 3G](local-packaging.md) implements a locked local HTTPS package, resource measurements, and an encrypted synthetic restore exercise; Stage 10 remains the hosted rollout. The [Supabase checklist](supabase-readiness.md) records dedicated non-production checks separately from local tests. Those checks remain unperformed until the actual project/network/credentials are available.
 
 The [Step 3A process](api-foundation.md) is local-only and explicitly rejects hosted environment names. It is not a deployment artifact; its limits have not been measured on Oracle. Supabase Auth on Free is selected, but no identity project or paid feature is enabled.
 
@@ -44,7 +44,7 @@ Before hosted use, restore a representative encrypted backup into an isolated en
 
 Verify decryption, schema/migration compatibility, ownership policies, record counts, representative balances, import provenance, and any retained source files. Confirm that jobs do not replay imports incorrectly and credentials are not exposed in the restored environment. Measure elapsed time and data loss against the agreed recovery targets. Repeat after backup/schema changes and on a defined schedule, provisionally monthly.
 
-Document the actual restore commands during implementation. A migration rollback must preserve data; destructive schema changes require a reviewed recovery path. Test backup restoration before relying on it as the rollback method.
+Run `python scripts/checks.py database` for the implemented foundation-only synthetic drill; see [its exact scope and evidence](local-packaging.md#encrypted-foundation-recovery). Development/hosted restores and financial records require a separate implemented procedure. A migration rollback must preserve data; destructive schema changes require a reviewed recovery path. Test backup restoration before relying on it as the rollback method.
 
 ## Monitoring and incident response
 

@@ -83,3 +83,7 @@ XIRR, realized/unrealized returns, and portfolio performance require documented 
 Local PostgreSQL supports reproducible development. Supabase moves database infrastructure off the small Oracle server while retaining PostgreSQL compatibility. Independent backups and explicit access controls remain mandatory.
 
 Self-hosted PostgreSQL remains an alternative if managed-service constraints become unsuitable. Oracle Autonomous Always Free uses Oracle Database and has restrictions on private endpoints and built-in restore, so it is not the selected database. OCI managed PostgreSQL is a billed service. See [Oracle Autonomous restrictions](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and [OCI PostgreSQL billing](https://docs.oracle.com/en-us/iaas/Content/postgresql/billing.htm).
+
+## Local packaging boundary
+
+[Step 3G](local-packaging.md) builds the protected static assets and Python runtime into a non-root image. A restricted loopback HTTPS gateway shares a network namespace with the loopback-only API. Authentication remains unavailable in this fixed rehearsal entry point; database and authenticated behavior are exercised separately. The encrypted recovery drill reconstructs a fresh disposable schema from migrations, restores current foundation records, and invalidates sessions. A distinct hosted configuration/role procedure and [Supabase evidence](supabase-readiness.md) remain prerequisites for deployment.

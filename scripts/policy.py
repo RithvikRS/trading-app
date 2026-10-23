@@ -1,5 +1,6 @@
 """Check the current workflow's security contract before extending it."""
 
+import re
 import sys
 import tomllib
 from pathlib import Path
@@ -40,7 +41,7 @@ def validate_workflow(document: dict) -> None:
     )
     require(document["permissions"] == {"contents": "read"}, "Workflow token must be read-only.")
     require(
-        set(document["jobs"]) == {"backend", "frontend", "repository", "database"},
+        set(document["jobs"]) == {"backend", "frontend", "repository", "database", "operations"},
         "Every verification job must be present.",
     )
     for name, job in document["jobs"].items():
@@ -122,6 +123,7 @@ def validate_repository(root: Path = ROOT) -> None:
     document = yaml.load(workflows[0].read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
     validate_workflow(document)
     validate_postgres(root)
+    validate_packaging(root)
     config = tomllib.loads((root / ".gitleaks.toml").read_text(encoding="utf-8"))
     require(
         config == {"title": "Repository secret detection", "extend": {"useDefault": True}},
@@ -221,6 +223,167 @@ def validate_postgres(root: Path = ROOT) -> None:
             }
         },
         "Tests must use an ephemeral loopback port and disposable memory storage.",
+    )
+
+
+def validate_package_ports(configured: dict, effective: dict) -> None:
+    expected = {"8443/tcp": [{"HostIp": "127.0.0.1", "HostPort": "8443"}]}
+    require(configured == expected, "Public gateway port.")
+    # Linux engines may retain image EXPOSE entries with null/empty bindings.
+    # They are not published. The actual HTTPS mapping must still be present.
+    published = {port: bindings for port, bindings in effective.items() if bindings}
+    require(published == expected, "Gateway mapping did not take effect or exposes extra ports.")
+
+
+def validate_packaging(root: Path = ROOT) -> None:
+    document = yaml.safe_load((root / "infra/application/compose.yaml").read_text(encoding="utf-8"))
+    require(set(document) == {"services", "networks", "secrets"}, "Unexpected package resources.")
+    require(set(document["services"]) == {"api", "gateway"}, "Unexpected package service.")
+    shared = {
+        "image",
+        "user",
+        "read_only",
+        "cap_drop",
+        "security_opt",
+        "tmpfs",
+        "mem_limit",
+        "memswap_limit",
+        "cpus",
+        "pids_limit",
+        "ulimits",
+        "restart",
+        "logging",
+    }
+    for name, memory, cpus, pids in (("api", "256m", 0.75, 64), ("gateway", "64m", 0.25, 32)):
+        service = document["services"][name]
+        extra = (
+            {"build", "network_mode", "depends_on"}
+            if name == "api"
+            else {"entrypoint", "ports", "volumes", "secrets"}
+        )
+        require(set(service) == shared | extra, "Unexpected package override or credential source.")
+        require(
+            service["user"] == "10001:10001" and service["read_only"] is True,
+            "Package must be non-root/read-only.",
+        )
+        require(
+            service["cap_drop"] == ["ALL"]
+            and service["security_opt"] == ["no-new-privileges:true"],
+            "Package capabilities changed.",
+        )
+        require(
+            service["mem_limit"] == service["memswap_limit"] == memory
+            and service["cpus"] == cpus
+            and service["pids_limit"] == pids,
+            "Package budget changed.",
+        )
+        require(
+            service["ulimits"] == {"core": 0} and service["restart"] == "no",
+            "Dump/restart policy changed.",
+        )
+        require(
+            service["tmpfs"]
+            == ["/tmp:rw,noexec,nosuid,nodev,size=16m,uid=10001,gid=10001,mode=0700"],
+            "Temporary storage policy changed.",
+        )
+        require(
+            service["logging"]
+            == {"driver": "local", "options": {"max-size": "1m", "max-file": "2"}},
+            "Unbounded logs.",
+        )
+    api, gateway = document["services"]["api"], document["services"]["gateway"]
+    require(
+        api["network_mode"] == "service:gateway" and api["depends_on"] == ["gateway"],
+        "API namespace changed.",
+    )
+    require(
+        api["image"] == "trading-app:local-rehearsal"
+        and api["build"] == {"context": "../..", "dockerfile": "infra/application/Dockerfile"},
+        "Unexpected build context.",
+    )
+    require(
+        bool(re.fullmatch(r"nginx:[a-z0-9.-]+@sha256:[a-f0-9]{64}", gateway["image"])),
+        "Proxy image must be digest pinned.",
+    )
+    require(gateway["ports"] == ["127.0.0.1:8443:8443"], "Gateway must stay on loopback.")
+    require(
+        gateway["entrypoint"] == ["nginx", "-g", "daemon off;"]
+        and gateway["volumes"]
+        == [
+            {
+                "type": "bind",
+                "source": "./nginx.conf",
+                "target": "/etc/nginx/nginx.conf",
+                "read_only": True,
+            }
+        ],
+        "Unexpected proxy entrypoint/mount.",
+    )
+    require(
+        gateway["secrets"] == ["tls_certificate", "tls_key"]
+        and document["secrets"]
+        == {
+            "tls_certificate": {"file": "${TRADING_REHEARSAL_CERT:?Use scripts/operations.py}"},
+            "tls_key": {"file": "${TRADING_REHEARSAL_KEY:?Use scripts/operations.py}"},
+        },
+        "Unexpected package secrets.",
+    )
+    require(
+        document["networks"]
+        == {
+            "default": {
+                "driver_opts": {
+                    "com.docker.network.bridge.host_binding_ipv4": "127.0.0.1",
+                    "com.docker.network.bridge.enable_icc": "false",
+                },
+            }
+        },
+        "Rehearsal requires loopback publication and peer isolation.",
+    )
+    dockerfile = (root / "infra/application/Dockerfile").read_text(encoding="utf-8")
+    sources = re.findall(r"^FROM (\S+)", dockerfile, re.M)
+    require(
+        len(sources) == 4
+        and all(re.fullmatch(r"[a-z0-9./:-]+@sha256:[a-f0-9]{64}", source) for source in sources),
+        "All build images must be pinned.",
+    )
+    require(
+        dockerfile.rstrip().endswith(
+            'USER 10001:10001\nENTRYPOINT ["python", "-m", "trading_api.packaged"]'
+        ),
+        "Runtime identity/entrypoint changed.",
+    )
+    allowed = {
+        "backend/",
+        "backend/pyproject.toml",
+        "backend/uv.lock",
+        "backend/trading_api/",
+        "backend/trading_api/*.py",
+        "backend/trading_auth/",
+        "backend/trading_auth/*.py",
+        "backend/trading_db/",
+        "backend/trading_db/*.py",
+        "frontend/",
+        "frontend/package.json",
+        "frontend/package-lock.json",
+        "frontend/workspace.config.ts",
+        "frontend/workspace-boundary.ts",
+        "frontend/src/",
+        "frontend/src/design.css",
+        "frontend/workspace/",
+        "frontend/workspace/index.html",
+        "frontend/workspace/src/",
+        "frontend/workspace/src/*.ts",
+        "frontend/workspace/src/*.tsx",
+        "frontend/workspace/src/*.css",
+        "infra/",
+        "infra/application/",
+        "infra/application/Dockerfile",
+    }
+    ignore = (root / ".dockerignore").read_text(encoding="utf-8").splitlines()
+    require(
+        ignore[0] == "**" and set(ignore[1:]) == {"!" + path for path in allowed},
+        "Build context must exclude credentials, demo, tests and local files.",
     )
 
 
