@@ -49,7 +49,7 @@ Supabase Free is the initial candidate. Its current limits include 500 MB databa
 
 ## Financial records
 
-The [Step 4 plan](financial-data-plan.md) defines the proposed account/source/instrument identities, exact numeric contracts, immutable evidence and corrections, atomic review completion, protected reads, and recovery coverage. These financial tables and routes remain planned. Existing authentication and display preferences remain the only implemented application persistence.
+The [Step 4 plan](financial-data-plan.md) defines the proposed account/source/instrument identities, exact numeric contracts, immutable evidence and corrections, atomic review completion, protected reads, and recovery coverage. [Step 4A](financial-values.md) implements pure Python value/date contracts and bounded exact arithmetic; financial tables and routes remain planned. Existing authentication and display preferences remain the only implemented application persistence.
 
 Model owners, institutions, accounts, instruments, transactions and cash movements, purchase lots, holdings snapshots, prices, exchange rates, import batches, source mappings, budgets, category rules, sync jobs, and audit events.
 

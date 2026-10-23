@@ -1,6 +1,6 @@
 # Step 4: Financial data model and persistence
 
-Status: planned, following the merged Step 3 foundation. This document defines the next increments; no financial schema, endpoint, import, or interface is implemented by this planning change. Security, exact values, provenance, and recoverability are the acceptance criteria.
+Status: [Step 4A exact value contracts](financial-values.md) are implemented and tested locally. The remaining increments are planned; financial schema, endpoints, imports and connected interfaces are not implemented. Security, exact values, provenance, and recoverability are the acceptance criteria.
 
 ## Result and scope
 
@@ -14,11 +14,11 @@ Use fabricated fixtures and disposable PostgreSQL. The existing demo remains sep
 
 ## Delivery increments
 
-Each increment includes focused tests, updated documentation, a conventional commit on `dev`, and a PR into `main`. All increments below are planned. Schema-changing increments include their own recovery-format update and restore tests; recovery is not deferred to the last increment.
+Each increment includes focused tests, updated documentation, a conventional commit on `dev`, and a PR into `main`. Step 4A is implemented; 4B–4G remain planned. Schema-changing increments include their own recovery-format update and restore tests; recovery is not deferred to the last increment.
 
 | Increment | Deliverable | Acceptance evidence | Conventional commit |
 | --- | --- | --- | --- |
-| 4A | Exact financial value, currency, date, and missing-value contracts | Decimal strings round-trip exactly; floats, non-finite numbers, unsupported scales/ranges, invalid dates, and ambiguous timestamps fail; signs and rounding have independent examples | `feat(finance): define exact financial value contracts` |
+| 4A | [Implemented exact financial value, currency, date, and missing-value contracts](financial-values.md) | Decimal strings round-trip exactly; floats, non-finite numbers, unsupported scales/ranges, invalid dates, and ambiguous timestamps fail; signs and rounding have independent examples | `feat(finance): define exact financial value contracts` |
 | 4B | Canonical accounts, account currencies, source accounts, and explicit mappings | HDFC/SBI and Indian/US/UBS accounts remain distinct; several sources can describe one canonical account; private references have protected custody; archive preserves history; composite ownership checks and recovery pass | `feat(accounts): persist owned accounts and source mappings` |
 | 4C | Instruments, listings, fund variants, and provider identifiers | Same name/ticker cannot merge securities; direct/regular and growth/distribution variants remain distinct; positions at different accounts remain separate; identifiers and mapping revisions are constrained | `feat(investments): persist instruments and fund identities` |
 | 4D.1 | Provenance, import batches, normalized staged rows, and versioned review decisions | Source observations are immutable; staged data cannot change financial state; row/account/owner mappings are checked; invalid/conflicting data remains blocked; revised evidence invalidates stale decisions | `feat(imports): persist source evidence and review staging` |
@@ -28,7 +28,7 @@ Each increment includes focused tests, updated documentation, a conventional com
 | 4F | Atomic review completion, scoped deduplication, idempotency, and reconciliation receipts | Exact replay is a no-op; identical legitimate transactions survive; changed payload under the same identity conflicts; concurrent/stale commits, exclusions, partial failures and retries have deterministic results | `feat(imports): commit reviewed financial batches atomically` |
 | 4G | Protected financial read APIs and persistence acceptance | Active MFA/session ownership on every read; bounded pagination and filters; no financial values in logs/URLs; two-owner denial, unavailable/partial responses, restart persistence and expanded encrypted recovery pass | `feat(api): expose protected financial read models` |
 
-Begin with **4A only**: a small Python domain module and deterministic tests, with any PostgreSQL constraint experiments confined to disposable test schemas. It adds no financial table, route, seed data, provider access, or frontend change. Later increments build on these contracts in the table's order.
+Step **4A** delivers a pure Python domain module and deterministic tests. It adds no financial table, route, seed data, provider access, or frontend change. Next is **4B**, accounts and source mappings. Later increments build on these contracts in the table's order.
 
 ## Proposed records and relationships
 
@@ -69,7 +69,7 @@ An institution/provider is not an ownership boundary. Initially keep instrument 
 
 Use strict Python `Decimal` values created from validated decimal strings, with PostgreSQL exact numeric storage. Financial JSON values are decimal strings accompanied by currency/unit context; floats, JSON number coercion, booleans, NaN/infinity, exponent notation, thousands separators, and excessive input length are rejected at the normalized boundary. A future parser may normalize a documented source format before this boundary while preserving its evidence. Normalize negative zero consistently without rewriting the original supplied representation.
 
-Proposed initial bounds are project limits, not claims about provider export formats:
+Implemented Python bounds are project limits, not claims about provider export formats. SQL enforcement remains part of later schema increments:
 
 | Value | Fractional digits | Magnitude and interpretation |
 | --- | --- | --- |
@@ -82,7 +82,7 @@ Values exceeding the contract remain unsupported/review-required; never truncate
 
 Use PostgreSQL `numeric` with explicit finite, scale, range and kind checks for stored source values. A declared `numeric(p,s)` can round excess fractional input before a subsequent check sees it, so use constraints that reject excessive scale before any coercing cast; verify this using direct SQL as well as Python validation. Do not use PostgreSQL `money`, float types, or JavaScript Number for authoritative amounts. [PostgreSQL numeric behavior](https://www.postgresql.org/docs/17/datatype-numeric.html).
 
-Arithmetic uses an explicit decimal context sized for the supported operands and bounded aggregate sizes, with unexpected inexact operations detected. Retain original booked/source amounts. Quantize only a documented derived output: proposed display valuation uses half away from zero at the final INR/USD minor unit, matching the prototype's explicit rule. Source settlement values remain authoritative and are reconciled independently; quantity × displayed price need not reproduce a separately rounded settlement. FX inversion/division and allocation require their own precision and residual rules before use. [Python decimal contexts](https://docs.python.org/3.14/library/decimal.html).
+Arithmetic uses an explicit decimal context sized for the supported operands and bounded aggregate sizes, with unexpected inexact operations detected. Retain original booked/source amounts. Quantize only a documented derived output: the 4A display primitive uses half away from zero at the final INR/USD minor unit, matching the prototype's explicit rule. Source settlement values remain authoritative and are reconciled independently; quantity × displayed price need not reproduce a separately rounded settlement. FX inversion/division and allocation require their own precision and residual rules before use. [Python decimal contexts](https://docs.python.org/3.14/library/decimal.html).
 
 Keep trade, settlement, booking and value dates separate when supplied. Use calendar dates for date-only evidence, not invented midnight instants. Store ingestion/audit instants as timezone-aware UTC and retain source timezone/precision when known. Unknown source timezone stays unknown; ambiguous dates/timestamps are not guessed. Settlement may legitimately follow trade/ingestion, so date ordering constraints depend on record kind and source meaning.
 
@@ -156,4 +156,4 @@ Required evidence across Step 4:
 
 ## Choices to revisit with source evidence
 
-The defaults above let 4A begin without a provider account or statement. Later parser work must verify actual account/folio identity rules, source transaction references, supported precision, historical coverage and lot semantics using sanitized representative exports. Values or identities outside the contract require a documented extension and tests before persistence. Statement retention, production key custody, hosted adapter/roles, private access, backup scale and operating cost remain on their existing checklists; this plan does not resolve them by assumption.
+The implemented 4A contracts require no provider account or statement. Later parser work must verify actual account/folio identity rules, source transaction references, supported precision, historical coverage and lot semantics using sanitized representative exports. Values or identities outside the contract require a documented extension and tests before persistence. Statement retention, production key custody, hosted adapter/roles, private access, backup scale and operating cost remain on their existing checklists; this plan does not resolve them by assumption.

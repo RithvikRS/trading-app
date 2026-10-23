@@ -74,12 +74,15 @@ Tests must use explicitly named disposable databases and synthetic identities. D
 
 ## Feature cycle
 
+[Step 4A financial values](financial-values.md) are pure Python contracts in `trading_api.finance`. Run the focused examples with `uv run --locked pytest tests/test_finance.py` from `backend/`, or include them through the normal shared backend checks. No database or provider configuration is needed for these tests.
+
 1. Define the user-visible result, security implications, and acceptance criteria.
 2. Inspect the worktree and preserve unrelated changes. Refresh remote state and resolve divergence without force pushes or rewriting shared history.
 3. Implement, verify relevant behavior, and update documentation.
 4. Review the complete diff for defects, secrets, personal data, generated files, and unrelated work.
 5. Commit the completed feature and documentation on `dev`. Push `dev` and reuse its open PR into `main` when one exists.
 6. Record actual checks and evidence. Resolve findings and rerun affected checks.
+7. Merge the completed PR automatically once final-revision checks and review requirements pass, then synchronize the persistent branches. Every increment retains its own PR record.
 
 Use the two persistent branches rather than creating a branch per routine increment. Keep unrelated work out of a PR under review. Merge commits preserve shared ancestry; fetch and fast-forward `dev` to `origin/main` after a merge. Inspect divergence when fast-forwarding is impossible. Deployments have a separate release process.
 
