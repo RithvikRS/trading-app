@@ -81,6 +81,11 @@ class HTTPBoundary:
                 headers = MutableHeaders(scope=message)
                 for key, value in SECURITY_HEADERS.items():
                     headers[key] = value
+                if scope.get("state", {}).get("protected_asset"):
+                    from trading_api.frontend import CONTENT_POLICY
+
+                    headers["Content-Security-Policy"] = CONTENT_POLICY
+                    headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
                 headers["X-Request-ID"] = request_id
             await send(message)
             if message["type"] == "http.response.body" and not message.get("more_body", False):
@@ -131,6 +136,10 @@ def create_app(
     )
     if browser is not None:
         api.include_router(routes(browser, policy))
+    if config.frontend_enabled:
+        from trading_api.frontend import routes as frontend_routes
+
+        api.include_router(frontend_routes())
 
     @api.exception_handler(AuthenticationDenied)
     @api.exception_handler(AuthenticationUnavailable)

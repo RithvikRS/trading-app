@@ -1,0 +1,86 @@
+@layer reset, base, layout, components, responsive;
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  body, h1, h2, p, ul, dl, dd { margin: 0; }
+  button, select, input { font: inherit; }
+  button, a, input, select { -webkit-tap-highlight-color: transparent; }
+  button, select { color: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: wait; opacity: .65; }
+  a { color: inherit; }
+  svg { flex-shrink: 0; vertical-align: middle; }
+  ul { padding: 0; list-style: none; }
+  [hidden] { display: none !important; }
+}
+
+@layer base {
+  :root {
+    font-family: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    color-scheme: light;
+    --background: #f2f3f9;
+    --surface: #ffffff;
+    --surface-soft: #f6f6fc;
+    --sidebar: #eceef7;
+    --text: #25304c;
+    --muted: #555c73;
+    --subtle: #586078;
+    --border: #dde1ee;
+    --accent: #9a572c;
+    --accent-strong: #82451f;
+    --accent-soft: #f7eadd;
+    --accent-border: #dec0a8;
+    --hero: #f7e7d9;
+    --hero-end: #f0d8c5;
+    --warning: #86550f;
+    --warning-soft: #fbf2df;
+    --warning-border: #ddc99f;
+    --allocation-us: #ad6a3a;
+    --allocation-funds: #356f9c;
+    --allocation-india: #8964b5;
+    --allocation-cash: #8a741d;
+    --focus: #526bc0;
+    --shadow: 0 2px 16px #24203804;
+  }
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --background: #1b2544;
+    --surface: #243152;
+    --surface-soft: #2d3b60;
+    --sidebar: #1e2b4b;
+    --text: #f0f3ff;
+    --muted: #b4bed9;
+    --subtle: #aebad6;
+    --border: #3c4a6c;
+    --accent: #f4bc8f;
+    --accent-strong: #ffd0aa;
+    --accent-soft: #3b3b52;
+    --accent-border: #796350;
+    --hero: #394563;
+    --hero-end: #303a56;
+    --warning: #f2ca82;
+    --warning-soft: #493e30;
+    --warning-border: #7d6846;
+    --allocation-us: #f4bc8f;
+    --allocation-funds: #7dcdf0;
+    --allocation-india: #c4a2f4;
+    --allocation-cash: #e8d276;
+    --focus: #b4c4ff;
+    --shadow: none;
+  }
+  body { min-width: 0; background: var(--background); color: var(--text); line-height: 1.5; }
+  ::selection { background: var(--accent-border); color: var(--text); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+  button, select, input { touch-action: manipulation; }
+  button { border: 0; background: none; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .amount, .masked-amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .masked-amount { letter-spacing: .08em; }
+  .unavailable { color: var(--muted); }
+  .skip-link { position: fixed; left: 16px; top: -100px; padding: 12px 20px; background: var(--surface); border: 2px solid var(--focus); z-index: 20; border-radius: 8px; }
+  .skip-link:focus { top: 16px; }
+}

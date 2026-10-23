@@ -15,12 +15,15 @@ From `frontend/`:
 | `npm run test` | Financial fixture, preference, component, structural accessibility checks |
 | `npm run test:watch` | Tests while editing |
 | `npm run typecheck` | TypeScript checks without emitting files |
-| `npm run build` | Type-check and build static output into `dist/` |
+| `npm run build` | Type-check both applications; build prototype `dist/` and protected `workspace/dist/` |
+| `npm run build:workspace` | Rebuild only the protected workspace assets; restart the API to load them |
 | `npm run check` | Tests and production build |
 | `npm run preview` | Serve `dist/` at `http://127.0.0.1:4173` |
 | `npm audit` | Installed dependency advisories |
 
 The project `.npmrc` disables dependency lifecycle scripts. Keep that restriction unless a script has been inspected and a narrow build-time need documented. Both servers bind to loopback with strict ports; do not expose them to a LAN, tunnel, or public host. The backend and databases are not required for this prototype.
+
+The separate [protected workspace](protected-workspace.md#separate-builds-and-local-entry) builds to `frontend/workspace/dist/` and is served through FastAPI with `TRADING_API_FRONTEND_ENABLED=true`. The prototype commands above continue to use fictional data.
 
 ## Local Python API
 
@@ -55,7 +58,7 @@ From `backend/` with the setup above:
 | `& $uv run --locked ruff format --check .` | Formatting check |
 | `& $uv run --locked mypy` | Strict application type checks |
 
-`backend/.env.example` lists the two supported settings. It is not loaded automatically. Set `TRADING_API_ENVIRONMENT` to `development` or `test` and `TRADING_API_PORT` to a valid unprivileged port when needed. Unknown application settings and hosted modes fail closed. Error logs intentionally omit values; check spelling and the allowlist in [the scaffold contract](api-foundation.md#configuration-and-local-entry-point).
+`backend/.env.example` lists the supported settings, including opt-in authentication and protected frontend delivery. It is not loaded automatically. Set `TRADING_API_ENVIRONMENT` to `development` or `test` and `TRADING_API_PORT` to a valid unprivileged port when needed. Unknown application settings and hosted modes fail closed. Error logs intentionally omit values; check spelling and the allowlist in [the scaffold contract](api-foundation.md#configuration-and-local-entry-point).
 
 ## Repeatable local checks and CI
 

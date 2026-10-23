@@ -184,8 +184,8 @@ def routes(service: BrowserAuth, policy: CookiePolicy) -> APIRouter:
         )
 
     @router.get("/bootstrap")
-    def bootstrap() -> dict[str, str]:
-        return {"status": "ready"}
+    def bootstrap() -> dict[str, str | bool]:
+        return {"status": "ready", "recovery_email_enabled": service.recovery_email}
 
     @router.post("/login")
     def login(body: Login, request: Request) -> Response:

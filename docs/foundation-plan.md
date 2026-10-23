@@ -1,6 +1,6 @@
 # Step 3: Secure application foundation
 
-Status: Steps 3A–3E.2 implemented; 3F.1–3G remain planned. Step 2 and the Step 3 planning PR #20 are merged into `main`. The [local API scaffold](api-foundation.md) provides a liveness endpoint, validated configuration, conservative server settings, and sanitized error/log handling. [Step 3B](verification.md) adds shared local checks and CI. [Step 3C](database-foundation.md) adds local PostgreSQL and the migration baseline. [Step 3D](ownership-isolation.md) adds internal owner isolation and forced row policies. [Step 3E.1](authentication-foundation.md) adds the internal Supabase authentication service and controlled identity mapping. [Step 3E.2](browser-sessions.md) adds browser sessions, revocation, recovery, and security events. Protected frontend, workspace data routes, and hosting remain unimplemented. Security is the first acceptance criterion.
+Status: Steps 3A–3F.1 implemented; 3F.2–3G remain planned. Step 2 and the Step 3 planning PR #20 are merged into `main`. The [local API scaffold](api-foundation.md) provides a liveness endpoint, validated configuration, conservative server settings, and sanitized error/log handling. [Step 3B](verification.md) adds shared local checks and CI. [Step 3C](database-foundation.md) adds local PostgreSQL and the migration baseline. [Step 3D](ownership-isolation.md) adds internal owner isolation and forced row policies. [Step 3E.1](authentication-foundation.md) adds the internal Supabase authentication service and controlled identity mapping. [Step 3E.2](browser-sessions.md) adds browser sessions, revocation, recovery, and security events. [Step 3F.1](protected-workspace.md) adds the protected frontend shell. Workspace data routes and hosting remain unimplemented. Security is the first acceptance criterion.
 
 The [authentication decision](authentication-options.md) selects Supabase Auth on Free with FastAPI. Python 3.14.9, uv 0.13.5, and the scaffold dependency tree are pinned. PostgreSQL 17.11, SQLAlchemy 2.1.6, Alembic 1.20.1, and Psycopg 3.3.6 are pinned in the database foundation. React, Indigo & Apricot, local PostgreSQL, and hosted Supabase PostgreSQL remain selected.
 
@@ -12,7 +12,7 @@ Accounts, holdings, financial transactions, real statement ingestion, provider c
 
 ## Proposed increments
 
-Steps 3A–3E.2 below are implemented; later increments are planned. Each delivers its tests, relevant documentation, a conventional commit on `dev`, and a focused PR into `main`. Larger findings are split further instead of combining unrelated capabilities.
+Steps 3A–3F.1 below are implemented; later increments are planned. Each delivers its tests, relevant documentation, a conventional commit on `dev`, and a focused PR into `main`. Larger findings are split further instead of combining unrelated capabilities.
 
 | Increment | Deliverable | Acceptance evidence | Conventional commit |
 | --- | --- | --- | --- |
@@ -22,7 +22,7 @@ Steps 3A–3E.2 below are implemented; later increments are planned. Each delive
 | 3D — implemented | [Ownership and database isolation](ownership-isolation.md) | Minimal owner/identity mapping and workspace-preference schema; non-owner runtime role; RLS for reads/writes; two-owner negative tests, missing identity denial, pooled transaction cleanup and rollback; no public data routes | `feat(security): enforce workspace ownership boundaries` |
 | 3E.1 — implemented | [Supabase authentication and restricted enrollment](authentication-foundation.md) | Closed registration, explicit owner provisioning, verified primary identity and MFA enrollment/challenge; partial authentication grants no workspace access; secret-redaction and rate-limit tests | `feat(auth): add owner authentication and mfa` |
 | 3E.2 — implemented | [Revocable sessions, recovery, and security events](browser-sessions.md) | Browser authentication routes, restart-safe admission limits, opaque cookies, CSRF/origin checks, bounded expiry, session rotation, concurrent renewal tests where applicable, logout/revoke-all, recovery/re-enrollment and outage tests; sanitized audit records | `feat(auth): harden session lifecycle and recovery` |
-| 3F.1 | Protected frontend shell | Matching light/dark login/MFA/expired-session UX, accessible keyboard/mobile states, empty workspace, no demo fallback, no provider tokens or cached financial data in the browser | `feat(ui): add authenticated workspace shell` |
+| 3F.1 — implemented | [Protected frontend shell](protected-workspace.md) | Matching light/dark login/MFA/expired-session UX, accessible keyboard/mobile states, empty workspace, no demo fallback, no provider tokens or cached financial data in the browser | `feat(ui): add authenticated workspace shell` |
 | 3F.2 | First persistent non-financial vertical slice | Read/update allowlisted display preferences through the authenticated API and RLS; validation, concurrent update policy, rollback and session-expiry tests; no client-provided owner assignment | `feat(settings): persist protected workspace preferences` |
 | 3G | Local packaging and Supabase readiness | Non-root application packaging, static frontend/proxy rehearsal, resource budgets, encrypted synthetic backup/restore, hosted compatibility checklist and explicit evidence gaps; no Oracle or production rollout | `chore(operations): prepare secure deployment foundation` |
 
@@ -113,4 +113,4 @@ CI uses read-only repository permissions, commit-pinned actions, no production s
 - Settled locally in 3E.2: opaque cookies, signed CSRF and exact Origin, PostgreSQL admission/leases, AES-GCM with a separate local key, backup TOTP, and email-code recovery plus existing MFA. Hosted identity/email evidence and deployment key custody remain outstanding.
 - Before 3G/hosting: region, domain/private entry, Supabase route/limits, backup destination and retention, key recovery, resource budget, and hosted evidence availability.
 
-Supabase Auth/FastAPI is selected, while future security controls remain planned until configured and verified. Next implementation increment: 3F.1, the protected frontend shell.
+Supabase Auth/FastAPI is selected, while future security controls remain planned until configured and verified. Next implementation increment: 3F.2, authenticated persistence for non-financial display preferences.
