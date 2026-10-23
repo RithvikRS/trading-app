@@ -12,8 +12,8 @@ HEAD = "0004_browser_sessions"
 def test_upgrade_and_disposable_downgrade_keep_identity_schema(database):
     url, project = database
     migrate.apply(url(), project, target="0003_auth_identity_lookup")
-    migrate.apply(url(), project)
-    migrate.apply(url(), project)
+    migrate.apply(url(), project, target=HEAD)
+    migrate.apply(url(), project, target=HEAD)
     assert migrate.revision(url(), project) == HEAD
     admin = engine_for(url("bootstrap"), migration=True)
     try:
@@ -35,7 +35,7 @@ def test_upgrade_and_disposable_downgrade_keep_identity_schema(database):
             assert connection.execute(
                 text("SELECT to_regclass('app.owner_identities')")
             ).scalar_one()
-        migrate.apply(url(), project)
+        migrate.apply(url(), project, target=HEAD)
         assert migrate.revision(url(), project) == HEAD
     finally:
         admin.dispose()
@@ -57,7 +57,7 @@ def test_failed_migration_rolls_back_security_tables_and_head(database, tmp_path
         encoding="utf-8",
     )
     with pytest.raises(RuntimeError, match="synthetic failure"):
-        migrate.apply(url(), project, directory=directory)
+        migrate.apply(url(), project, directory=directory, target="0005_failure")
     assert migrate.revision(url(), project) == start
     admin = engine_for(url("bootstrap"), migration=True)
     try:

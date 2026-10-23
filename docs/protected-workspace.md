@@ -1,6 +1,6 @@
 # Step 3F.1: Protected frontend shell
 
-The protected application now has its own entry point, sign-in and authenticator screens, restricted password recovery, session controls, and an empty workspace. It uses the existing Indigo & Apricot light/dark design. Financial records, account connections, imports, and saved preferences are not available in this build. Step 3F.2 introduces the first authenticated preference API.
+The protected application now has its own entry point, sign-in and authenticator screens, restricted password recovery, session controls, and an empty workspace. It uses the existing Indigo & Apricot light/dark design. Financial records, account connections, and imports are not available in this build. [Step 3F.2](display-preferences.md) adds authenticated account preferences to this shell; the captures and verification totals below record the original Step 3F.1 increment.
 
 ## Separate builds and local entry
 
@@ -31,12 +31,12 @@ Static delivery is deliberately small: only `/` and the build's JS/CSS/font asse
 
 | State | Behavior |
 | --- | --- |
-| Initial check | Render only the gate; bootstrap CSRF, then verify the server session before opening the workspace |
+| Initial check | Render only the gate; bootstrap CSRF, then verify the server session and load account preferences before opening the workspace |
 | Sign-in | Email/password with password-manager autocomplete and paste; no public registration; form fields cleared on submission |
 | First MFA enrollment | Display the setup key in memory for manual time-based authenticator entry; verify a six-digit code; clear setup material when the flow ends |
 | Existing MFA | Select an existing authenticator when two are available; submit a six-digit code; an unsuccessful attempt requires a new sign-in |
 | Recovery | Show email recovery only when bootstrap reports it enabled; generic email response, email code, existing authenticator, then new password; a fresh sign-in is required afterward |
-| Active workspace | Explicit empty content; no financial totals, persisted preferences, or sample records; theme follows the system initially and can change in memory |
+| Active workspace | Explicit empty financial content; no totals or sample records; authenticated display preferences with draft/save/discard and conflict review |
 | Expired or revoked | Hide the workspace, discard earlier requests and clear transient state; local expiry also attempts server sign-out, with uncertain revocation shown separately |
 | Forbidden, offline, unavailable, invalid response, or limited | Hide protected content; fixed explanation and deliberate retry; never render provider error bodies |
 | Sign-out | Immediately hide content; revoke locally through the API; distinguish confirmed sign-out, unavailable provider cleanup, and unconfirmed server revocation |
@@ -47,7 +47,7 @@ Requests within a tab are serialized. A generation guard and abort signal discar
 
 Hiding an active workspace clears it from the rendered page. Returning to that tab or restoring a history entry requires a new session check. Page navigation also clears incomplete authentication material. A `BroadcastChannel` sends only a constant lock signal to other tabs after sign-out/recovery; it carries no identity, secrets, or financial data. Browsers can suspend or terminate pages without delivering lifecycle events, so these UI measures supplement server expiry/revocation rather than replacing them. See [page lifecycle limitations](https://developer.mozilla.org/en-US/docs/Web/API/Window/pagehide_event).
 
-No password, MFA setup key, code, session metadata, provider token, or financial record is written to local/session storage, IndexedDB, URLs, telemetry, or a service worker. Only the server's opaque HttpOnly session cookie and readable signed CSRF cookie are used. This increment stores no theme preference; it does not read the prototype's display preferences. Amount masking has no disclosure control yet because the workspace contains no amounts.
+No password, MFA setup key, code, session metadata, provider token, or financial record is written to local/session storage, IndexedDB, URLs, telemetry, or a service worker. Only the server's opaque HttpOnly session cookie and readable signed CSRF cookie are used. The shell never reads the prototype's display preferences. Account preferences persist only through the authenticated API introduced in [Step 3F.2](display-preferences.md); the browser keeps them in memory. Amount masking is a saved display choice; the workspace still contains no amounts.
 
 Backup-factor enrollment/removal remains available through the existing backend contract and operator runbook; this shell implements initial enrollment, selecting existing factors, and restricted password recovery. It provides no bypass for loss of every authenticator. The UI is not an authorization boundary: future workspace endpoints must independently verify identity and enforce database ownership.
 
@@ -72,4 +72,4 @@ Local Windows evidence on 24 October 2026: repository checks passed with 15 help
 
 ## Migration and recovery
 
-No database migration or credential change is introduced. Existing installations keep the liveness-only default unless authentication/frontend options are explicitly enabled. To disable static delivery, unset `TRADING_API_FRONTEND_ENABLED` or set it to `false` and restart. This does not revoke existing sessions; use the [session revocation procedure](browser-sessions.md) when revocation is needed. Never deploy the prototype output as the protected build. Retain the backend session API and use forward fixes if an active installation needs recovery.
+Step 3F.1 introduced no database migration or credential change. The current shell requires the additive preference revision migration described in [Step 3F.2](display-preferences.md). Existing installations keep the liveness-only default unless authentication/frontend options are explicitly enabled. To disable static delivery, unset `TRADING_API_FRONTEND_ENABLED` or set it to `false` and restart. This does not revoke existing sessions; use the [session revocation procedure](browser-sessions.md) when revocation is needed. Never deploy the prototype output as the protected build. Retain the backend session API and use forward fixes if an active installation needs recovery.

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthController, parseSession } from '../../workspace/src/auth'
 
+const preferences = () => ({ theme: 'light', display_currency: 'INR', amount_masked: true, revision: 0 })
 const factor = '40000000-0000-4000-8000-000000000001'
 const session = () => ({ status: 'authenticated', expires_at: new Date(Date.now() + 28_800_000).toISOString(), idle_expires_at: new Date(Date.now() + 900_000).toISOString(), fresh_until: new Date(Date.now() + 300_000).toISOString(), factors: [factor], unverified_factors: [] })
 function response(data: unknown, status = 200, extra: Record<string, string> = {}) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', Date: new Date().toUTCString(), ...extra } }) }
@@ -20,7 +21,7 @@ afterEach(() => { stop?.(); stop = undefined; vi.useRealTimers(); vi.unstubAllGl
 
 it('starts closed, bootstraps CSRF, restores only a checked session, and never uses storage', async () => {
   const local = vi.spyOn(Storage.prototype, 'setItem')
-  fetchMock.mockResolvedValueOnce(ready()).mockResolvedValueOnce(response(session()))
+  fetchMock.mockResolvedValueOnce(ready()).mockResolvedValueOnce(response(session())).mockResolvedValueOnce(response(preferences()))
   expect(controller.snapshot().screen.kind).toBe('checking')
   await controller.bootstrap()
   expect(controller.snapshot().screen.kind).toBe('workspace')
@@ -32,7 +33,7 @@ it('requires MFA, then checks the active session before exposing the workspace',
   fetchMock.mockResolvedValueOnce(response({ status: 'mfa_required', factors: [factor], setup_key: 'JBSWY3DPEHPK3PXP' }))
   await controller.login('owner@example.invalid', 'synthetic-password')
   expect(controller.snapshot().screen.kind).toBe('mfa')
-  fetchMock.mockResolvedValueOnce(response({ status: 'authenticated' })).mockResolvedValueOnce(response(session()))
+  fetchMock.mockResolvedValueOnce(response({ status: 'authenticated' })).mockResolvedValueOnce(response(session())).mockResolvedValueOnce(response(preferences()))
   await controller.verify(factor, '123456')
   expect(controller.snapshot().screen.kind).toBe('workspace')
   expect(JSON.stringify(controller.snapshot())).not.toContain('JBSWY3DPEHPK3PXP')
@@ -48,16 +49,16 @@ it('consumes a failed MFA attempt without keeping the setup key', async () => {
 })
 
 it.each([401, 403, 429, 500, 503])('hides the workspace on a %s session check and does not retry', async status => {
-  fetchMock.mockResolvedValueOnce(ready()).mockResolvedValueOnce(response(session())).mockResolvedValueOnce(response({ error: '<script>do-not-render</script>' }, status))
+  fetchMock.mockResolvedValueOnce(ready()).mockResolvedValueOnce(response(session())).mockResolvedValueOnce(response(preferences())).mockResolvedValueOnce(response({ error: '<script>do-not-render</script>' }, status))
   await controller.bootstrap()
   await controller.check()
   expect(controller.snapshot().screen.kind).not.toBe('workspace')
   expect(JSON.stringify(controller.snapshot())).not.toContain('script')
-  expect(fetchMock).toHaveBeenCalledTimes(3)
+  expect(fetchMock).toHaveBeenCalledTimes(4)
 })
 
 it('discards a stale session response after local lock', async () => {
-  fetchMock.mockResolvedValueOnce(ready()).mockResolvedValueOnce(response(session()))
+  fetchMock.mockResolvedValueOnce(ready()).mockResolvedValueOnce(response(session())).mockResolvedValueOnce(response(preferences()))
   await controller.bootstrap()
   let resolve!: (value: Response) => void
   fetchMock.mockImplementationOnce(() => new Promise(done => { resolve = done }))
@@ -79,7 +80,7 @@ it('serializes requests within a tab', async () => {
 })
 
 it('locks immediately on logout, confirms revocation, and discards older checks', async () => {
-  fetchMock.mockResolvedValueOnce(ready()).mockResolvedValueOnce(response(session()))
+  fetchMock.mockResolvedValueOnce(ready()).mockResolvedValueOnce(response(session())).mockResolvedValueOnce(response(preferences()))
   await controller.bootstrap()
   let resolve!: (value: Response) => void
   fetchMock.mockImplementationOnce(() => new Promise(done => { resolve = done })).mockResolvedValueOnce(response({ status: 'signed_out', provider_cleanup: 'complete' }))
@@ -150,7 +151,7 @@ it('rejects oversized responses and missing CSRF without posting credentials', a
 
 it('checks revocation periodically without extending idle time, and only activity extends it', async () => {
   vi.useFakeTimers()
-  fetchMock.mockImplementation(async path => path === '/api/v1/auth/bootstrap' ? ready() : response(session()))
+  fetchMock.mockImplementation(async path => path === '/api/v1/auth/bootstrap' ? ready() : path === '/api/v1/preferences' ? response(preferences()) : response(session()))
   stop = controller.start()
   await vi.advanceTimersByTimeAsync(1)
   await vi.advanceTimersByTimeAsync(60_000)
@@ -213,7 +214,7 @@ it('locks other tabs using a constant signal without sending any identity or cre
     postMessage(message: unknown) { sent.push(message) }
     close() {}
   })
-  fetchMock.mockResolvedValueOnce(ready()).mockResolvedValueOnce(response(session()))
+  fetchMock.mockResolvedValueOnce(ready()).mockResolvedValueOnce(response(session())).mockResolvedValueOnce(response(preferences()))
   stop = controller.start()
   await vi.waitFor(() => expect(controller.snapshot().screen.kind).toBe('workspace'))
   channel.onmessage?.(new MessageEvent('message', { data: 'locked' }))

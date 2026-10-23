@@ -81,7 +81,11 @@ class BrowserBoundary:
         from trading_api.application import error_response
 
         request = Request(scope)
-        if not request.url.path.startswith("/api/v1/auth/"):
+        if not (
+            request.url.path.startswith("/api/v1/auth/")
+            or request.url.path == "/api/v1/preferences"
+            or request.url.path.startswith("/api/v1/preferences/")
+        ):
             await self.app(scope, receive, send)
             return
         headers = request.headers

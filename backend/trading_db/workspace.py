@@ -1,11 +1,11 @@
-"""Internal owner-scoped persistence; no authentication adapter or HTTP routes."""
+"""Owner-scoped persistence through a restricted role and forced row policies."""
 
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import URL, Connection, text
 
 from trading_db.connections import DatabaseFailure, engine_for, verify_server
@@ -23,6 +23,17 @@ class Preferences(BaseModel):
     theme: Literal["light", "dark"] = "light"
     display_currency: Literal["INR", "USD"] = "INR"
     amount_masked: bool = True
+
+
+class PreferenceSnapshot(Preferences):
+    revision: int = Field(default=0, ge=0, le=9007199254740991)
+
+
+class PreferenceUpdate(PreferenceSnapshot):
+    theme: Literal["light", "dark"]
+    display_currency: Literal["INR", "USD"]
+    amount_masked: bool
+    revision: int = Field(ge=0, le=9007199254740991)
 
 
 class WorkspaceTransaction:
@@ -69,13 +80,46 @@ class WorkspaceTransaction:
             {"owner": self._owner_id, **validated.model_dump()},
         )
 
+    def preference_snapshot(self) -> PreferenceSnapshot:
+        self._require_open()
+        row = (
+            self._connection.execute(
+                text(
+                    "SELECT theme, display_currency, amount_masked, revision "
+                    "FROM app.workspace_preferences WHERE owner_id=:owner"
+                ),
+                {"owner": self._owner_id},
+            )
+            .mappings()
+            .one_or_none()
+        )
+        return PreferenceSnapshot.model_validate(dict(row)) if row else PreferenceSnapshot()
+
+    def compare_preferences(self, update: PreferenceUpdate) -> PreferenceSnapshot | None:
+        self._require_open()
+        validated = PreferenceUpdate.model_validate(update.model_dump())
+        parameters = {"owner": self._owner_id, **validated.model_dump()}
+        if validated.revision == 0:
+            query = """
+                INSERT INTO app.workspace_preferences
+                    (owner_id, theme, display_currency, amount_masked)
+                VALUES (:owner, :theme, :display_currency, :amount_masked)
+                ON CONFLICT (owner_id) DO NOTHING
+                RETURNING theme, display_currency, amount_masked, revision
+            """
+        else:
+            query = """
+                UPDATE app.workspace_preferences SET
+                    theme=:theme, display_currency=:display_currency, amount_masked=:amount_masked
+                WHERE owner_id=:owner AND revision=:revision AND revision<9007199254740991
+                RETURNING theme, display_currency, amount_masked, revision
+            """
+        row = self._connection.execute(text(query), parameters).mappings().one_or_none()
+        return PreferenceSnapshot.model_validate(dict(row)) if row else None
+
 
 class WorkspaceDatabase:
-    """Accept an internal UUID only after server-side identity verification in Step 3E.
-
-    A UUID is a scope, not authentication proof. Currently only synthetic tests invoke
-    this interface; nothing reads an identity from requests, environment, or the UI.
-    """
+    """A UUID scopes a transaction; authentication must independently verify it first."""
 
     def __init__(self, url: URL, project: str) -> None:
         if url.username != "trading_runtime":
