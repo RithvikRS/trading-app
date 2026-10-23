@@ -20,6 +20,8 @@ from trading_auth.browser import BrowserAuth
 from trading_auth.models import AuthenticationDenied
 from trading_auth.session_models import verifier
 from trading_db import migrate, recovery
+from trading_db.account_keys import ReferenceKeys, load_keys
+from trading_db.accounts import AccountDatabase, AccountDefinition
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.enrollment import provision_owner
 from trading_db.local import ROOT, disposable, private_directory
@@ -43,6 +45,18 @@ def signature(engine):
             engine,
             "SELECT table_name,grantee,privilege_type FROM information_schema.table_privileges "
             "WHERE table_schema='app' ORDER BY table_name,grantee,privilege_type",
+        ),
+        "column_grants": sql(
+            engine,
+            "SELECT table_name,column_name,grantee,privilege_type "
+            "FROM information_schema.column_privileges WHERE table_schema='app' "
+            "ORDER BY table_name,column_name,grantee,privilege_type",
+        ),
+        "constraints": sql(
+            engine,
+            "SELECT c.relname,k.conname,pg_get_constraintdef(k.oid) FROM pg_constraint k "
+            "JOIN pg_class c ON c.oid=k.conrelid WHERE c.relnamespace='app'::regnamespace "
+            "ORDER BY c.relname,k.conname",
         ),
     }
 
@@ -70,9 +84,41 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
         unit.compare_preferences(
             PreferenceUpdate(theme="light", display_currency="INR", amount_masked=True, revision=0)
         )
+    identifier_material = {1: b"a" * 32, 2: b"b" * 32}
+    identifier_keys = ReferenceKeys({1: identifier_material[1]}, 1)
+    account_store = AccountDatabase(source_url("runtime"), source_project, identifier_keys)
+    try:
+        for owner in (own, other):
+            with account_store.transaction(owner) as unit:
+                definition = AccountDefinition(
+                    kind="mutual_fund",
+                    institution="fund_registrar",
+                    market="IN",
+                    label="Synthetic folio",
+                    currencies=("INR",),
+                )
+                first, second = unit.create(definition), unit.create(definition)
+                source = unit.source("cas", "FAKE-FOLIO")
+                unit.map(source.id, first.id, expected_revision=0)
+                unit.map(source.id, second.id, expected_revision=1)
+                unit.archive(first.id, expected_revision=1)
+    finally:
+        account_store.close()
+    identifier_keys = ReferenceKeys(identifier_material, 2)
+    account_store = AccountDatabase(source_url("runtime"), source_project, identifier_keys)
+    try:
+        for owner in (own, other):
+            with account_store.transaction(owner) as unit:
+                assert unit.rotate_references() == 1
+    finally:
+        account_store.close()
     key = Fernet.generate_key()
     started = time.monotonic()
-    encrypted = recovery.export_snapshot(source_url("bootstrap"), source_project, key)
+    with pytest.raises(DatabaseFailure):
+        recovery.export_snapshot(source_url("bootstrap"), source_project, key)
+    encrypted = recovery.export_snapshot(
+        source_url("bootstrap"), source_project, key, identifier_keys=identifier_keys
+    )
     data = recovery.decode_snapshot(encrypted, key)
     assert "auth_sessions" not in data and "auth_admissions" not in data
     assert str(own).encode() not in encrypted
@@ -88,9 +134,24 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             private_directory(keys)
             (objects / "foundation.fernet").write_bytes(encrypted)
             (keys / "recovery.key").write_bytes(key)
+            identifier_directory = target.directory / "identifier-keys"
+            private_directory(identifier_directory)
+            (identifier_directory / "v2.key").write_bytes(identifier_material[2])
+            (identifier_directory / "v2.key").chmod(0o600)
+            recovered_identifiers = load_keys(identifier_directory, active=2, versions=(2,))
             del key
             recovered_key = (keys / "recovery.key").read_bytes()
             recovered_object = (objects / "foundation.fernet").read_bytes()
+            for missing in (None, ReferenceKeys({2: b"x" * 32}, 2)):
+                with pytest.raises(DatabaseFailure):
+                    recovery.restore_snapshot(
+                        target_url,
+                        target.project,
+                        recovered_object,
+                        recovered_key,
+                        identifier_keys=missing,
+                    )
+                assert sql(restored_admin, "SELECT count(*) FROM app.owners")[0][0] == 0
             for invalid, supplied_key in [
                 (recovered_object, Fernet.generate_key()),
                 (recovered_object[:-8] + b"tampered", recovered_key),
@@ -107,10 +168,15 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                     target.project,
                     Fernet(recovered_key).encrypt(json.dumps(broken).encode()),
                     recovered_key,
+                    identifier_keys=recovered_identifiers,
                 )
             assert sql(restored_admin, "SELECT count(*) FROM app.owners")[0][0] == 0
             counts = recovery.restore_snapshot(
-                target_url, target.project, recovered_object, recovered_key
+                target_url,
+                target.project,
+                recovered_object,
+                recovered_key,
+                identifier_keys=recovered_identifiers,
             )
             assert (
                 counts["owners"]
@@ -119,9 +185,14 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 == 2
             )
             assert counts["auth_sessions"] == counts["auth_admissions"] == 0
+            assert counts["financial_accounts"] == counts["account_currencies"] == 4
+            assert counts["source_accounts"] == 2 and counts["source_account_mappings"] == 4
             assert signature(restored_admin) == baseline
             restored_data = recovery.decode_snapshot(
-                recovery.export_snapshot(target_url, target.project, recovered_key), recovered_key
+                recovery.export_snapshot(
+                    target_url, target.project, recovered_key, identifier_keys=recovered_identifiers
+                ),
+                recovered_key,
             )
             for table in set(data) - {"auth_revocations"}:
                 assert sorted(restored_data[table], key=str) == sorted(data[table], key=str)
@@ -131,8 +202,25 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             )
             with pytest.raises(DatabaseFailure, match="must be empty"):
                 recovery.restore_snapshot(
-                    target_url, target.project, recovered_object, recovered_key
+                    target_url,
+                    target.project,
+                    recovered_object,
+                    recovered_key,
+                    identifier_keys=recovered_identifiers,
                 )
+            restored_accounts = AccountDatabase(
+                target.url("runtime"), target.project, recovered_identifiers
+            )
+            try:
+                for owner in (own, other):
+                    with restored_accounts.transaction(owner) as unit:
+                        assert len(unit.list()) == 2
+                        source = unit.source("cas", "FAKE-FOLIO")
+                        assert source.revision == 2
+                        assert [row.revision for row in unit.history(source.id)] == [2, 1]
+                        assert unit.get(unit.mapping(source.id).account_id).archived_at is None
+            finally:
+                restored_accounts.close()
             restored_workspace = WorkspaceDatabase(target.url("runtime"), target.project)
             restored_sessions = SessionDatabase(target.url("auth"), target.project)
             try:
@@ -198,7 +286,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 restored_workspace.close()
                 restored_sessions.close()
             report = {
-                "scope": "synthetic foundation records; separate PostgreSQL clusters",
+                "scope": "synthetic foundation and account records; separate PostgreSQL clusters",
                 "encrypted_bytes": len(encrypted),
                 "rows": counts,
                 "elapsed_seconds": round(time.monotonic() - started, 3),

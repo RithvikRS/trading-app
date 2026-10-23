@@ -12,7 +12,7 @@ from trading_db.connections import DatabaseFailure
 
 def payload():
     return {
-        "format": 1,
+        "format": recovery.FORMAT,
         "revision": recovery.HEAD,
         "postgres_major": 17,
         "migration_digest": recovery.source_digest(),
@@ -28,6 +28,7 @@ def payload():
         lambda value: value.update(migration_digest="different"),
         lambda value: value.update(postgres_major=16),
         lambda value: value.update(format=True),
+        lambda value: value.update(format=1),
         lambda value: value.update(extra="unexpected"),
         lambda value: value["rows"].update(auth_sessions=[]),
         lambda value: value["rows"].update(owners=[{}]),

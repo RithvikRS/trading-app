@@ -10,9 +10,11 @@ from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy import URL, Connection, text
 
 from trading_db import migrate
+from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 
-HEAD = "0005_preference_revisions"
+HEAD = "0006_accounts_sources"
+FORMAT = 2
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -36,6 +38,40 @@ COLUMNS = {
         "request_id",
         "actor",
         "session_reference",
+    ),
+    "financial_accounts": (
+        "owner_id",
+        "id",
+        "kind",
+        "institution",
+        "market",
+        "label",
+        "archived_at",
+        "revision",
+        "created_at",
+        "updated_at",
+    ),
+    "account_currencies": ("owner_id", "account_id", "currency"),
+    "source_accounts": (
+        "owner_id",
+        "id",
+        "namespace",
+        "key_version",
+        "key_check",
+        "fingerprint",
+        "encrypted_reference",
+        "revision",
+        "created_at",
+        "updated_at",
+    ),
+    "source_account_mappings": (
+        "owner_id",
+        "source_id",
+        "revision",
+        "previous_revision",
+        "account_id",
+        "reason",
+        "created_at",
     ),
 }
 OMITTED = ("auth_sessions", "auth_admissions")
@@ -99,7 +135,21 @@ def encode(value: Any) -> str:
     raise DatabaseFailure("Unsupported recovery value.")
 
 
-def export_snapshot(url: URL, project: str, key: bytes) -> bytes:
+def verify_references(rows: dict[str, list[dict[str, Any]]], keys: ReferenceKeys | None) -> None:
+    identities: set[tuple[str, str, str]] = set()
+    for row in rows["source_accounts"]:
+        if keys is None:
+            raise ReferenceUnavailable()
+        value = keys.open(row)
+        identity = (str(row["owner_id"]), row["namespace"], value)
+        if identity in identities:
+            raise ReferenceUnavailable()
+        identities.add(identity)
+
+
+def export_snapshot(
+    url: URL, project: str, key: bytes, *, identifier_keys: ReferenceKeys | None = None
+) -> bytes:
     target(url, project)
     engine = engine_for(url, migration=True)
     try:
@@ -120,9 +170,10 @@ def export_snapshot(url: URL, project: str, key: bytes) -> bytes:
                     ]
                     if len(rows[table]) > MAX_ROWS:
                         raise DatabaseFailure("Recovery rehearsal row budget exceeded.")
+                verify_references(rows, identifier_keys)
                 payload = json.dumps(
                     {
-                        "format": 1,
+                        "format": FORMAT,
                         "revision": HEAD,
                         "postgres_major": 17,
                         "migration_digest": source_digest(),
@@ -178,7 +229,7 @@ def decode_snapshot(encrypted: bytes, key: bytes) -> dict[str, list[dict[str, An
             data["postgres_major"],
             data["migration_digest"],
             data["application_version"],
-        ) != (1, HEAD, 17, source_digest(), "0.1.0"):
+        ) != (FORMAT, HEAD, 17, source_digest(), "0.1.0"):
             raise ValueError()
         if type(data["format"]) is not int or type(data["postgres_major"]) is not int:
             raise ValueError()
@@ -198,8 +249,16 @@ def decode_snapshot(encrypted: bytes, key: bytes) -> dict[str, list[dict[str, An
         raise DatabaseFailure("Recovery object is invalid or incompatible.") from None
 
 
-def restore_snapshot(url: URL, project: str, encrypted: bytes, key: bytes) -> dict[str, int]:
+def restore_snapshot(
+    url: URL,
+    project: str,
+    encrypted: bytes,
+    key: bytes,
+    *,
+    identifier_keys: ReferenceKeys | None = None,
+) -> dict[str, int]:
     rows = decode_snapshot(encrypted, key)
+    verify_references(rows, identifier_keys)
     target(url, project)
     engine = engine_for(url, migration=True)
     try:
