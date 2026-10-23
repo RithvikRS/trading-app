@@ -1,6 +1,8 @@
 """Application factory and the outer HTTP error/header boundary."""
 
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
@@ -11,7 +13,14 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from trading_api.authentication import BrowserBoundary, CookiePolicy, routes
 from trading_api.config import Settings, load_settings
+from trading_auth.browser import BrowserAuth
+from trading_auth.models import (
+    AuthenticationDenied,
+    AuthenticationLimited,
+    AuthenticationUnavailable,
+)
 
 logger = logging.getLogger("trading_api")
 ERROR_CODES = {
@@ -19,6 +28,12 @@ ERROR_CODES = {
     404: "not_found",
     405: "method_not_allowed",
     422: "invalid_request",
+    401: "authentication_required",
+    403: "request_rejected",
+    413: "request_too_large",
+    415: "unsupported_content_type",
+    429: "try_later",
+    503: "authentication_unavailable",
 }
 SECURITY_HEADERS = {
     "Cache-Control": "no-store",
@@ -86,13 +101,53 @@ class HTTPBoundary:
         logger.info("request_completed", extra={"request_id": request_id, "status": status})
 
 
-def create_app(settings: Settings | None = None) -> HTTPBoundary:
+def create_app(
+    settings: Settings | None = None, *, browser: BrowserAuth | None = None
+) -> HTTPBoundary:
     config = load_settings() if settings is None else settings
     # Revalidate injected settings as well as process configuration at startup.
     Settings.model_validate(config.model_dump())
+    if config.auth_enabled and browser is None:
+        from trading_auth.local import local_browser
+
+        browser = local_browser()
+    policy = CookiePolicy(f"http://127.0.0.1:{config.port}")
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        try:
+            yield
+        finally:
+            if browser is not None:
+                browser.close()
+
     api = FastAPI(
-        debug=False, docs_url=None, redoc_url=None, openapi_url=None, redirect_slashes=False
+        debug=False,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+        redirect_slashes=False,
+        lifespan=lifespan,
     )
+    if browser is not None:
+        api.include_router(routes(browser, policy))
+
+    @api.exception_handler(AuthenticationDenied)
+    @api.exception_handler(AuthenticationUnavailable)
+    async def auth_error(request: Request, exc: Exception) -> JSONResponse:
+        status = (
+            429
+            if isinstance(exc, AuthenticationLimited)
+            else 401
+            if isinstance(exc, AuthenticationDenied)
+            else 503
+        )
+        response = error_response(status, request.state.request_id)
+        if status != 429:
+            policy.clear(response)
+        if status == 429:
+            response.headers["Retry-After"] = "5"
+        return response
 
     @api.get("/api/v1/health/live")
     async def liveness() -> dict[str, str]:
@@ -113,6 +168,13 @@ def create_app(settings: Settings | None = None) -> HTTPBoundary:
     async def server_error(request: Request, exc: Exception) -> JSONResponse:
         return error_response(500, request.state.request_id)
 
+    app: ASGIApp = api
+    if browser is not None:
+        app = BrowserBoundary(app, policy, browser.vault.csrf_secret)
     return HTTPBoundary(
-        TrustedHostMiddleware(api, allowed_hosts=["127.0.0.1", "localhost"], www_redirect=False)
+        TrustedHostMiddleware(
+            app,
+            allowed_hosts=["127.0.0.1", "localhost"],
+            www_redirect=False,
+        )
     )

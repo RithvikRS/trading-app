@@ -7,7 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 PREFIX = "TRADING_API_"
-ALLOWED_KEYS = frozenset({f"{PREFIX}ENVIRONMENT", f"{PREFIX}PORT"})
+ALLOWED_KEYS = frozenset({f"{PREFIX}ENVIRONMENT", f"{PREFIX}PORT", f"{PREFIX}AUTH_ENABLED"})
 
 
 class ConfigurationError(ValueError):
@@ -20,6 +20,7 @@ class Settings(BaseModel):
     # Hosted modes remain unavailable until the corresponding controls exist.
     environment: Literal["development", "test"] = "development"
     port: int = Field(default=8000, ge=1024, le=65535)
+    auth_enabled: bool = False
 
 
 def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
@@ -35,8 +36,15 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
         raise ConfigurationError("Invalid API configuration; see docs/development.md.")
 
     try:
+        auth = source.get(f"{PREFIX}AUTH_ENABLED", "false")
+        if auth not in {"true", "false"}:
+            raise ConfigurationError("Invalid API configuration; see docs/development.md.")
         return Settings.model_validate(
-            {"environment": source.get(f"{PREFIX}ENVIRONMENT", "development"), "port": int(port)}
+            {
+                "environment": source.get(f"{PREFIX}ENVIRONMENT", "development"),
+                "port": int(port),
+                "auth_enabled": auth == "true",
+            }
         )
     except ValidationError:
         raise ConfigurationError("Invalid API configuration; see docs/development.md.") from None

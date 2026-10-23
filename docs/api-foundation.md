@@ -1,6 +1,6 @@
 # Step 3A: Local Python API scaffold
 
-The API in `backend/` is a local development foundation. Supabase Auth on Free with FastAPI is the [selected authentication direction](authentication-options.md); authentication is not implemented yet. The frontend still runs independently with fictional data. The API scaffold itself creates no database, provider connection, user account, cloud resource, or deployment. Later [verification](verification.md) and [local database](database-foundation.md) tools run independently.
+The API in `backend/` is a local development foundation. Supabase Auth on Free with FastAPI is the [selected authentication direction](authentication-options.md); [Step 3E.2](browser-sessions.md) adds opt-in authentication and sessions. This document records the original liveness-only default. The frontend still runs independently with fictional data. The API scaffold itself creates no database, provider connection, user account, cloud resource, or deployment. Later [verification](verification.md) and [local database](database-foundation.md) tools run independently.
 
 ## Runtime and dependencies
 
@@ -8,7 +8,7 @@ Python 3.14.9 is pinned in `.python-version`; the project accepts the 3.14 bugfi
 
 Python 3.14 remains in bugfix support and avoids introducing the newly released 3.15 line while database/authentication integrations are still to come. Patch/dependency updates require refreshing the pins and checks; a lockfile does not remove the need for maintenance. [Python releases](https://www.python.org/downloads/), [uv projects](https://docs.astral.sh/uv/guides/projects/).
 
-## HTTP contract
+## Default HTTP contract
 
 | Request | Result |
 | --- | --- |
@@ -33,8 +33,9 @@ Run `python -m trading_api` through the locked environment using the [developmen
 | --- | --- | --- |
 | `TRADING_API_ENVIRONMENT` | `development` | `development` or `test` |
 | `TRADING_API_PORT` | `8000` | ASCII integer from 1024 through 65535, without whitespace or leading zeroes |
+| `TRADING_API_AUTH_ENABLED` | `false` | `true` or `false`; enabled mode requires the [session setup](browser-sessions.md#local-setup-and-verification) |
 
-An unknown `TRADING_API_` setting, misspelling, invalid value, or unsupported command-line argument stops startup with exit code 2 and a generic `configuration_invalid` event. Supplied values are never printed. `.env.example` is reference material; the application does not discover or load `.env` files. There are no credentials to supply at this stage.
+An unknown `TRADING_API_` setting, misspelling, invalid value, or unsupported command-line argument stops startup with exit code 2 and a generic `configuration_invalid` event. Supplied values are never printed. `.env.example` is reference material; the application does not discover or load `.env` files. Default liveness mode needs no credentials; opt-in authentication fails startup when provider configuration or its private key is missing.
 
 The entry point fixes binding to `127.0.0.1`, one process, no reload, no forwarded-header trust, no access log, no server-identification header, and no WebSocket protocol. It uses h11 with a 16 KiB incomplete-event limit, 32 concurrent connections/tasks, backlog 64, and five-second keep-alive/graceful-shutdown bounds. These are conservative development defaults, not measurements of Oracle capacity or substitutes for later request-size/rate controls. [Uvicorn settings](https://uvicorn.dev/settings/).
 
@@ -54,4 +55,4 @@ Local evidence includes clean locked installation, lint/format/type checks, the 
 
 Verification on 23 October 2026 with Windows and Python 3.14.9: 48 backend tests passed; Ruff lint/format and strict mypy checks passed; a fresh runtime-only locked environment successfully created the application. pip-audit 2.10.1 reported no known vulnerabilities in the installed backend dependencies. The real-socket test requires local loopback access; a network-restricted runner cannot supply that evidence. Frontend checks were not repeated because its source, dependencies, and configuration did not change.
 
-[Step 3B](verification.md) now provides the shared local/CI verification commands. [Step 3C](database-foundation.md) now provides local PostgreSQL and migrations independently of API startup. [Step 3D](ownership-isolation.md) adds internal database ownership isolation while the HTTP routes remain unchanged. [Step 3E.1](authentication-foundation.md) adds a separate internal Supabase login/MFA service. HTTP authentication routes and server sessions remain Step 3E.2.
+[Step 3B](verification.md) now provides the shared local/CI verification commands. [Step 3C](database-foundation.md) now provides local PostgreSQL and migrations independently of API startup. [Step 3D](ownership-isolation.md) adds internal database ownership isolation while the HTTP routes remain unchanged. [Step 3E.1](authentication-foundation.md) adds a separate internal Supabase login/MFA service. [Step 3E.2](browser-sessions.md) now adds opt-in HTTP authentication routes and server sessions; the original default remains liveness-only.

@@ -1,6 +1,6 @@
 # Step 3E.1: Supabase authentication and restricted enrollment
 
-The server-side authentication service now verifies a Supabase password sign-in, requires authenticator-app TOTP, and resolves only explicitly provisioned identities. It is exercised by local tests and an interactive development walkthrough. No Supabase project is configured, and no hosted smoke test has run. The HTTP API still exposes only liveness; login routes, browser sessions, recovery, and the protected UI are later increments. An internal MFA result does not grant browser or workspace access.
+The server-side authentication service now verifies a Supabase password sign-in, requires authenticator-app TOTP, and resolves only explicitly provisioned identities. It is exercised by local tests and an interactive development walkthrough. No Supabase project is configured, and no hosted smoke test has run. This document records the server-only Step 3E.1 service. [Step 3E.2](browser-sessions.md) now adds opt-in HTTP authentication, browser sessions, and recovery; the protected UI remains separate future work. An internal MFA result does not grant browser or workspace access.
 
 ## Integration decisions
 
@@ -29,7 +29,7 @@ The adapter uses explicit operations instead of a shared stateful authentication
 
 Attempts expire five minutes after password processing begins and do not extend on activity. An attempt allows at most five code submissions and one operation at a time. The service permits four simultaneous attempts, one per resolved owner, five starts per normalized email in five minutes, and thirty starts globally in that window. Invalid credentials and abandoned attempts count. Email rate keys are keyed hashes with a random process-local key; raw emails are not stored in the limiter.
 
-These admission controls are process-local and reset on restart. They are not a distributed or durable login throttle. Step 3E.2 must add the HTTP/session admission boundary and restart-safe limits before exposing browser authentication. No HTTP routes exist here, so CSRF/cookies are not partially introduced. Reuse one service instance when integrating it; recreating it per request would reset its counters. No external provider call holds a database transaction open.
+These admission controls are process-local and reset on restart. They are not a distributed or durable login throttle. [Step 3E.2](browser-sessions.md) uses a separate durable PostgreSQL admission boundary for browser authentication. No HTTP routes exist here, so CSRF/cookies are not partially introduced. Reuse one service instance when integrating it; recreating it per request would reset its counters. No external provider call holds a database transaction open.
 
 ## Identity and enrollment database boundary
 
@@ -39,7 +39,7 @@ The identity role can read only active owner IDs/status and the minimal identity
 
 The separate administrative `provision-owner` command creates a new internal owner and exact issuer/subject mapping in one transaction. Duplicate identities fail atomically; there is no upsert, relinking, reactivation, or MFA reset. It accepts only the managed local database's bootstrap identity and checks the server marker. Normal authentication never loads that credential. The administrator must establish the intended provider account separately; entering a UUID does not verify who controls it.
 
-Once an identity has completed MFA, loss of its provider factor requires recovery. Password knowledge alone cannot clear the marker and enroll a replacement through this service. Cancelling first enrollment can leave an unverified provider factor; it is not silently deleted or replaced. Recovery, factor replacement, secondary recovery methods, and abandoned-enrollment cleanup need the controlled procedure in Step 3E.2. No recovery codes or factor-management endpoints are implemented here.
+Once an identity has completed MFA, loss of its provider factor requires recovery. Password knowledge alone cannot clear the marker and enroll a replacement through this service. Cancelling first enrollment can leave an unverified provider factor; it is not silently deleted or replaced. The [browser-session runbook](browser-sessions.md#recovery-procedures) describes the implemented backup factor, replacement, email recovery, and abandoned-enrollment controls. This original command-line service creates no browser session.
 
 ## Local verification and migration
 
@@ -52,19 +52,19 @@ python scripts/database.py status
 python scripts/checks.py all
 ```
 
-The expected head is `0003_auth_identity_lookup`. Ordinary tests require no Supabase credentials, internet identity calls, paid service, real owner, or real MFA seed. Provider responses/signing keys stay in test modules; the database runner uses its guarded disposable cluster. The historical 3C/3D tests target their original revisions; new tests exercise the current head and both restricted roles.
+The Step 3E.1 revision is `0003_auth_identity_lookup`; the current head is `0004_browser_sessions`. Ordinary tests require no Supabase credentials, internet identity calls, paid service, real owner, or real MFA seed. Provider responses/signing keys stay in test modules; the database runner uses its guarded disposable cluster. The historical 3C/3D tests target their original revisions; new tests exercise the current head and both restricted roles.
 
 Upgrade preserves existing owner mappings and preferences. New enrollment markers default to false; no owners are seeded by migration. The local service adds its new credential only when the original set is complete. Failed migrations roll back DDL and version metadata together. Test-only downgrade removes auth grants and the marker; re-upgrade cannot reconstruct the old marker. Consequently downgrade is not a recovery method for used identities. Development recovery uses a forward migration, and shared migrations must not be rewritten.
 
 Tests cover signed-but-invalid claims, tampering, wrong issuer/audience/role, key rotation and outage, unknown/inactive identities, cross-owner denial, initial enrollment, wrong codes, unsupported/missing factors, deadlines, cancellation, concurrent attempts, admission limits, safe diagnostics, and role restrictions. Local validation and actual GitHub runs are recorded separately.
 
-Local Windows evidence on 24 October 2026: the complete shared check passed, followed by passing backend/database checks for the final additional assertions. Final totals are 15 verification-helper tests, 189 API/authentication/unit tests, 100 PostgreSQL tests, and 478 frontend tests. Ruff, strict mypy, frontend types/build, workflow policy/actionlint, documentation links, and repository secret scans passed. Python and npm audits reported no known vulnerabilities. Development reached `0003_auth_identity_lookup`, retained its original credentials, and had no owner, identity, or preference rows. GitHub CI results are recorded in the PR.
+Historical Step 3E.1 Windows evidence on 24 October 2026: the complete shared check passed, followed by passing backend/database checks for the final additional assertions. Final totals are 15 verification-helper tests, 189 API/authentication/unit tests, 100 PostgreSQL tests, and 478 frontend tests. Ruff, strict mypy, frontend types/build, workflow policy/actionlint, documentation links, and repository secret scans passed. Python and npm audits reported no known vulnerabilities. Development reached `0003_auth_identity_lookup`, retained its original credentials, and had no owner, identity, or preference rows. GitHub CI results are recorded in the PR.
 
 ## Optional provider walkthrough — not run
 
 A later manual smoke test needs a dedicated Free development project and a fabricated account. Configure closed registration, confirmed email, TOTP, asymmetric JWT signing, and an access-token lifetime of at most one hour. Disable other sign-in methods. The application validates the exposed settings but does not configure the project, SMTP, entitlement, or administrator access. Set up cloud-administrator MFA separately. Do not use production credentials or a personal financial identity.
 
-Only `TRADING_AUTH_PROJECT_URL` and `TRADING_AUTH_PUBLISHABLE_KEY` are read by the authentication tools, explicitly from the process environment. No dotenv file is loaded, and no admin API key is accepted. Supply the actual canonical project URL and publishable key locally; never put passwords, codes, or tokens in command arguments or repository files. The normal API settings remain unchanged.
+The authentication tools read `TRADING_AUTH_PROJECT_URL` and `TRADING_AUTH_PUBLISHABLE_KEY` explicitly from the process environment. Step 3E.2 adds the separately default-off `TRADING_AUTH_RECOVERY_EMAIL_ENABLED` control. No dotenv file is loaded, and no admin API key is accepted. Supply the actual canonical project URL and publishable key locally; never put passwords, codes, or tokens in command arguments or repository files. The normal API defaults remain liveness-only; browser authentication requires its explicit enable setting and private key.
 
 After the development database is upgraded, use a private interactive terminal:
 
@@ -75,4 +75,4 @@ python scripts/authentication.py smoke
 
 Provisioning prompts for the provider user UUID. The smoke command prompts without echo for email, password, and TOTP. First enrollment displays its setup key only in an interactive terminal; it refuses redirected input/output. Add that key manually to an authenticator using TOTP with six digits and a thirty-second interval. Do not record or share that terminal or its scrollback. The application writes no seed file and does not display provider tokens. The command confirms completion only after provider-session cleanup succeeds; it opens no workspace.
 
-Record actual provider/version/configuration evidence, closed signup, first enrollment, repeat sign-in, wrong-code rejection, and outage behavior when this walkthrough is run. Hosted key behavior, email delivery, provider revocation, MFA recovery, Supabase database TLS/pooling, and Oracle deployment remain unverified. Step 3E.2 is next: browser/session transport, revocation, recovery, and security events. The UI remains the separate fictional prototype.
+Record actual provider/version/configuration evidence, closed signup, first enrollment, repeat sign-in, wrong-code rejection, and outage behavior when this walkthrough is run. Hosted key behavior, email delivery, provider revocation, MFA recovery, Supabase database TLS/pooling, and Oracle deployment remain unverified. [Step 3E.2](browser-sessions.md) implements browser/session transport, revocation, recovery, and security events with local evidence; Step 3F.1 is the next increment. The UI remains the separate fictional prototype.

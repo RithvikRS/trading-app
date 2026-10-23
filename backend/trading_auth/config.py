@@ -13,6 +13,7 @@ class AuthSettings(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True, hide_input_in_errors=True)
     project_url: str
     publishable_key: SecretStr
+    recovery_email_enabled: bool = False
 
     @model_validator(mode="after")
     def validate_target(self) -> AuthSettings:
@@ -31,13 +32,21 @@ class AuthSettings(BaseModel):
 
 def load_settings(environ: Mapping[str, str] | None = None) -> AuthSettings:
     source = os.environ if environ is None else environ
-    allowed = {"TRADING_AUTH_PROJECT_URL", "TRADING_AUTH_PUBLISHABLE_KEY"}
+    allowed = {
+        "TRADING_AUTH_PROJECT_URL",
+        "TRADING_AUTH_PUBLISHABLE_KEY",
+        "TRADING_AUTH_RECOVERY_EMAIL_ENABLED",
+    }
     if {key for key in source if key.upper().startswith("TRADING_AUTH_")} - allowed:
         raise AuthenticationUnavailable()
     try:
+        recovery = source.get("TRADING_AUTH_RECOVERY_EMAIL_ENABLED", "false")
+        if recovery not in {"true", "false"}:
+            raise AuthenticationUnavailable()
         return AuthSettings(
             project_url=source["TRADING_AUTH_PROJECT_URL"],
             publishable_key=SecretStr(source["TRADING_AUTH_PUBLISHABLE_KEY"]),
+            recovery_email_enabled=recovery == "true",
         )
     except KeyError, ValidationError:
         raise AuthenticationUnavailable() from None
