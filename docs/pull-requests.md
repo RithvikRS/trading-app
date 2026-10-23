@@ -50,7 +50,7 @@ Applicable checks must pass on the final revision: source checks, meaningful tes
 
 [Step 3B verification](verification.md) defines five CI checks: Python checks, Database checks, Frontend checks, Repository security, and Local package checks. Run `python scripts/checks.py all` locally and inspect all five GitHub results on the final revision before merging. The workflow uses read-only repository permissions, no production secrets, and no path-based skips. Repository branch protection/ruleset settings are separate and are not configured by the workflow; do not infer enforced merge gates from a green run.
 
-Merge after review, passing checks, resolved findings, and satisfied security requirements. Use a merge commit with a conventional title to preserve ancestry between `dev` and `main`; do not squash or rebase this branch pair. Fetch and fast-forward `dev` to `origin/main` afterward, resolving divergence without rewriting shared history. Verify the resulting branches.
+Merge each completed increment automatically after final-revision review, all five passing CI checks, resolved findings, and satisfied security requirements. Keep a separate PR for every increment; automatic merging does not bypass failing checks or repository protections. Use a merge commit with a conventional title to preserve ancestry between `dev` and `main`; do not squash or rebase this branch pair. Fetch and fast-forward `dev` to `origin/main` afterward, push the fast-forward to `dev`, and verify both persistent branches. Merging does not deploy the application.
 
 ## Repository protections
 
