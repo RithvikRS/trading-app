@@ -4,7 +4,7 @@ import hashlib
 import re
 import secrets
 import threading
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -295,6 +295,20 @@ class BrowserAuth:
                 "factors": [str(factor) for factor in state.factors],
                 "unverified_factors": [str(factor) for factor in state.unverified],
             }
+
+    @contextmanager
+    def workspace_access(
+        self, cookie: str, csrf: str, request: str
+    ) -> Iterator[tuple[UUID, Callable[[], None]]]:
+        with self._lease(cookie, ("active",), request, csrf, "renewal") as (row, state):
+            state = self._refresh(state)
+            self.store.finish(
+                row, row.verifier, self.vault.seal(state, row.verifier), "active", request
+            )
+        # A concurrent logout between refresh and this guard denies access. A logout
+        # after admission waits for the bounded workspace transaction to commit/roll back.
+        with self.store.workspace_guard(row.verifier, row.owner) as validate:
+            yield row.owner, validate
 
     def logout(
         self,

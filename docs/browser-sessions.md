@@ -1,6 +1,6 @@
 # Step 3E.2: Browser sessions, revocation, and recovery
 
-The Python API now has opt-in browser authentication using Supabase password/TOTP verification and local PostgreSQL session state. Security decisions remain on the server. The fictional frontend is unchanged; the protected UI starts in Step 3F.1. No hosted project, real identity, financial record, or deployment was used for this increment.
+The Python API now has opt-in browser authentication using Supabase password/TOTP verification and local PostgreSQL session state. Security decisions remain on the server. The fictional frontend is unchanged; [Step 3F.1](protected-workspace.md) adds the protected UI and [Step 3F.2](display-preferences.md) adds authenticated preference persistence. Preference access refreshes the session without extending idle expiry, then uses a short guard across runtime commit to order saves against application revocation. No hosted project, real identity, financial record, or deployment was used for this increment.
 
 ## Session and credential boundary
 

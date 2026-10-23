@@ -1,4 +1,6 @@
 // Only opaque cookies cross the session boundary. This module has no storage adapter.
+import { parsePreferences } from './preferences'
+import type { DisplayPreferences, PreferenceSnapshot, PreferenceStatus } from './preferences'
 export type Session = { status: 'authenticated'; expires_at: string; idle_expires_at: string; fresh_until: string; factors: string[]; unverified_factors: string[] }
 export type Pending = { status: 'mfa_required'; factors: string[]; setup_key?: string }
 export type Screen =
@@ -7,8 +9,8 @@ export type Screen =
   | { kind: 'mfa'; pending: Pending; deadline: number }
   | { kind: 'recovery'; sent: boolean; message?: string }
   | { kind: 'password'; deadline: number }
-  | { kind: 'workspace'; session: Session; deadline: number }
-  | { kind: 'blocked'; reason: 'offline' | 'unavailable' | 'forbidden' | 'limited' | 'protocol' | 'signout'; retryAt?: number }
+  | { kind: 'workspace'; session: Session; deadline: number; preferences: PreferenceSnapshot; preferenceStatus: PreferenceStatus }
+  | { kind: 'blocked'; reason: 'offline' | 'unavailable' | 'forbidden' | 'limited' | 'protocol' | 'signout'; retryAt?: number; notice?: string }
 
 export type State = { screen: Screen; busy: boolean; recovery: boolean }
 type Json = Record<string, unknown>
@@ -17,6 +19,7 @@ const ids = (value: unknown): value is string[] => Array.isArray(value) && value
 const record = (value: unknown): value is Json => !!value && typeof value === 'object' && !Array.isArray(value)
 const exact = (value: Json, keys: string[]) => Object.keys(value).every(key => keys.includes(key))
 const invalid = () => new AuthError('protocol')
+class PreferenceConflict extends Error {}
 
 export class AuthError extends Error {
   constructor(readonly reason: 'unauthorized' | 'offline' | 'unavailable' | 'forbidden' | 'limited' | 'protocol', readonly retryAt?: number) { super('Authentication request failed.') }
@@ -31,15 +34,15 @@ function csrf(): string {
   return value
 }
 
-async function request(path: string, signal: AbortSignal, body?: Json): Promise<{ data: Json; now: number }> {
+async function request(path: string, signal: AbortSignal, body?: Json, method?: 'PUT'): Promise<{ data: Json; now: number }> {
   const started = performance.now()
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (path !== '/bootstrap') headers['X-CSRFToken'] = csrf()
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   let response: Response
   try {
-    response = await fetch(`/api/v1/auth${path}`, {
-      method: body === undefined ? 'GET' : 'POST', headers,
+    response = await fetch(path === '/preferences' ? '/api/v1/preferences' : `/api/v1/auth${path}`, {
+      method: method ?? (body === undefined ? 'GET' : 'POST'), headers,
       credentials: 'same-origin', mode: 'same-origin', redirect: 'error', cache: 'no-store',
       referrerPolicy: 'no-referrer', signal, body: body === undefined ? undefined : JSON.stringify(body),
     })
@@ -48,6 +51,7 @@ async function request(path: string, signal: AbortSignal, body?: Json): Promise<
     void response.body?.cancel()
     if (response.status === 401) throw new AuthError('unauthorized')
     if (response.status === 403) throw new AuthError('forbidden')
+    if (response.status === 409 && path === '/preferences') throw new PreferenceConflict()
     if (response.status === 429) throw new AuthError('limited', Date.now() + 5_000)
     throw new AuthError('unavailable')
   }
@@ -128,10 +132,21 @@ export class AuthController {
       if (generation === this.generation) { this.controller = undefined; this.set(this.state.screen) }
     }
   }
-  private activate(data: Json, now: number) {
+  private activate(data: Json, now: number, loaded?: PreferenceSnapshot) {
     const session = parseSession(data, now)
+    const previous = this.state.screen
+    const preferences = loaded ?? (previous.kind === 'workspace' ? previous.preferences : undefined)
+    if (!preferences) throw invalid()
     this.lastCheck = performance.now()
-    this.set({ kind: 'workspace', session, deadline: performance.now() + Math.min(Date.parse(session.expires_at), Date.parse(session.idle_expires_at)) - now })
+    this.set({ kind: 'workspace', session, preferences, preferenceStatus: loaded ? 'idle' : previous.kind === 'workspace' ? previous.preferenceStatus : 'idle', deadline: performance.now() + Math.min(Date.parse(session.expires_at), Date.parse(session.idle_expires_at)) - now })
+  }
+  private async openWorkspace(signal: AbortSignal, current: () => boolean) {
+    const session = await request('/session', signal)
+    if (!current()) return
+    parseSession(session.data, session.now)
+    const received = performance.now()
+    const result = await request('/preferences', signal)
+    if (current()) this.activate(session.data, session.now + performance.now() - received, parsePreferences(result.data))
   }
   start() {
     this.cancel()
@@ -161,8 +176,7 @@ export class AuthController {
       if (data.status !== 'ready' || typeof data.recovery_email_enabled !== 'boolean' || !exact(data, ['status', 'recovery_email_enabled'])) throw invalid()
       this.state = { ...this.state, recovery: data.recovery_email_enabled }
       try {
-        const result = await request('/session', signal)
-        if (current()) this.activate(result.data, result.now)
+        await this.openWorkspace(signal, current)
       } catch (error) { if (latest()) this.fail(error, 'Sign in to your private workspace.') }
     })
   }
@@ -179,8 +193,7 @@ export class AuthController {
     if (data.status === 'password_required' && exact(data, ['status'])) this.set({ kind: 'password', deadline: this.pendingDeadline })
     else if (data.status === 'authenticated' && exact(data, ['status'])) {
       this.set({ kind: 'checking' }, true)
-      const result = await request('/session', signal)
-      if (current()) this.activate(result.data, result.now)
+      await this.openWorkspace(signal, current)
     } else throw invalid()
   })
   check = () => this.run(async (signal, current) => {
@@ -191,6 +204,36 @@ export class AuthController {
     const result = await request('/session/activity', signal, {})
     if (current()) this.activate(result.data, result.now)
   })
+  reloadPreferences = () => this.run(async (signal, current) => {
+    const result = await request('/preferences', signal)
+    if (current() && this.state.screen.kind === 'workspace') {
+      if (performance.now() >= this.state.screen.deadline) throw new AuthError('unauthorized')
+      this.set({ ...this.state.screen, preferences: parsePreferences(result.data), preferenceStatus: 'idle' })
+    }
+  })
+  savePreferences = (changes: DisplayPreferences) => {
+    const previous = this.state.screen
+    if (previous.kind !== 'workspace' || previous.preferenceStatus === 'conflict') return Promise.resolve()
+    return this.run(async (signal, current, latest) => {
+      this.set({ ...previous, preferenceStatus: 'saving' }, true)
+      try {
+        if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+        const result = await request('/preferences', signal, { ...changes, revision: previous.preferences.revision }, 'PUT')
+        if (!current()) return
+        if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+        const preferences = parsePreferences(result.data)
+        if (preferences.revision !== previous.preferences.revision + 1 || preferences.theme !== changes.theme || preferences.display_currency !== changes.display_currency || preferences.amount_masked !== changes.amount_masked) throw invalid()
+        this.set({ ...previous, preferences, preferenceStatus: 'saved' })
+      } catch (error) {
+        if (!latest()) return
+        if (error instanceof PreferenceConflict && performance.now() < previous.deadline) this.set({ ...previous, preferenceStatus: 'conflict' })
+        else {
+          this.fail(error, 'Your session ended. The save was not confirmed; saved settings will load after sign-in.')
+          if (this.state.screen.kind === 'blocked') this.set({ ...this.state.screen, notice: 'The save was not confirmed. Check your connection and reload saved settings before trying again.' })
+        }
+      }
+    })
+  }
   logout = async (all = false, message?: string) => {
     this.signoutAll = all
     this.cancel()

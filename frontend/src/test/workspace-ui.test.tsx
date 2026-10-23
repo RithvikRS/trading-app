@@ -6,6 +6,7 @@ import axe from 'axe-core'
 import Workspace from '../../workspace/src/Workspace'
 import { AuthController } from '../../workspace/src/auth'
 
+const preferences = () => ({ theme: 'light', display_currency: 'INR', amount_masked: true, revision: 0 })
 const factor = '40000000-0000-4000-8000-000000000001'
 const fetchMock = vi.fn<typeof fetch>()
 function response(data: unknown, status = 200) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', Date: new Date().toUTCString() } }) }
@@ -38,7 +39,7 @@ it('supports password managers, paste, MFA enrollment, focus movement, and clear
   expect(await screen.findByLabelText(/Setup key/)).toBeTruthy()
   expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'One more layer of security.' }))
   await user.click(screen.getByLabelText('6-digit authenticator code')); await user.paste('123456')
-  fetchMock.mockResolvedValueOnce(response({ status: 'authenticated' })).mockResolvedValueOnce(response(session()))
+  fetchMock.mockResolvedValueOnce(response({ status: 'authenticated' })).mockResolvedValueOnce(response(session())).mockResolvedValueOnce(response(preferences()))
   await user.click(screen.getByRole('button', { name: 'Verify authenticator' }))
   await screen.findByRole('heading', { name: 'A fresh start.' })
   expect(screen.queryByDisplayValue('JBSWY3DPEHPK3PXP')).toBeNull()
@@ -57,7 +58,7 @@ it('switches themes in memory and does not use demo preferences', async () => {
 })
 
 it('renders an accessible empty workspace and hides it immediately offline', async () => {
-  fetchMock.mockImplementation(async path => path === '/api/v1/auth/bootstrap' ? response({ status: 'ready', recovery_email_enabled: false }) : response(session()))
+  fetchMock.mockImplementation(async path => path === '/api/v1/auth/bootstrap' ? response({ status: 'ready', recovery_email_enabled: false }) : path === '/api/v1/preferences' ? response(preferences()) : response(session()))
   const { container } = render(<Workspace />)
   await screen.findByRole('heading', { name: 'A fresh start.' })
   expect((await axe.run(container, { rules: { 'color-contrast': { enabled: false } } })).violations).toEqual([])
@@ -67,7 +68,7 @@ it('renders an accessible empty workspace and hides it immediately offline', asy
 })
 
 it('requires revalidation after visibility changes and history restoration', async () => {
-  fetchMock.mockImplementation(async path => path === '/api/v1/auth/bootstrap' ? response({ status: 'ready', recovery_email_enabled: false }) : response(session()))
+  fetchMock.mockImplementation(async path => path === '/api/v1/auth/bootstrap' ? response({ status: 'ready', recovery_email_enabled: false }) : path === '/api/v1/preferences' ? response(preferences()) : response(session()))
   render(<Workspace />); await screen.findByRole('heading', { name: 'A fresh start.' })
   const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
   fireEvent(document, new Event('visibilitychange'))

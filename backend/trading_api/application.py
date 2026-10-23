@@ -21,12 +21,14 @@ from trading_auth.models import (
     AuthenticationLimited,
     AuthenticationUnavailable,
 )
+from trading_db.workspace import WorkspaceDatabase
 
 logger = logging.getLogger("trading_api")
 ERROR_CODES = {
     400: "bad_request",
     404: "not_found",
     405: "method_not_allowed",
+    409: "preferences_conflict",
     422: "invalid_request",
     401: "authentication_required",
     403: "request_rejected",
@@ -107,7 +109,10 @@ class HTTPBoundary:
 
 
 def create_app(
-    settings: Settings | None = None, *, browser: BrowserAuth | None = None
+    settings: Settings | None = None,
+    *,
+    browser: BrowserAuth | None = None,
+    workspace: WorkspaceDatabase | None = None,
 ) -> HTTPBoundary:
     config = load_settings() if settings is None else settings
     # Revalidate injected settings as well as process configuration at startup.
@@ -116,6 +121,13 @@ def create_app(
         from trading_auth.local import local_browser
 
         browser = local_browser()
+    if config.auth_enabled and workspace is None:
+        from trading_db.local import development
+
+        local = development()
+        workspace = WorkspaceDatabase(local.url("runtime"), local.project)
+    if workspace is not None and browser is None:
+        raise ValueError("Workspace routes require authentication.")
     policy = CookiePolicy(f"http://127.0.0.1:{config.port}")
 
     @asynccontextmanager
@@ -125,6 +137,8 @@ def create_app(
         finally:
             if browser is not None:
                 browser.close()
+            if workspace is not None:
+                workspace.close()
 
     api = FastAPI(
         debug=False,
@@ -136,6 +150,10 @@ def create_app(
     )
     if browser is not None:
         api.include_router(routes(browser, policy))
+        if workspace is not None:
+            from trading_api.preferences import routes as preference_routes
+
+            api.include_router(preference_routes(browser, workspace, policy))
     if config.frontend_enabled:
         from trading_api.frontend import routes as frontend_routes
 

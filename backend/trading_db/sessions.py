@@ -1,5 +1,7 @@
 """Short database transactions; provider I/O never runs inside a registry transaction."""
 
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from datetime import datetime
 from uuid import UUID, uuid4
 
@@ -43,6 +45,31 @@ def event(
 
 
 class SessionDatabase(IdentityDatabase):
+    @contextmanager
+    def workspace_guard(self, key: bytes, owner: UUID) -> Iterator[Callable[[], None]]:
+        # Share the revocation/renewal lock only during short local SQL work.
+        # Provider I/O has already completed. Runtime retains no access to this registry.
+        with self._transaction() as connection:
+            connection.execute(text(LOCK))
+
+            def validate() -> None:
+                row = connection.execute(
+                    text(f"""
+                        SELECT s.lease FROM app.auth_sessions s
+                        WHERE verifier=:key AND owner_id=:owner AND stage='active'
+                            AND expires_at>clock_timestamp() AND idle_until>clock_timestamp()
+                            AND {ACTIVE}
+                    """),
+                    {"key": key, "owner": owner},
+                ).one_or_none()
+                if row is None:
+                    raise AuthenticationDenied()
+                if row.lease is not None:
+                    raise AuthenticationLimited()
+
+            validate()
+            yield validate
+
     def audit(
         self,
         name: Event,
