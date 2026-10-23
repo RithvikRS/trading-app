@@ -1,8 +1,8 @@
 # Step 3: Secure application foundation
 
-Status: Steps 3A and 3B implemented; 3C–3G remain planned. Step 2 and the Step 3 planning PR #20 are merged into `main`. The [local API scaffold](api-foundation.md) provides a liveness endpoint, validated configuration, conservative server settings, and sanitized error/log handling. [Step 3B](verification.md) adds shared local checks and CI. Databases, authentication, and hosting remain unimplemented. Security is the first acceptance criterion.
+Status: Steps 3A–3C implemented; 3D–3G remain planned. Step 2 and the Step 3 planning PR #20 are merged into `main`. The [local API scaffold](api-foundation.md) provides a liveness endpoint, validated configuration, conservative server settings, and sanitized error/log handling. [Step 3B](verification.md) adds shared local checks and CI. [Step 3C](database-foundation.md) adds local PostgreSQL and the migration baseline. Owner isolation, authentication, and hosting remain unimplemented. Security is the first acceptance criterion.
 
-The [authentication decision](authentication-options.md) selects Supabase Auth on Free with FastAPI. Python 3.14.9, uv 0.13.5, and the scaffold dependency tree are pinned. SQLAlchemy, Alembic, and Psycopg arrive with the database increments. React, Indigo & Apricot, local PostgreSQL, and hosted Supabase PostgreSQL remain selected.
+The [authentication decision](authentication-options.md) selects Supabase Auth on Free with FastAPI. Python 3.14.9, uv 0.13.5, and the scaffold dependency tree are pinned. PostgreSQL 17.11, SQLAlchemy 2.1.6, Alembic 1.20.1, and Psycopg 3.3.6 are pinned in the database foundation. React, Indigo & Apricot, local PostgreSQL, and hosted Supabase PostgreSQL remain selected.
 
 ## Result and boundaries
 
@@ -12,13 +12,13 @@ Accounts, holdings, financial transactions, real statement ingestion, provider c
 
 ## Proposed increments
 
-Steps 3A and 3B below are implemented; later increments are planned. Each delivers its tests, relevant documentation, a conventional commit on `dev`, and a focused PR into `main`. Larger findings are split further instead of combining unrelated capabilities.
+Steps 3A–3C below are implemented; later increments are planned. Each delivers its tests, relevant documentation, a conventional commit on `dev`, and a focused PR into `main`. Larger findings are split further instead of combining unrelated capabilities.
 
 | Increment | Deliverable | Acceptance evidence | Conventional commit |
 | --- | --- | --- | --- |
 | 3A — implemented | [Python API scaffold and safe configuration](api-foundation.md) | Locked Python/dependencies; clean install; loopback binding; minimal liveness endpoint; malformed/unsafe configuration fails closed; sanitized errors/logs; no financial or authentication bypass endpoint | `feat(api): add secure application scaffold` |
 | 3B — implemented | [Repeatable local checks and CI](verification.md) | Python lint/type/tests and dependency audit, frontend checks, secret scanning, pinned actions with minimal permissions, synthetic isolated tests; no deployment credentials or production access | `ci(security): add foundation verification checks` |
-| 3C | Local PostgreSQL and migration baseline | Reproducible local service, separate test database, explicit bootstrap/runtime/migrator identities; first schema migration and clean/upgrade/rollback-on-failure checks; runtime cannot perform DDL | `feat(database): add local postgres foundation` |
+| 3C — implemented | [Local PostgreSQL and migration baseline](database-foundation.md) | Reproducible local service, separate test database, explicit bootstrap/runtime/migrator identities; first schema migration and clean/upgrade/rollback-on-failure checks; runtime cannot perform DDL | `feat(database): add local postgres foundation` |
 | 3D | Ownership and database isolation | Minimal owner/identity mapping and workspace-preference schema; non-owner runtime role; RLS for reads/writes; two-owner negative tests, missing identity denial, pooled transaction cleanup and rollback; no public data routes | `feat(security): enforce workspace ownership boundaries` |
 | 3E.1 | Selected authentication integration and restricted enrollment | Closed registration, explicit owner provisioning, verified primary identity and MFA enrollment/challenge; partial authentication grants no workspace access; secret-redaction and rate-limit tests | `feat(auth): add owner authentication and mfa` |
 | 3E.2 | Revocable sessions, recovery, and security events | Opaque cookies, CSRF/origin checks, bounded expiry, session rotation, concurrent renewal tests where applicable, logout/revoke-all, recovery/re-enrollment and outage tests; sanitized audit records | `feat(auth): harden session lifecycle and recovery` |
@@ -50,7 +50,7 @@ Keep one Python application with explicit authentication, database, and domain i
 | Local production rehearsal | Built frontend and Python service with TLS/cookie behavior, local restricted database roles, synthetic backup/restore | Exercises deployment settings without publishing a service |
 | Future deployment | Supabase PostgreSQL and selected identity provider; static frontend/API on Oracle | Dedicated configuration, verified TLS, private/gated entry, network restrictions, tested recovery; Stage 10 activation |
 
-Step 3A pins Python 3.14.9, uv 0.13.5, and the compatible dependency tree. Match the local PostgreSQL major and required extensions to the selected supported Supabase target before 3C; do not assume the newest local release is available on the hosted project. Production must reject missing keys, debug/test identities, wildcard credentialed origins, insecure cookie settings, and unsafe database roles. Test commands must refuse non-test database names and hosted connection strings before destructive fixture cleanup.
+Step 3A pins Python 3.14.9, uv 0.13.5, and the compatible dependency tree. Step 3C selects PostgreSQL 17, a supported Supabase target, with no additional extensions. Verify the selected hosted project’s actual version and privileges before integration; local compatibility is not hosted evidence. Production must reject missing keys, debug/test identities, wildcard credentialed origins, insecure cookie settings, and unsafe database roles. Test commands must refuse non-test database names and hosted connection strings before destructive fixture cleanup.
 
 ## Ownership and schema contract
 

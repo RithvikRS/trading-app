@@ -1,6 +1,6 @@
 # Step 3A: Local Python API scaffold
 
-The API in `backend/` is a local development foundation. Supabase Auth on Free with FastAPI is the [selected authentication direction](authentication-options.md); authentication is not implemented yet. The frontend still runs independently with fictional data. No database, provider connection, user account, cloud resource, CI workflow, or deployment is created.
+The API in `backend/` is a local development foundation. Supabase Auth on Free with FastAPI is the [selected authentication direction](authentication-options.md); authentication is not implemented yet. The frontend still runs independently with fictional data. The API scaffold itself creates no database, provider connection, user account, cloud resource, or deployment. Later [verification](verification.md) and [local database](database-foundation.md) tools run independently.
 
 ## Runtime and dependencies
 
@@ -50,8 +50,8 @@ This deliberately limits diagnostic detail while there are no protected operatio
 
 Tests exercise configuration rejection, absence of implicit dotenv loading, local startup restrictions, route/method/Host behavior, security headers, generated request IDs, generic validation/server errors, and interrupted responses. Fault routes exist only in tests. A subprocess test starts the documented entry point on a temporary loopback port, sends real HTTP and malformed protocol input, and checks that synthetic sensitive markers do not appear in process logs.
 
-Local evidence includes clean locked installation, lint/format/type checks, the backend suite, and an advisory lookup of installed dependency versions. These do not prove hosted compatibility or security of future authentication/database features. No Supabase, PostgreSQL, Oracle, Linux/container, or real-data checks have been performed. Frontend behavior is unchanged and remains independent.
+Local evidence includes clean locked installation, lint/format/type checks, the backend suite, and an advisory lookup of installed dependency versions. These do not prove hosted compatibility or security of future authentication/database features. This API-only evidence does not cover Supabase, PostgreSQL, Oracle, or real data. Later database evidence is recorded separately in [Step 3C](database-foundation.md). Frontend behavior is unchanged and remains independent.
 
 Verification on 23 October 2026 with Windows and Python 3.14.9: 48 backend tests passed; Ruff lint/format and strict mypy checks passed; a fresh runtime-only locked environment successfully created the application. pip-audit 2.10.1 reported no known vulnerabilities in the installed backend dependencies. The real-socket test requires local loopback access; a network-restricted runner cannot supply that evidence. Frontend checks were not repeated because its source, dependencies, and configuration did not change.
 
-[Step 3B](verification.md) now provides the shared local/CI verification commands. Local PostgreSQL and migrations remain the next increment, 3C; Supabase login/MFA and server sessions remain 3E.
+[Step 3B](verification.md) now provides the shared local/CI verification commands. [Step 3C](database-foundation.md) now provides local PostgreSQL and migrations independently of API startup. Ownership isolation remains the next increment, 3D; Supabase login/MFA and server sessions remain 3E.

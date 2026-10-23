@@ -115,6 +115,16 @@ def frontend() -> None:
         run(label, [*npm_command, *args], ROOT / "frontend", timeout=timeout)
 
 
+def database() -> None:
+    uv = uv_command()
+    sync_backend(uv)
+    run(
+        "isolated PostgreSQL migrations and permissions",
+        [uv, "run", "--locked", "--no-sync", "python", "-m", "trading_db", "check"],
+        ROOT / "backend",
+    )
+
+
 @contextmanager
 def scratch(root: Path = ROOT):
     parent = root / ".cache/verification"
@@ -284,9 +294,14 @@ def repository() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("scope", choices=["all", "backend", "frontend", "repository"])
+    parser.add_argument("scope", choices=["all", "backend", "frontend", "repository", "database"])
     args = parser.parse_args()
-    phases = {"repository": repository, "backend": backend, "frontend": frontend}
+    phases = {
+        "repository": repository,
+        "backend": backend,
+        "database": database,
+        "frontend": frontend,
+    }
     try:
         for name in phases if args.scope == "all" else [args.scope]:
             phases[name]()

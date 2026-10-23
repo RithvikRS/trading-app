@@ -59,11 +59,13 @@ From `backend/` with the setup above:
 
 ## Repeatable local checks and CI
 
-Run `python scripts/checks.py all` from the repository root after the setup above and selecting Node 22.23.2/npm 12.0.2. The launcher also accepts `backend`, `frontend`, or `repository`. It performs locked installs and fails on incomplete checks. See [verification](verification.md) for tool pins, network/loopback requirements, secret-scan scope, and the matching three CI jobs.
+Run `python scripts/checks.py all` from the repository root after the setup above and selecting Node 22.23.2/npm 12.0.2. The launcher also accepts `backend`, `frontend`, `repository`, or `database`. Start a local Docker Engine 28+ with Compose before database or all checks. It performs locked installs and fails on incomplete checks. See [verification](verification.md) for tool pins, network/loopback requirements, secret-scan scope, and the matching four CI jobs.
 
-## Planned database and authentication work
+## Local PostgreSQL
 
-[Step 3B](verification.md) implements repeatable checks and CI. [Step 3](foundation-plan.md) next adds isolated PostgreSQL and migrations in 3C, ownership isolation in 3D, and Supabase MFA/server sessions in 3E. No database bootstrap commands or provider integration exist yet.
+[Step 3C](database-foundation.md) provides `python scripts/database.py up`, `migrate`, `status`, and `down` from the repository root. Run `up` then `migrate`; the service binds to `127.0.0.1:55432`. `down` retains the volume and generated credentials. `python scripts/checks.py database` creates its own disposable cluster and does not need the development service. Read the database runbook before changing local credential files or storage.
+
+Ownership isolation remains Step 3D; Supabase MFA/server sessions remain Step 3E. No provider integration or financial persistence exists yet.
 
 Tests must use explicitly named disposable databases and synthetic identities. Destructive test setup must reject hosted or non-test connection strings. Test authentication adapters stay outside the deployed runtime; no environment variable or debug endpoint may grant an owner identity in production. Hosted Supabase/identity checks, where needed, run separately from ordinary local/PR tests and report their actual evidence.
 
@@ -107,7 +109,7 @@ A feature can include its tests and documentation in one commit. Split unrelated
 
 Use tests for meaningful behavior and risks. Documentation-only changes do not need unrelated application tests. Component tests do not replace visual, keyboard, or assistive-technology review. Advisories are a point-in-time check, not a security guarantee.
 
-CI and automated secret detection are defined by [the verification workflow](verification.md). GitHub branch protections remain separate settings; this change does not configure them. Record local evidence honestly. Establish access controls, secret handling, and protected storage before introducing real data. Future database tests use a separate local instance with synthetic fixtures, never deployed Supabase.
+CI and automated secret detection are defined by [the verification workflow](verification.md). GitHub branch protections remain separate settings; this change does not configure them. Record local evidence honestly. Establish access controls, secret handling, and protected storage before introducing real data. Database tests use a separate local instance with synthetic fixtures, never deployed Supabase.
 
 ## Documentation upkeep
 

@@ -1,6 +1,6 @@
 # Architecture
 
-Planning baseline: 21 October 2026. Development uses local PostgreSQL; deployment uses Supabase PostgreSQL. The frontend prototype has locked dependency versions; the remaining components guide later implementation. Neither database is provisioned by the prototype. The [Step 3 foundation plan](foundation-plan.md) defines implementation increments and security contracts. [Supabase Auth on Free with FastAPI](authentication-options.md) is selected. The [Step 3A API scaffold](api-foundation.md) is implemented locally; identity integration, database persistence, and hosted use remain later work.
+Planning baseline: 21 October 2026. Development uses local PostgreSQL; deployment uses Supabase PostgreSQL. The frontend prototype has locked dependency versions and remains independent. [Step 3C](database-foundation.md) provisions local PostgreSQL 17 and migrations; hosted Supabase is not provisioned. The [Step 3 foundation plan](foundation-plan.md) defines implementation increments and security contracts. [Supabase Auth on Free with FastAPI](authentication-options.md) is selected. The [Step 3A API scaffold](api-foundation.md) is implemented locally; identity integration, financial persistence, and hosted use remain later work.
 
 ## Components
 
@@ -14,6 +14,8 @@ Planning baseline: 21 October 2026. Development uses local PostgreSQL; deploymen
 | Hosted database | Supabase PostgreSQL | Managed database reached through restricted, verified TLS connections |
 
 Keep domain modules for accounts, investments, banking, imports, valuations, and integrations within one application. This preserves clear boundaries without requiring separate services for each feature. No continuously running Node server is needed for the static frontend build. See [Vite deployment](https://vite.dev/guide/static-deploy.html) and [FastAPI](https://fastapi.tiangolo.com/).
+
+The local database tool is separate from API startup. Bootstrap owns the database; the migrator owns `app_meta` and `app`; runtime receives connection and schema-usage privileges only. Alembic runs in a verified, advisory-locked transaction. No API route reads or writes the database yet.
 
 ## Data flow
 
@@ -37,7 +39,7 @@ The frontend accesses financial records through the API. It receives no database
 
 ## Environments and portability
 
-- Development uses a local PostgreSQL instance bound to local/private interfaces and synthetic fixtures. Match the hosted PostgreSQL major version and required extensions once the Supabase project is selected.
+- Development uses a local PostgreSQL instance bound to local/private interfaces and synthetic fixtures. PostgreSQL 17 is selected with no additional extensions; verify the actual Supabase project before integration.
 - Automated checks use an isolated database, separate credentials, and fabricated or irreversibly sanitized fixtures.
 - Hosted services use a dedicated Supabase project with the unused Data API disabled, source address restrictions, and certificate-verified TLS. See [security requirements](security.md).
 - Application tables, business rules, and migrations remain ordinary PostgreSQL and Python where practical. Keep provider-specific authentication and storage adapters behind explicit interfaces.
