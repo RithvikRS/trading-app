@@ -21,6 +21,7 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
             request.cookies.get(policy.session, ""),
             request.headers.get("x-csrftoken", ""),
             request.state.request_id,
+            expected_context=request.headers.get("x-workspace-context", ""),
         ) as (owner, validate):
             try:
                 with database.transaction(owner) as unit:

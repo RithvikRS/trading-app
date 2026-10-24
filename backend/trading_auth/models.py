@@ -17,6 +17,11 @@ class AuthenticationUnavailable(RuntimeError):
         super().__init__("Authentication is temporarily unavailable.")
 
 
+class WorkspaceContextChanged(ValueError):
+    def __init__(self) -> None:
+        super().__init__("The workspace sign-in context changed.")
+
+
 class AuthenticationLimited(AuthenticationDenied):
     pass
 

@@ -99,3 +99,5 @@ Self-hosted PostgreSQL remains an alternative if managed-service constraints bec
 [Step 4G.3b](completion-receipt-reads.md) completes the persistence/read boundary with immutable receipt effects and frozen source/combined comparisons. Reads reconstruct one bounded historical comparison at a time under owner isolation; current portfolio calculations remain a separate data flow.
 
 [Step 5A](amfi-nav-contracts.md) adds a pure, bounded public NAV parser and explicit target matcher. Original report bytes determine its digest; original line/occurrence, decimal strings and observation dates survive parsing. No automatic identity creation, provider request or database write occurs. [Stage 5](investment-flow-plan.md) defines the separate private document, review and connected portfolio boundaries.
+
+[Step 5E.0](workspace-context.md) adds a non-authorizing session-context marker to checked session responses and requires it on preference and financial requests. Comparison happens after authentication and before financial SQL. A stale marker returns 412 without revoking the valid replacement session; client state is cleared before rechecking.

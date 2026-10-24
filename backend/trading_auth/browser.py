@@ -16,6 +16,7 @@ from trading_auth.models import (
     AuthenticationDenied,
     AuthenticationLimited,
     AuthenticationUnavailable,
+    WorkspaceContextChanged,
 )
 from trading_auth.session_models import (
     Event,
@@ -287,6 +288,7 @@ class BrowserAuth:
             )
             return {
                 "status": "authenticated",
+                "workspace_context": self.vault.workspace_context(row.verifier),
                 "expires_at": row.expires.isoformat(),
                 "idle_expires_at": min(
                     row.expires, datetime.now(UTC) + timedelta(minutes=15) if activity else row.idle
@@ -298,13 +300,21 @@ class BrowserAuth:
 
     @contextmanager
     def workspace_access(
-        self, cookie: str, csrf: str, request: str
+        self, cookie: str, csrf: str, request: str, *, expected_context: str
     ) -> Iterator[tuple[UUID, Callable[[], None]]]:
         with self._lease(cookie, ("active",), request, csrf, "renewal") as (row, state):
             state = self._refresh(state)
             self.store.finish(
                 row, row.verifier, self.vault.seal(state, row.verifier), "active", request
             )
+        # This is an expected stale-view failure, outside the lease's revocation
+        # path. Do not revoke the replacement sign-in or enter financial SQL.
+        if not re.fullmatch(
+            r"[0-9a-f]{64}", expected_context, re.ASCII
+        ) or not secrets.compare_digest(
+            expected_context, self.vault.workspace_context(row.verifier)
+        ):
+            raise WorkspaceContextChanged()
         # A concurrent logout between refresh and this guard denies access. A logout
         # after admission waits for the bounded workspace transaction to commit/roll back.
         with self.store.workspace_guard(row.verifier, row.owner) as validate:

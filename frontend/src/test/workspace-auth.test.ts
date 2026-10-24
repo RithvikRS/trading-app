@@ -3,7 +3,7 @@ import { AuthController, parseSession } from '../../workspace/src/auth'
 
 const preferences = () => ({ theme: 'light', display_currency: 'INR', amount_masked: true, revision: 0 })
 const factor = '40000000-0000-4000-8000-000000000001'
-const session = () => ({ status: 'authenticated', expires_at: new Date(Date.now() + 28_800_000).toISOString(), idle_expires_at: new Date(Date.now() + 900_000).toISOString(), fresh_until: new Date(Date.now() + 300_000).toISOString(), factors: [factor], unverified_factors: [] })
+const session = () => ({ status: 'authenticated', workspace_context: 'a'.repeat(64), expires_at: new Date(Date.now() + 28_800_000).toISOString(), idle_expires_at: new Date(Date.now() + 900_000).toISOString(), fresh_until: new Date(Date.now() + 300_000).toISOString(), factors: [factor], unverified_factors: [] })
 function response(data: unknown, status = 200, extra: Record<string, string> = {}) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', Date: new Date().toUTCString(), ...extra } }) }
 const ready = () => response({ status: 'ready', recovery_email_enabled: true })
 const denied = () => response({}, 401)

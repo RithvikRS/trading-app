@@ -21,7 +21,7 @@ CAS compatibility requires a reproducible, irreversibly sanitized representative
 
 ## Delivery sequence
 
-Each increment has its own conventional commit and `dev` to `main` PR, documentation, review and final-revision checks. Complete independent work while source-specific evidence is unavailable. Do not enable an unverified source adapter to make the interface appear complete.
+Each increment has its own conventional commit and `dev` to `main` PR, documentation, review and final-revision checks. Complete independent work while source-specific evidence is unavailable. The 5E.0 sign-in binding precedes financial screens and does not require a source adapter. Do not enable an unverified source adapter to make the interface appear complete.
 
 | Step | Deliverable | Acceptance |
 | --- | --- | --- |
@@ -29,7 +29,7 @@ Each increment has its own conventional commit and `dev` to `main` PR, documenta
 | 5B | Isolated document intake | A fixed, non-root, network-disabled parser boundary with no database/provider/session secrets; strict file, time, memory, concurrency and output limits; authenticated bounded intake and cancellation; temporary plaintext/password cleanup. |
 | 5C | One verified detailed CAS adapter | Original row order and reported balances preserved; explicit provider/layout version, folio and fund evidence; unsupported transaction types retained as blocked; verified known examples and hostile documents. |
 | 5D | Owned staging and reviewed completion | Server-derived ownership, explicit account/folio/instrument mappings, revision checks, overlap/conflict review, immutable completion and source-specific reconciliation. Missing cash checkpoints cannot be replaced with invented balances. |
-| 5E | Connected import and investment screens | Protected upload/review/receipt workflow and holdings/detail pages, Indigo & Apricot in both themes, accessible keyboard/mobile interactions, exact amounts and visible coverage/freshness. Lock/revocation discards private state and pending requests. |
+| 5E | Connected import and investment screens; [5E.0 sign-in context](workspace-context.md) implemented | Protected upload/review/receipt workflow and holdings/detail pages, Indigo & Apricot in both themes, accessible keyboard/mobile interactions, exact amounts and visible coverage/freshness. Lock/revocation discards private state and pending requests. |
 | 5F | NAV acquisition and valuation | An allowlisted bounded public-data fetch, persisted exact source evidence and explicit source choice, safe retries and dated valuation for mapped fund positions. No holdings changes from a NAV update. |
 | 5G | End-to-end acceptance and recovery | Synthetic statement-to-portfolio checks, repeat/overlap/conflict imports, two-owner denial, encrypted restore, resource measurements, failure recovery and documented source/hosted limitations. |
 

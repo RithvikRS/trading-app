@@ -90,3 +90,5 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 Completed features use conventional commits on `dev`, with pull requests into `main`. Real statements, identifiers, credentials, and database dumps stay outside the repository. Planned protections are not claims of controls already deployed.
 
 Licensed under [Apache License 2.0](LICENSE).
+
+[Step 5E.0](docs/workspace-context.md) binds workspace requests to their checked sign-in. A changed cookie in another tab cannot silently redirect preference saves or financial reads into a replacement session; stale views clear and require a session recheck.

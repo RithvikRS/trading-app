@@ -101,3 +101,5 @@ Hosted password/MFA, recovery email delivery and replay, actual refresh rotation
 ## Financial identity reads
 
 [Step 4G.1](financial-reads.md) extends the same browser protections to `/api/v1/finance`. Read-only JSON queries require active MFA and bound CSRF, preserve the idle deadline and validate session/owner state after constructing their bounded response. Database-query unavailability is separate from authentication failure and does not clear a valid session. Restored financial identities require a fresh authenticated session; old session cookies remain unusable.
+
+[Workspace context](workspace-context.md) binds subsequent preference and financial requests to the exact checked sign-in. It does not grant access. Sign-in/recovery attempts also send the existing constant cross-tab lock message; session checks and server enforcement handle missing delivery.

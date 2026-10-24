@@ -1,7 +1,7 @@
 // Only opaque cookies cross the session boundary. This module has no storage adapter.
 import { parsePreferences } from './preferences'
 import type { DisplayPreferences, PreferenceSnapshot, PreferenceStatus } from './preferences'
-export type Session = { status: 'authenticated'; expires_at: string; idle_expires_at: string; fresh_until: string; factors: string[]; unverified_factors: string[] }
+export type Session = { status: 'authenticated'; workspace_context: string; expires_at: string; idle_expires_at: string; fresh_until: string; factors: string[]; unverified_factors: string[] }
 export type Pending = { status: 'mfa_required'; factors: string[]; setup_key?: string }
 export type Screen =
   | { kind: 'checking' }
@@ -10,7 +10,7 @@ export type Screen =
   | { kind: 'recovery'; sent: boolean; message?: string }
   | { kind: 'password'; deadline: number }
   | { kind: 'workspace'; session: Session; deadline: number; preferences: PreferenceSnapshot; preferenceStatus: PreferenceStatus }
-  | { kind: 'blocked'; reason: 'offline' | 'unavailable' | 'forbidden' | 'limited' | 'protocol' | 'signout'; retryAt?: number; notice?: string }
+  | { kind: 'blocked'; reason: 'offline' | 'unavailable' | 'forbidden' | 'limited' | 'context' | 'protocol' | 'signout'; retryAt?: number; notice?: string }
 
 export type State = { screen: Screen; busy: boolean; recovery: boolean }
 type Json = Record<string, unknown>
@@ -22,7 +22,7 @@ const invalid = () => new AuthError('protocol')
 class PreferenceConflict extends Error {}
 
 export class AuthError extends Error {
-  constructor(readonly reason: 'unauthorized' | 'offline' | 'unavailable' | 'forbidden' | 'limited' | 'protocol', readonly retryAt?: number) { super('Authentication request failed.') }
+  constructor(readonly reason: 'unauthorized' | 'offline' | 'unavailable' | 'forbidden' | 'limited' | 'context' | 'protocol', readonly retryAt?: number) { super('Authentication request failed.') }
 }
 
 function csrf(): string {
@@ -34,11 +34,15 @@ function csrf(): string {
   return value
 }
 
-async function request(path: string, signal: AbortSignal, body?: Json, method?: 'PUT'): Promise<{ data: Json; now: number }> {
+async function request(path: string, signal: AbortSignal, body?: Json, method?: 'PUT', workspaceContext?: string): Promise<{ data: Json; now: number }> {
   const started = performance.now()
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (path !== '/bootstrap') headers['X-CSRFToken'] = csrf()
   if (body !== undefined) headers['Content-Type'] = 'application/json'
+  if (path === '/preferences') {
+    if (typeof workspaceContext !== 'string' || !/^[0-9a-f]{64}$/.test(workspaceContext)) throw invalid()
+    headers['X-Workspace-Context'] = workspaceContext
+  }
   let response: Response
   try {
     response = await fetch(path === '/preferences' ? '/api/v1/preferences' : `/api/v1/auth${path}`, {
@@ -51,6 +55,7 @@ async function request(path: string, signal: AbortSignal, body?: Json, method?: 
     void response.body?.cancel()
     if (response.status === 401) throw new AuthError('unauthorized')
     if (response.status === 403) throw new AuthError('forbidden')
+    if (response.status === 412) throw new AuthError('context')
     if (response.status === 409 && path === '/preferences') throw new PreferenceConflict()
     if (response.status === 429) throw new AuthError('limited', Date.now() + 5_000)
     throw new AuthError('unavailable')
@@ -83,7 +88,7 @@ async function request(path: string, signal: AbortSignal, body?: Json, method?: 
 }
 
 export function parseSession(data: Json, now: number): Session {
-  if (!exact(data, ['status', 'expires_at', 'idle_expires_at', 'fresh_until', 'factors', 'unverified_factors']) || data.status !== 'authenticated' || !ids(data.factors) || !data.factors.length || !ids(data.unverified_factors)) throw invalid()
+  if (!exact(data, ['status', 'workspace_context', 'expires_at', 'idle_expires_at', 'fresh_until', 'factors', 'unverified_factors']) || data.status !== 'authenticated' || typeof data.workspace_context !== 'string' || !/^[0-9a-f]{64}$/.test(data.workspace_context) || !ids(data.factors) || !data.factors.length || !ids(data.unverified_factors)) throw invalid()
   for (const key of ['expires_at', 'idle_expires_at', 'fresh_until']) {
     if (typeof data[key] !== 'string' || !/^\d{4}-\d\d-\d\dT[\d:.]+(?:Z|\+00:00)$/.test(data[key]) || !Number.isFinite(Date.parse(data[key]))) throw invalid()
   }
@@ -135,6 +140,7 @@ export class AuthController {
   private activate(data: Json, now: number, loaded?: PreferenceSnapshot) {
     const session = parseSession(data, now)
     const previous = this.state.screen
+    if (previous.kind === 'workspace' && previous.session.workspace_context !== session.workspace_context) throw new AuthError('context')
     const preferences = loaded ?? (previous.kind === 'workspace' ? previous.preferences : undefined)
     if (!preferences) throw invalid()
     this.lastCheck = performance.now()
@@ -143,9 +149,9 @@ export class AuthController {
   private async openWorkspace(signal: AbortSignal, current: () => boolean) {
     const session = await request('/session', signal)
     if (!current()) return
-    parseSession(session.data, session.now)
+    const checked = parseSession(session.data, session.now)
     const received = performance.now()
-    const result = await request('/preferences', signal)
+    const result = await request('/preferences', signal, undefined, undefined, checked.workspace_context)
     if (current()) this.activate(session.data, session.now + performance.now() - received, parsePreferences(result.data))
   }
   start() {
@@ -183,6 +189,7 @@ export class AuthController {
   login = (email: string, password: string) => {
     this.pendingDeadline = performance.now() + 5 * 60_000
     return this.run(async (signal, current) => {
+      this.channel?.postMessage('locked')
       const { data } = await request('/login', signal, { email, password })
       if (current()) this.set({ kind: 'mfa', pending: pending(data), deadline: this.pendingDeadline })
     })
@@ -204,13 +211,18 @@ export class AuthController {
     const result = await request('/session/activity', signal, {})
     if (current()) this.activate(result.data, result.now)
   })
-  reloadPreferences = () => this.run(async (signal, current) => {
-    const result = await request('/preferences', signal)
-    if (current() && this.state.screen.kind === 'workspace') {
-      if (performance.now() >= this.state.screen.deadline) throw new AuthError('unauthorized')
-      this.set({ ...this.state.screen, preferences: parsePreferences(result.data), preferenceStatus: 'idle' })
-    }
-  })
+  reloadPreferences = () => {
+    const previous = this.state.screen
+    if (previous.kind !== 'workspace') return Promise.resolve()
+    return this.run(async (signal, current) => {
+      if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+      const result = await request('/preferences', signal, undefined, undefined, previous.session.workspace_context)
+      if (current() && this.state.screen.kind === 'workspace') {
+        if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+        this.set({ ...this.state.screen, preferences: parsePreferences(result.data), preferenceStatus: 'idle' })
+      }
+    })
+  }
   savePreferences = (changes: DisplayPreferences) => {
     const previous = this.state.screen
     if (previous.kind !== 'workspace' || previous.preferenceStatus === 'conflict') return Promise.resolve()
@@ -218,7 +230,7 @@ export class AuthController {
       this.set({ ...previous, preferenceStatus: 'saving' }, true)
       try {
         if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
-        const result = await request('/preferences', signal, { ...changes, revision: previous.preferences.revision }, 'PUT')
+        const result = await request('/preferences', signal, { ...changes, revision: previous.preferences.revision }, 'PUT', previous.session.workspace_context)
         if (!current()) return
         if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
         const preferences = parsePreferences(result.data)
@@ -262,6 +274,7 @@ export class AuthController {
   verifyRecovery = (email: string, code: string) => {
     this.pendingDeadline = performance.now() + 5 * 60_000
     return this.run(async (signal, current) => {
+      this.channel?.postMessage('locked')
       const { data } = await request('/recovery/verify', signal, { email, code })
       if (current()) this.set({ kind: 'mfa', pending: pending(data), deadline: this.pendingDeadline })
     })

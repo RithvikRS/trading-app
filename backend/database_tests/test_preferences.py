@@ -69,6 +69,9 @@ def login(client, *, mfa=True):
             ).status_code
             == 200
         )
+        checked = client.get("/api/v1/auth/session", headers=headers)
+        assert checked.status_code == 200
+        headers["X-Workspace-Context"] = checked.json()["workspace_context"]
     return headers
 
 

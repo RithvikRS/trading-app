@@ -124,10 +124,17 @@ class Vault:
             raise AuthenticationUnavailable()
         self._cipher = AESGCM(key)
         self._rate_key = hmac.digest(key, b"admission-v1", "sha256")
+        self._workspace_key = hmac.digest(key, b"workspace-context-v1", "sha256")
         self.csrf_secret = hmac.digest(key, b"csrf-v1", "sha256").hex()
 
     def rate_key(self, identity: str) -> bytes:
         return hmac.digest(self._rate_key, identity.casefold().encode(), "sha256")
+
+    def workspace_context(self, key: bytes) -> str:
+        """A non-authorizing view binding; never expose the cookie verifier itself."""
+        if type(key) is not bytes or len(key) != 32:
+            raise AuthenticationUnavailable()
+        return hmac.digest(self._workspace_key, key, "sha256").hex()
 
     def seal(self, state: SessionState, key: bytes) -> bytes:
         import json
