@@ -14,6 +14,8 @@ Connections adds six source inspectors with separate financial, statement, quote
 
 Investment samples distinguish positions, activity, cash, and remaining lots. Same-folio source preferences retain one snapshot; regular/direct funds and Accenture positions at different accounts remain separate. Missing fees, acquisition history, and tax basis stay unknown. Completion records only a scoped sample receipt, and bank/investment reviews share undo/reset without changing portfolio totals.
 
+[Step 5A](docs/amfi-nav-contracts.md) begins the [connected investment flow](docs/investment-flow-plan.md) with bounded public NAV parsing and exact fund matching. Missing, stale, ambiguous or unsupported evidence cannot supply a usable valuation. Statement intake and connected investment screens remain later increments.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:

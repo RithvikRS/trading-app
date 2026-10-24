@@ -30,6 +30,8 @@ Current holdings and average purchase prices cannot reconstruct a complete trans
 
 AMFI describes consolidated statements through CAMS and KFintech and summary/detailed CAS through MFCentral. Request detailed history for the needed periods and reconcile the result against actual folios. Account linkage, holding form, and available statement periods can affect coverage. Preserve advisor regular plans as distinct from direct plans. See [AMFI CAS guidance](https://www.amfiindia.com/online-center/download-cas).
 
+[Step 5A](amfi-nav-contracts.md) implements bounded parsing of the current eight-column AMFI text report and exact scheme/ISIN/variant matching. It performs no acquisition or persistence. Source dates and unsupported identity/variant fields remain explicit; actual statement compatibility follows the [investment flow plan](investment-flow-plan.md).
+
 NAV refreshes update valuation, not units owned. Units and cash flows change only through validated transactions or explicitly sourced snapshots. AMFI publishes NAV resources; confirm the chosen endpoint and usage conditions before scheduling downloads. See [AMFI NAV resources](https://www.amfiindia.com/net-asset-value/).
 
 ## UBS and banking
