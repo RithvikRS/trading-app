@@ -42,7 +42,7 @@ No filename, statement binary, unrestricted JSON/raw description, PAN, plaintext
 
 ## Migration, recovery and verification
 
-Apply the [local migration command](database-foundation.md#commands-and-lifecycle) to reach the current head `0017_reconciled_completion`. Step 4D.1 introduced `0008_import_staging`. Existing identities/accounts/instruments are preserved; no owner or financial data is seeded. Prior shared migrations are unchanged. Tests cover transactional migration failure and disposable downgrade/re-upgrade.
+Apply the [local migration command](database-foundation.md#commands-and-lifecycle) to reach the current head listed in [development](development.md#local-postgresql). Step 4D.1 introduced `0008_import_staging`. Existing identities/accounts/instruments are preserved; no owner or financial data is seeded. Prior shared migrations are unchanged. Tests cover transactional migration failure and disposable downgrade/re-upgrade.
 
 The current recovery format **13** covers 40 application tables: 38 durable tables and the two omitted session/admission tables, including events, movements, lot/correction and snapshot/selection histories. It includes source predecessors, normalization revisions, original and exact financial values, and all review decisions. Dates and decimals serialize as exact strings. The separate-cluster drill restores two owners with superseded batches, unknown basis, high-precision units and mapping-bound decisions, compares rows/constraints/grants/policies, validates separately recovered identifier keys, and rejects old sessions.
 
