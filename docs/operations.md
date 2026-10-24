@@ -57,3 +57,5 @@ For suspected compromise, restrict access, pause affected imports, revoke expose
 Require a successful production build, reviewed migration, protected entry point, verified database restrictions, security release gates, a restore exercise, and resource checks with a representative import. Confirm that failures retain last-known-good data and are visible to the owner.
 
 Record deployed versions, configuration decisions, backup location and retention, key-recovery procedure, actual resource measurements, known limits, and the next maintenance review. Revisit the architecture before sustained memory pressure, database quota exhaustion, public multi-user access, or trading execution.
+
+[Step 4D.2](financial-events.md#compatibility-and-recovery) advances the local schema to `0009_financial_events` and recovery format 5. The bounded disposable recovery exercise covers 24 durable tables plus the two deliberately omitted session/admission tables. Older objects require restoration with their matching release before a tested forward upgrade.

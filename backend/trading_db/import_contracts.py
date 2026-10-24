@@ -46,6 +46,7 @@ SECURITY_KINDS = {
 }
 SNAPSHOT_KINDS = {"position_snapshot", "cash_snapshot", "lot_acquisition", "lot_remaining"}
 TRADE_KINDS = {"buy", "sell", "subscription", "redemption"}
+EVENT_KINDS = TRADE_KINDS | {"cash_movement", "dividend", "fee", "withholding"}
 COMPONENTS = {
     "cash_movement": {"net_cash", "fee", "withholding"},
     "cash_snapshot": {"net_cash"},
@@ -133,6 +134,7 @@ class StagedValue(Definition):
 class CandidateDefinition(Definition):
     occurrence: int = Field(ge=1, le=1_000_000)
     kind: CandidateKind
+    posting_state: Literal["posted", "pending"] | None = None
     instrument_identifier_id: UUID | None = None
     trade_date: str | None = Field(default=None, repr=False)
     settlement_date: str | None = Field(default=None, repr=False)
@@ -146,6 +148,8 @@ class CandidateDefinition(Definition):
     def structure(self) -> CandidateDefinition:
         if self.instrument_identifier_id == UUID(int=0):
             raise ValueError("Invalid security reference.")
+        if self.kind in SNAPSHOT_KINDS and self.posting_state is not None:
+            raise ValueError("Snapshots do not have an activity posting state.")
         for name in ("trade_date", "settlement_date", "booking_date", "value_date", "as_of_date"):
             value = getattr(self, name)
             if value is not None:
@@ -160,6 +164,8 @@ class CandidateDefinition(Definition):
             return self.blocked_reason
         if self.kind == "unsupported":
             return "unsupported"
+        if self.kind in EVENT_KINDS and self.posting_state is None:
+            return "not_supplied"
         if any(value.role not in COMPONENTS[self.kind] for value in self.values):
             return "unsupported_component"
         values: dict[str, Decimal | None] = {

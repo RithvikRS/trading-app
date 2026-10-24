@@ -16,6 +16,7 @@ from database_tests.test_ownership import DISABLED, OWNER_A, OWNER_B, UNKNOWN, s
 from trading_db import migrate
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.import_contracts import (
+    EVENT_KINDS,
     BatchDefinition,
     CandidateDefinition,
     ObservationDefinition,
@@ -44,6 +45,9 @@ def observation(digest="a"):
 
 
 def candidate(occurrence=1, **changes):
+    changes.setdefault(
+        "posting_state", "posted" if changes.get("kind", "cash_movement") in EVENT_KINDS else None
+    )
     return CandidateDefinition(
         **(
             dict(

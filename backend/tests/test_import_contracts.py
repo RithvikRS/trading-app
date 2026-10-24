@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from trading_db.import_contracts import (
+    EVENT_KINDS,
     BatchDefinition,
     CandidateDefinition,
     ObservationDefinition,
@@ -19,6 +20,9 @@ def cash(source="-12.30", **changes):
 
 
 def candidate(**changes):
+    changes.setdefault(
+        "posting_state", "posted" if changes.get("kind", "cash_movement") in EVENT_KINDS else None
+    )
     return CandidateDefinition(
         **(
             dict(occurrence=1, kind="cash_movement", booking_date="2026-10-24", values=(cash(),))
@@ -168,3 +172,19 @@ def test_occurrences_keep_legitimate_identical_rows_and_component_order_is_canon
 def test_row_rejects_ambiguous_dates_and_unbounded_source_fields(changes):
     with pytest.raises(ValidationError):
         candidate(**changes)
+
+
+def test_posting_evidence_is_explicit_and_legacy_digest_is_versioned():
+    unknown = candidate(posting_state=None)
+    pending = candidate(posting_state="pending")
+    posted = candidate(posting_state="posted")
+    assert unknown.issue() == "not_supplied"
+    assert pending.issue() is posted.issue() is None
+    batches = [
+        BatchDefinition(normalizer="synthetic", normalizer_version="1", rows=(row,))
+        for row in (unknown, pending, posted)
+    ]
+    assert len({canonical(value) for value in batches}) == 3
+    assert len({canonical(value, 1) for value in batches}) == 1
+    with pytest.raises(ValidationError):
+        candidate(kind="cash_snapshot", posting_state="posted")

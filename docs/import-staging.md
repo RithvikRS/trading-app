@@ -20,7 +20,7 @@ The value table has finite component roles: quantity, net/gross cash, unit price
 
 Missing basis remains null, including on an otherwise reviewable lot snapshot. Required missing values, unsupported kinds/components, inconsistent signs and unresolved identities block inclusion. A malformed numeric token is rejected at the normalized boundary; an adapter can retain the occurrence as unsupported without putting arbitrary raw text into these tables. Unsupported records can be inspected or explicitly excluded. This does not turn incomplete evidence into complete history.
 
-Trade candidates require signed units and independently supplied net cash: buys/subscriptions add units and debit cash; sells/redemptions do the reverse. Cash activity needs a booking date; trades need a trade date; snapshots/lots need a supplied as-of date. Optional costs, fees, gross cash and withholding remain independent evidence. Inclusion does not attest that gross, fees and net reconcile, establish an event's posted/pending state, select a tax-lot method, or establish full historical coverage. Typed posting is 4D.2; sourced lot/correction contracts are 4D.3; reconciliation and atomic completion are 4F.
+Trade candidates require signed units and independently supplied net cash: buys/subscriptions add units and debit cash; sells/redemptions do the reverse. Cash activity needs a booking date; trades need a trade date; snapshots/lots need a supplied as-of date. Optional costs, fees, gross cash and withholding remain independent evidence. Step 4D.2 adds explicit posted/pending source evidence for activity inclusion; snapshots/lots retain no posting state. Inclusion does not attest that gross, fees and net reconcile, select a tax-lot method, or establish full historical coverage. [Typed event persistence](financial-events.md) is separate from inclusion; sourced lot/correction contracts are 4D.3; reconciliation and atomic completion are 4F.
 
 ## Review lifecycle
 
@@ -28,7 +28,7 @@ Rows derive a current state: `reviewable`, `blocked`, `included`, `excluded`, or
 
 An inclusion binds the exact current account and instrument mapping revisions. The account must be active, currencies must belong to it, and instrument/asset/listing relationships must be compatible. A changed or unlinked mapping blocks an earlier inclusion until it is reviewed again; account archival also blocks it. New normalization or superseding evidence makes the old batch superseded. Earlier decisions remain historical evidence, never a current authorization to post.
 
-Exclusion supports an explicit user choice or a suspected duplicate; it does not declare a confirmed duplicate or waive future reconciliation. Reopen returns the occurrence to review. Re-including an excluded row repeats all current checks. There is no prototype-style deletion/reset of this durable history.
+Exclusion supports an explicit user choice or a suspected duplicate; it does not declare a confirmed duplicate or waive future reconciliation. Reopen returns the occurrence to review. Re-including an excluded row repeats all current checks. There is no prototype-style deletion/reset of this durable history. Step 4D.2 locks decisions after an event consumes the row; subsequent changes require a financial correction.
 
 ## Isolation, atomicity and limits
 
@@ -42,12 +42,12 @@ No filename, statement binary, unrestricted JSON/raw description, PAN, plaintext
 
 ## Migration, recovery and verification
 
-Apply the [local migration command](database-foundation.md#commands-and-lifecycle) to reach `0008_import_staging`. Existing identities/accounts/instruments are preserved; no owner or financial data is seeded. Prior shared migrations are unchanged. Tests cover transactional migration failure and disposable downgrade/re-upgrade.
+Apply the [local migration command](database-foundation.md#commands-and-lifecycle) to reach the current head `0009_financial_events`. Step 4D.1 introduced `0008_import_staging`. Existing identities/accounts/instruments are preserved; no owner or financial data is seeded. Prior shared migrations are unchanged. Tests cover transactional migration failure and disposable downgrade/re-upgrade.
 
-Recovery format **4** covers 22 application tables: 20 durable tables and the two omitted session/admission tables. It includes source predecessors, normalization revisions, original and exact financial values, and all review decisions. Dates and decimals serialize as exact strings. The separate-cluster drill restores two owners with superseded batches, unknown basis, high-precision units and mapping-bound decisions, compares rows/constraints/grants/policies, validates separately recovered identifier keys, and rejects old sessions.
+The current recovery format **5** covers 26 application tables: 24 durable tables and the two omitted session/admission tables, including the events and movements added in Step 4D.2. It includes source predecessors, normalization revisions, original and exact financial values, and all review decisions. Dates and decimals serialize as exact strings. The separate-cluster drill restores two owners with superseded batches, unknown basis, high-precision units and mapping-bound decisions, compares rows/constraints/grants/policies, validates separately recovered identifier keys, and rejects old sessions.
 
-Formats 1–3 require their matching repository/schema for restoration followed by tested forward migrations. The current reader does not relabel old manifests. [Recovery bounds and hosted gaps](local-packaging.md#encrypted-foundation-recovery) remain in effect.
+Formats 1–4 require their matching repository/schema for restoration followed by tested forward migrations. The current reader does not relabel old manifests. [Recovery bounds and hosted gaps](local-packaging.md#encrypted-foundation-recovery) remain in effect.
 
 Synthetic tests cover exact replay, repeated occurrences, normalization changes, revised evidence, stale/concurrent review, archive/remapping, missing versus zero, SQL precision/ownership/immutability denials, complete-batch constraints, interrupted writes, pooled context and encrypted recovery. Check counts and actual CI results are recorded in the increment's PR.
 
-Next is [Step 4D.2: typed events and cash movements](financial-data-plan.md#delivery-increments). Uploads/parsers, browser review mutations, financial completion and connected UI remain separate increments.
+[Step 4D.2](financial-events.md) subsequently adds event persistence, explicit staged posting state, legacy-compatible versioned batch digests, and recovery format 5 covering 26 tables. Next is Step 4D.3: lot evidence and corrections. Uploads/parsers, browser review mutations, financial completion and connected UI remain separate increments.
