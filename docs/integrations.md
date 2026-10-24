@@ -1,6 +1,6 @@
 # Integration plan
 
-Research baseline: 21 October 2026. Public documentation identifies possible interfaces; authenticated access, scopes, data coverage, and automation behavior still need verification against the owner's accounts. No provider connection has been established.
+Research baseline: 21 October 2026; INDmoney public discovery refreshed on 24 October 2026. Public documentation identifies possible interfaces; authenticated access, scopes, data coverage, and automation behavior still need verification against the owner's accounts. No provider connection has been established.
 
 The implemented [connection-status walkthroughs](ui-prototype.md#connections-and-source-coverage-step-2e1) illustrate coverage and recovery using bundled fictional evidence. [Bank and investment samples](import-samples.md) provide fictional evidence inspection, reversible review decisions, and session-only completion receipts. They do not verify a provider API/export format, establish a connection, or change the research baseline below. Simulated permissions and attempts must remain labeled separately from actual capabilities.
 
@@ -8,9 +8,9 @@ The implemented [connection-status walkthroughs](ui-prototype.md#connections-and
 
 | Provider or data | Initial approach | Verification before implementation |
 | --- | --- | --- |
-| INDmoney Indian stocks and ETFs | Evaluate official INDstocks holdings and market-data endpoints | Account eligibility, ETF coverage, trade-history depth, source IDs, token scopes, rate limits, and renewal |
+| INDmoney Indian stocks and ETFs | Prioritize the official read-only portfolio interface; retain INDstocks REST as a separately assessed option | Custom-client eligibility, ETF coverage, source IDs, history depth, scopes, limits and renewal |
 | INDmoney US stocks and mutual funds | Evaluate the official read-only MCP connector; use statement imports where necessary | Custom-client access, unattended use, consent lifetime, holdings detail, historical transactions, and terms |
-| Advisor mutual funds | Detailed CAMS/KFintech/MFCentral consolidated account statement | Actual folios, direct/regular variants, demat versus non-demat coverage, supported periods, and opening balances |
+| Advisor mutual funds | Verify linked portfolio coverage first; detailed CAS for missing or incomplete evidence | Actual folios, direct/regular variants, demat versus non-demat coverage, supported periods, and opening balances |
 | UBS Accenture ESPP | Statements and available transaction exports | Export formats, purchase dates, fractional units, discounts, basis, dividends, withholding, fees, and transfers |
 | HDFC banking | Downloaded statements first; later evaluate automatic emailed statement ingestion | Representative format, account identifiers, transaction references, debit/credit signs, running balances, and delivery frequency |
 | SBI banking | Downloaded statements first; later evaluate automatic emailed statement ingestion | The same checks as HDFC, implemented as a separate parser |
@@ -19,6 +19,8 @@ The implemented [connection-status walkthroughs](ui-prototype.md#connections-and
 | Indian/US prices and FX | Official broker data or a suitable documented provider | Instruments, delayed versus live prices, historical coverage, adjusted prices, license, limits, and cost |
 
 ## INDmoney and INDstocks
+
+Prioritize the [official read-only portfolio route](indmoney-integration-plan.md) before selecting a mutual-fund statement format. Public OAuth discovery advertises the necessary capability candidates, but custom-client eligibility, actual coverage, permitted storage and renewal still require verification. Initial Stage 6 work now precedes the remaining Stage 5 file-parser work.
 
 INDstocks documents equity holdings in a demat account and separate trading endpoints. Its FAQ describes 24-hour tokens and a TOTP-based unattended generation path. That path involves sensitive credentials and must not be enabled merely to eliminate a manual renewal step. Prefer a provider-enforced read-only route; a trading-capable token is not made read-only by hiding trade buttons. See [holdings documentation](https://api-docs.indstocks.com/portfolio_funds/) and [authentication FAQ](https://api-docs.indstocks.com/faq/).
 

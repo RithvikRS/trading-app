@@ -14,7 +14,7 @@ Connections adds six source inspectors with separate financial, statement, quote
 
 Investment samples distinguish positions, activity, cash, and remaining lots. Same-folio source preferences retain one snapshot; regular/direct funds and Accenture positions at different accounts remain separate. Missing fees, acquisition history, and tax basis stay unknown. Completion records only a scoped sample receipt, and bank/investment reviews share undo/reset without changing portfolio totals.
 
-[Step 5A](docs/amfi-nav-contracts.md) begins the [connected investment flow](docs/investment-flow-plan.md) with bounded public NAV parsing and exact fund matching. Missing, stale, ambiguous or unsupported evidence cannot supply a usable valuation. [Step 5B.1](docs/parser-transport.md) adds bounded worker transport contracts. The worker, statement intake and connected investment screens remain later increments. [Step 5E.1](docs/connected-accounts.md) connects the protected Accounts page to saved account identities, with bounded pagination, explicit unavailable states and sign-in-bound requests. It shows no balances or provider connection claims.
+[Step 5A](docs/amfi-nav-contracts.md) begins the [connected investment flow](docs/investment-flow-plan.md) with bounded public NAV parsing and exact fund matching. Missing, stale, ambiguous or unsupported evidence cannot supply a usable valuation. [Step 5B.1](docs/parser-transport.md) adds bounded worker transport contracts. The [INDmoney integration plan](docs/indmoney-integration-plan.md) prioritizes official read-only acquisition before further statement parsing; Step 6A.1 implements bounded public discovery validation, while account authorization and data compatibility remain unperformed. The worker, statement intake and connected investment screens remain later increments. [Step 5E.1](docs/connected-accounts.md) connects the protected Accounts page to saved account identities, with bounded pagination, explicit unavailable states and sign-in-bound requests. It shows no balances or provider connection claims.
 
 ## Run locally
 
@@ -83,6 +83,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |
 | [Integrations](docs/integrations.md) | Provider options and verification |
+| [INDmoney integration](docs/indmoney-integration-plan.md) | Read-only portfolio route, public discovery evidence, authorization design, coverage and statement fallbacks |
 | [Operations](docs/operations.md) | Hosting, backups, recovery, incident handling |
 | [Development](docs/development.md) | Local commands, validation, conventional commits |
 | [Pull requests](docs/pull-requests.md) | Scope, evidence, merge policy |
