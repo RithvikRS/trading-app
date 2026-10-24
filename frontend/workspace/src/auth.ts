@@ -1,5 +1,7 @@
 // Only opaque cookies cross the session boundary. This module has no storage adapter.
 import { parsePreferences } from './preferences'
+import { ACCOUNT_PAGE_SIZE, accountCursor, parseAccountPage } from './accounts'
+import type { AccountNavigation, AccountsState } from './accounts'
 import type { DisplayPreferences, PreferenceSnapshot, PreferenceStatus } from './preferences'
 export type Session = { status: 'authenticated'; workspace_context: string; expires_at: string; idle_expires_at: string; fresh_until: string; factors: string[]; unverified_factors: string[] }
 export type Pending = { status: 'mfa_required'; factors: string[]; setup_key?: string }
@@ -9,7 +11,7 @@ export type Screen =
   | { kind: 'mfa'; pending: Pending; deadline: number }
   | { kind: 'recovery'; sent: boolean; message?: string }
   | { kind: 'password'; deadline: number }
-  | { kind: 'workspace'; session: Session; deadline: number; preferences: PreferenceSnapshot; preferenceStatus: PreferenceStatus }
+  | { kind: 'workspace'; session: Session; deadline: number; preferences: PreferenceSnapshot; preferenceStatus: PreferenceStatus; accounts: AccountsState }
   | { kind: 'blocked'; reason: 'offline' | 'unavailable' | 'forbidden' | 'limited' | 'context' | 'protocol' | 'signout'; retryAt?: number; notice?: string }
 
 export type State = { screen: Screen; busy: boolean; recovery: boolean }
@@ -39,13 +41,13 @@ async function request(path: string, signal: AbortSignal, body?: Json, method?: 
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (path !== '/bootstrap') headers['X-CSRFToken'] = csrf()
   if (body !== undefined) headers['Content-Type'] = 'application/json'
-  if (path === '/preferences') {
+  if (path === '/preferences' || path === '/finance/accounts/query') {
     if (typeof workspaceContext !== 'string' || !/^[0-9a-f]{64}$/.test(workspaceContext)) throw invalid()
     headers['X-Workspace-Context'] = workspaceContext
   }
   let response: Response
   try {
-    response = await fetch(path === '/preferences' ? '/api/v1/preferences' : `/api/v1/auth${path}`, {
+    response = await fetch(path === '/finance/accounts/query' ? '/api/v1/finance/accounts/query' : path === '/preferences' ? '/api/v1/preferences' : `/api/v1/auth${path}`, {
       method: method ?? (body === undefined ? 'GET' : 'POST'), headers,
       credentials: 'same-origin', mode: 'same-origin', redirect: 'error', cache: 'no-store',
       referrerPolicy: 'no-referrer', signal, body: body === undefined ? undefined : JSON.stringify(body),
@@ -71,7 +73,7 @@ async function request(path: string, signal: AbortSignal, body?: Json, method?: 
       const { done, value } = await reader.read()
       if (done) break
       size += value.length
-      if (size > 8192) throw invalid()
+      if (size > (path === '/finance/accounts/query' ? 256 * 1024 : 8192)) throw invalid()
       chunks.push(value)
     }
   } finally { await reader.cancel() }
@@ -144,7 +146,7 @@ export class AuthController {
     const preferences = loaded ?? (previous.kind === 'workspace' ? previous.preferences : undefined)
     if (!preferences) throw invalid()
     this.lastCheck = performance.now()
-    this.set({ kind: 'workspace', session, preferences, preferenceStatus: loaded ? 'idle' : previous.kind === 'workspace' ? previous.preferenceStatus : 'idle', deadline: performance.now() + Math.min(Date.parse(session.expires_at), Date.parse(session.idle_expires_at)) - now })
+    this.set({ kind: 'workspace', session, preferences, accounts: previous.kind === 'workspace' ? previous.accounts : { kind: 'idle' }, preferenceStatus: loaded ? 'idle' : previous.kind === 'workspace' ? previous.preferenceStatus : 'idle', deadline: performance.now() + Math.min(Date.parse(session.expires_at), Date.parse(session.idle_expires_at)) - now })
   }
   private async openWorkspace(signal: AbortSignal, current: () => boolean) {
     const session = await request('/session', signal)
@@ -211,6 +213,29 @@ export class AuthController {
     const result = await request('/session/activity', signal, {})
     if (current()) this.activate(result.data, result.now)
   })
+  loadAccounts = (direction: AccountNavigation = 'first') => {
+    const previous = this.state.screen
+    if (previous.kind !== 'workspace') return Promise.resolve()
+    const cursor = accountCursor(previous.accounts, direction)
+    if (!cursor) return Promise.resolve()
+    return this.run(async (signal, current, latest) => {
+      if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+      this.set({ ...previous, accounts: { kind: 'loading', cursor } }, true)
+      try {
+        const result = await request('/finance/accounts/query', signal, { limit: ACCOUNT_PAGE_SIZE, after: cursor.after }, undefined, previous.session.workspace_context)
+        if (!current()) { if (latest()) throw new AuthError('unavailable'); return }
+        if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+        const page = parseAccountPage(result.data, cursor.after)
+        this.set({ ...previous, accounts: { kind: 'ready', cursor, page } })
+      } catch (error) {
+        if (!latest()) return
+        if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+        if (error instanceof AuthError && ['unavailable', 'limited'].includes(error.reason)) {
+          this.set({ ...previous, accounts: { kind: 'failed', cursor, limited: error.reason === 'limited' } })
+        } else throw error
+      }
+    })
+  }
   reloadPreferences = () => {
     const previous = this.state.screen
     if (previous.kind !== 'workspace') return Promise.resolve()
