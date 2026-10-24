@@ -43,3 +43,5 @@ Migration creates no owner or financial data. The disposable-only downgrade refu
 ## Verification
 
 [Contract tests](../backend/tests/test_markets.py) cover exact decimals, missing/nonpositive evidence, currency direction, timestamp precision and unsupported identities. [PostgreSQL tests](../backend/database_tests/test_markets.py) exercise replay conflicts, correction/selection history, concurrency, separate fund variants, foreign IDs, direct-SQL tampering, grants, forced policies, bounded reads and migration safety. The [encrypted recovery test](../backend/database_tests/test_recovery.py) includes all market tables alongside existing financial history. Run the shared [verification commands](verification.md); only fabricated evidence is used.
+
+[Step 4G.2b](snapshot-market-reads.md) exposes exact quote/NAV/FX observations, correction links, instrument listings and choice history through the authenticated API. Single-selection resolution reuses this service's rules and separates current usable evidence from historical or stale choices. It does not establish freshness or compute a valuation.

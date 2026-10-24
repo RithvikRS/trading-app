@@ -2,7 +2,7 @@
 
 Step 4G.1 exposes owned account, source-mapping, instrument and position identities through the authenticated Python API. These records carry no inferred balances, holdings quantities or valuation totals. The protected frontend remains empty; connected views follow with their complete data flow in Stage 5.
 
-[Step 4G.2a](event-lot-reads.md) adds dated event/lot evidence and retained history. Step 4G.2b adds snapshot and market evidence/selection reads. Step 4G.3 adds import/review/receipt inspection and the remaining persistence acceptance checks. No financial mutation, upload, download from a provider, export or administrative route is introduced by these read increments.
+[Step 4G.2a](event-lot-reads.md) adds dated event/lot evidence and retained history. [Step 4G.2b](snapshot-market-reads.md) adds dated snapshot/market evidence, listings and selection history/resolution. Step 4G.3 adds import/review/receipt inspection and the remaining persistence acceptance checks. No financial mutation, upload, download from a provider, export or administrative route is introduced by these read increments.
 
 ## Request contract
 

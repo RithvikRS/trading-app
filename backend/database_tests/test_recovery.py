@@ -52,7 +52,7 @@ from trading_db.snapshots import SnapshotTransaction
 from trading_db.workspace import PreferenceUpdate, WorkspaceDatabase
 
 
-def identity_pages(client, headers):
+def financial_pages(client, headers):
     def query(resource, **body):
         response = client.post(f"/api/v1/finance/{resource}", headers=headers, json=body)
         assert response.status_code == 200
@@ -94,6 +94,50 @@ def identity_pages(client, headers):
                     pages["lot_history"][observation["id"]] = query(
                         "lots/observations/history", id=observation["id"]
                     )
+    pages["snapshots"] = {}
+    pages["snapshot_history"] = {}
+    pages["snapshot_selections"] = {}
+    pages["snapshot_selection_history"] = {}
+    pages["snapshot_resolution"] = {}
+    for account in pages["accounts"]["items"]:
+        snapshots = query("snapshots/query", account_id=account["id"])
+        pages["snapshots"][account["id"]] = snapshots
+        for snapshot in snapshots["items"]:
+            pages["snapshot_history"][snapshot["id"]] = query(
+                "snapshots/history", id=snapshot["id"]
+            )
+        choices = query("snapshots/selections/query", account_id=account["id"])
+        pages["snapshot_selections"][account["id"]] = choices
+        for choice in choices["items"]:
+            pages["snapshot_selection_history"][choice["id"]] = query(
+                "snapshots/selections/history", id=choice["id"]
+            )
+            pages["snapshot_resolution"][choice["id"]] = query(
+                "snapshots/selections/resolve", id=choice["id"]
+            )
+    pages["listings"] = {}
+    pages["markets"] = {}
+    pages["market_selections"] = {}
+    pages["market_selection_history"] = {}
+    pages["market_resolution"] = {}
+    targets = [("fx", dict(kind="fx"))]
+    for instrument in pages["instruments"]["items"]:
+        pages["listings"][instrument["id"]] = query(
+            "listings/query", instrument_id=instrument["id"]
+        )
+        kind = "nav" if instrument["asset_class"] == "mutual_fund" else "quote"
+        targets.append((instrument["id"], dict(kind=kind, instrument_id=instrument["id"])))
+    for key, body in targets:
+        pages["markets"][key] = query("markets/observations/query", **body)
+        choices = query("markets/selections/query", **body)
+        pages["market_selections"][key] = choices
+        for choice in choices["items"]:
+            pages["market_selection_history"][choice["id"]] = query(
+                "markets/selections/history", id=choice["id"]
+            )
+            pages["market_resolution"][choice["id"]] = query(
+                "markets/selections/resolve", id=choice["id"]
+            )
     return pages
 
 
@@ -852,9 +896,10 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 assert completion_baselines[owner] == before_rotation
     finally:
         account_store.close()
-    original_pages = identity_pages(client, headers)
+    original_pages = financial_pages(client, headers)
     assert len(original_pages["accounts"]["items"]) == 3
     assert original_pages["event_history"] and original_pages["lot_history"]
+    assert original_pages["snapshot_history"] and original_pages["market_resolution"]
     key = Fernet.generate_key()
     started = time.monotonic()
     with pytest.raises(DatabaseFailure):
@@ -1200,7 +1245,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                         == 401
                     )
                     fresh_headers = login(recovered_client)
-                    assert identity_pages(recovered_client, fresh_headers) == original_pages
+                    assert financial_pages(recovered_client, fresh_headers) == original_pages
             finally:
                 restored_workspace.close()
                 restored_sessions.close()
