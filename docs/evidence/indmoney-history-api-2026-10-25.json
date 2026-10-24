@@ -1,0 +1,28 @@
+{
+  "checked_on": "2026-10-25",
+  "assessment": "public_documentation_only",
+  "specification": {
+    "url": "https://api-docs.indstocks.com/openapi-spec.yaml",
+    "bytes": 60445,
+    "sha256": "10e61128dbc58133b6c1f4cd967805951b7f3fd3cdd7741992351496f747ca02",
+    "paths": 27,
+    "http_operations": 28
+  },
+  "findings": {
+    "order_book_documented_period": "current_trading_day",
+    "trade_book_documented_period": "current_trading_day",
+    "per_order_retention": "unverified",
+    "overview_per_order_path": "/trades/{order_id}",
+    "detailed_specification_per_order_path": "/order/trades",
+    "market_history_is_account_activity": false,
+    "indmoney_authenticated_tool_list": "not_obtained",
+    "complete_indian_us_mutual_fund_history": "not_established"
+  },
+  "authenticated_requests_made": 0,
+  "registrations_created": 0,
+  "credentials_accessed": false,
+  "financial_payloads_accessed": false,
+  "historical_ingestion_enabled": false,
+  "next_acquisition_priority": "authenticated_api_capability_verification",
+  "statement_format_selected": false
+}

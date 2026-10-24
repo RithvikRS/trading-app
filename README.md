@@ -93,6 +93,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Integrations](docs/integrations.md) | Provider options and verification |
 | [INDmoney integration](docs/indmoney-integration-plan.md) | Read-only portfolio route, public discovery evidence, authorization design, coverage and statement fallbacks |
 | [INDmoney compatibility](docs/indmoney-compatibility.md) | Observed custom-client registration/handoff, history limitations, renewal findings and remaining account tests |
+| [INDmoney history APIs](docs/indmoney-history-api.md) | API-first historical acquisition assessment, current-day trade limits and remaining authenticated capability checks |
 | [INDmoney reader](docs/indmoney-reader.md) | Bounded read-only engine, exact evidence, incomplete coverage and the live schema compatibility gate |
 | [Operations](docs/operations.md) | Hosting, backups, recovery, incident handling |
 | [Development](docs/development.md) | Local commands, validation, conventional commits |
