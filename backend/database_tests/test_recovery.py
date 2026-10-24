@@ -22,6 +22,7 @@ from trading_auth.session_models import verifier
 from trading_db import migrate, recovery
 from trading_db.account_keys import ReferenceKeys, load_keys
 from trading_db.accounts import AccountDatabase, AccountDefinition
+from trading_db.completion_baseline import CompletionBaseline
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.enrollment import provision_owner
 from trading_db.event_evidence import EventEvidenceTransaction
@@ -617,13 +618,17 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
         account_store.close()
     identifier_keys = ReferenceKeys(identifier_material, 2)
     account_store = AccountDatabase(source_url("runtime"), source_project, identifier_keys)
+    completion_baselines = {}
     try:
         for owner in (own, other):
             with account_store.transaction(owner) as unit:
+                before_rotation = CompletionBaseline(unit._unit).current()
                 assert unit.rotate_references() == 1
                 assert (
                     EventEvidenceTransaction(unit._unit, identifier_keys).rotate_references() == 2
                 )
+                completion_baselines[owner] = CompletionBaseline(unit._unit).current()
+                assert completion_baselines[owner] == before_rotation
     finally:
         account_store.close()
     key = Fernet.generate_key()
@@ -756,6 +761,9 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             try:
                 for owner in (own, other):
                     with restored_accounts.transaction(owner) as unit:
+                        assert (
+                            CompletionBaseline(unit._unit).current() == completion_baselines[owner]
+                        )
                         assert len(unit.list()) == 3
                         source = unit.source("cas", "FAKE-FOLIO")
                         assert source.revision == 2

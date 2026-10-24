@@ -70,3 +70,5 @@ Record local results separately from the actual GitHub run. A local pass does no
 [Step 4F.2](reconciliation-contracts.md) adds independent cash/unit reconciliation examples, hostile decimal-context checks, bounded aggregate/JSON checks, incomplete coverage and missing-value cases, source/combined checkpoint conflicts and direct revalidation of malformed nested models. No database migration or hosted/provider verification is introduced.
 
 [Step 4F.3.1](statement-boundaries.md) adds source-period and boundary validation, exact normalization replay, changed-interpretation history, one-day checkpoint conflict cases, direct-SQL bypass checks, transactional migration/legacy hash checks and encrypted recovery of the new metadata. No hosted source or parser verification is introduced.
+
+[Step 4F.3.2a](completion-preflight.md) adds strict public manifest parsing, private reference omission, owner/role denial, stale state and rollback checks, bounded database reads, concurrent lock/snapshot tests, migration round trips and recovered baseline equality. Financial completion remains a separate increment.
