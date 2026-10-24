@@ -22,6 +22,7 @@ type CandidateKind = Literal[
     "cash_snapshot",
     "lot_acquisition",
     "lot_remaining",
+    "cancellation",
     "unsupported",
 ]
 type ValueRole = Literal[
@@ -33,6 +34,7 @@ type ValueRole = Literal[
     "withholding",
     "acquisition_cost",
     "reported_tax_basis",
+    "discount_amount",
 ]
 SECURITY_KINDS = {
     "buy",
@@ -46,8 +48,10 @@ SECURITY_KINDS = {
 }
 SNAPSHOT_KINDS = {"position_snapshot", "cash_snapshot", "lot_acquisition", "lot_remaining"}
 TRADE_KINDS = {"buy", "sell", "subscription", "redemption"}
+LOT_KINDS = {"lot_acquisition", "lot_remaining"}
 EVENT_KINDS = TRADE_KINDS | {"cash_movement", "dividend", "fee", "withholding"}
 COMPONENTS = {
+    "cancellation": set(),
     "cash_movement": {"net_cash", "fee", "withholding"},
     "cash_snapshot": {"net_cash"},
     "fee": {"net_cash"},
@@ -69,6 +73,8 @@ COMPONENTS = {
         for kind in ("position_snapshot", "lot_acquisition", "lot_remaining")
     },
 }
+for _kind in LOT_KINDS:
+    COMPONENTS[_kind] = COMPONENTS[_kind] | {"discount_amount"}
 
 
 class ObservationDefinition(Definition):
@@ -141,6 +147,7 @@ class CandidateDefinition(Definition):
     booking_date: str | None = Field(default=None, repr=False)
     value_date: str | None = Field(default=None, repr=False)
     as_of_date: str | None = Field(default=None, repr=False)
+    acquisition_date: str | None = Field(default=None, repr=False)
     blocked_reason: Literal["not_supplied", "unsupported", "conflicting_evidence"] | None = None
     values: tuple[StagedValue, ...] = Field(default=(), max_length=8, repr=False)
 
@@ -148,9 +155,18 @@ class CandidateDefinition(Definition):
     def structure(self) -> CandidateDefinition:
         if self.instrument_identifier_id == UUID(int=0):
             raise ValueError("Invalid security reference.")
-        if self.kind in SNAPSHOT_KINDS and self.posting_state is not None:
-            raise ValueError("Snapshots do not have an activity posting state.")
-        for name in ("trade_date", "settlement_date", "booking_date", "value_date", "as_of_date"):
+        if self.kind in SNAPSHOT_KINDS | {"cancellation"} and self.posting_state is not None:
+            raise ValueError("This evidence does not have an activity posting state.")
+        if self.acquisition_date is not None and self.kind not in LOT_KINDS:
+            raise ValueError("Acquisition dates require lot evidence.")
+        for name in (
+            "trade_date",
+            "settlement_date",
+            "booking_date",
+            "value_date",
+            "as_of_date",
+            "acquisition_date",
+        ):
             value = getattr(self, name)
             if value is not None:
                 FinancialDate(value)
@@ -168,6 +184,8 @@ class CandidateDefinition(Definition):
             return "not_supplied"
         if any(value.role not in COMPONENTS[self.kind] for value in self.values):
             return "unsupported_component"
+        if self.kind == "cancellation":
+            return None if self.booking_date is not None else "not_supplied"
         values: dict[str, Decimal | None] = {
             item.role: item.financial().value for item in self.values
         }
@@ -185,6 +203,20 @@ class CandidateDefinition(Definition):
         if self.kind in SECURITY_KINDS and self.instrument_identifier_id is None:
             return "unresolved_instrument"
         quantity, cash = values.get("quantity"), values.get("net_cash")
+        if self.kind in LOT_KINDS and (
+            (self.kind == "lot_acquisition" and quantity is not None and quantity == 0)
+            or any(
+                amount is not None and amount < 0
+                for role in ("acquisition_cost", "reported_tax_basis", "discount_amount")
+                for amount in (values.get(role),)
+            )
+            or (
+                self.acquisition_date is not None
+                and self.as_of_date is not None
+                and self.acquisition_date > self.as_of_date
+            )
+        ):
+            return "conflicting_evidence"
         if quantity is not None and (
             (self.kind in ("buy", "subscription") and quantity <= 0)
             or (self.kind in ("sell", "redemption") and quantity >= 0)

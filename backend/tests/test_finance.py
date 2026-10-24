@@ -181,7 +181,7 @@ def test_kind_and_context_combinations_are_closed(kwargs):
 
 
 @pytest.mark.parametrize(
-    "meaning", ["acquisition_cost", "reported_tax_basis", "fee", "withholding"]
+    "meaning", ["acquisition_cost", "reported_tax_basis", "discount_amount", "fee", "withholding"]
 )
 def test_monetary_evidence_preserves_its_meaning_separately_from_cash(meaning):
     evidence = FinancialValue("monetary_evidence", "12.12345678", currency="USD", meaning=meaning)
