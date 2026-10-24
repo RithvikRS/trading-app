@@ -1,0 +1,53 @@
+# Source evidence and review staging: Step 4D.1
+
+[Normalized contracts](../backend/trading_db/import_contracts.py), [internal services](../backend/trading_db/imports.py), and migration [0008_import_staging](../backend/migrations/versions/0008_import_staging.py) persist source observations, complete normalized batches, exact staged values, and reversible review history. Including a row records a review choice. It does not write a trade, lot, balance, position quantity, or reconciliation receipt.
+
+## Evidence identity and normalization
+
+An observation belongs to one protected source account. It records an exact lowercase SHA-256 digest with algorithm version, a supplied calendar-date period or explicit unknown period, and coverage (`complete_activity`, `partial_activity`, `snapshot`, or `unknown`). Coverage is a source assertion, not proof of reconciliation. The server supplies ingestion time. Source dates are not converted to invented midnight timestamps; a later parser must preserve other precision through a separately supported contract.
+
+Owner, source account, algorithm and document digest scope replay. An exact repeat returns the existing observation. Different metadata under that identity conflicts. A revised document can explicitly supersede one prior observation from the same source; unique successors prevent branching, and the prior evidence remains readable. The service accepts already-normalized synthetic input. No file is read or retained, so a digest alone neither provides document recovery nor proves the document's authenticity.
+
+Each complete batch binds an observation to a normalizer name/version, canonical content digest, immutable occurrence rows, and a revision. Changed normalized content requires a different normalizer version; reusing any previously recorded version with different content conflicts. Exact replay compares canonical content as well as its digest. Reordered value components do not create a new batch; original decimal strings remain part of the content. New normalization uses the expected current revision and supersedes earlier review.
+
+Occurrence numbers preserve source order and distinguish repeated legitimate transactions. Two identical amounts on the same date remain separate rows. Dates, descriptions and amount similarity never deduplicate them. Document replay at this boundary is distinct from economic event deduplication and completion, which remain Step 4F.
+
+## Rows and exact values
+
+Rows use explicit candidate kinds: cash movements; buys/sells and subscriptions/redemptions; dividends, fees and withholding; position/cash snapshots; acquisition/remaining-lot evidence; and unsupported records. Trade, settlement, booking, value and as-of calendar dates remain separate. An optional public instrument identifier points to its independently versioned mapping. No canonical account, security or position is guessed from a label.
+
+The value table has finite component roles: quantity, net/gross cash, unit price, fee, withholding, acquisition cost and reported tax basis. Each retains its source decimal string separately from exact PostgreSQL `numeric`, with applicable INR/USD currency and an explicit missing reason. SQL checks the original string, numeric equality, finite magnitude, fractional precision and required context; there is no rounding `numeric(p,s)` cast. These checks implement the relevant [4A bounds](financial-values.md#values-and-serialization): 2 fractional digits for cash, 8 for monetary evidence, and 12 for units/prices. A reported negative zero keeps its source text while its normalized numeric value is zero.
+
+Missing basis remains null, including on an otherwise reviewable lot snapshot. Required missing values, unsupported kinds/components, inconsistent signs and unresolved identities block inclusion. A malformed numeric token is rejected at the normalized boundary; an adapter can retain the occurrence as unsupported without putting arbitrary raw text into these tables. Unsupported records can be inspected or explicitly excluded. This does not turn incomplete evidence into complete history.
+
+Trade candidates require signed units and independently supplied net cash: buys/subscriptions add units and debit cash; sells/redemptions do the reverse. Cash activity needs a booking date; trades need a trade date; snapshots/lots need a supplied as-of date. Optional costs, fees, gross cash and withholding remain independent evidence. Inclusion does not attest that gross, fees and net reconcile, establish an event's posted/pending state, select a tax-lot method, or establish full historical coverage. Typed posting is 4D.2; sourced lot/correction contracts are 4D.3; reconciliation and atomic completion are 4F.
+
+## Review lifecycle
+
+Rows derive a current state: `reviewable`, `blocked`, `included`, `excluded`, or `superseded`. Every include, exclude and reopen appends a revision with an immediate predecessor and an allowlisted reason. Expected revisions reject stale/concurrent decisions. Earlier decisions cannot be rewritten or deleted.
+
+An inclusion binds the exact current account and instrument mapping revisions. The account must be active, currencies must belong to it, and instrument/asset/listing relationships must be compatible. A changed or unlinked mapping blocks an earlier inclusion until it is reviewed again; account archival also blocks it. New normalization or superseding evidence makes the old batch superseded. Earlier decisions remain historical evidence, never a current authorization to post.
+
+Exclusion supports an explicit user choice or a suspected duplicate; it does not declare a confirmed duplicate or waive future reconciliation. Reopen returns the occurrence to review. Re-including an excluded row repeats all current checks. There is no prototype-style deletion/reset of this durable history.
+
+## Isolation, atomicity and limits
+
+The five tables are `source_observations`, `import_batches`, `staged_rows`, `staged_values`, and `review_decisions`. Every relationship is owner-scoped, with forced active-owner row policies and composite foreign keys. Runtime receives SELECT and explicit INSERT columns; updates, deletes, truncation and audit-time assignment are denied. The authentication role has no access. Fixed errors make unknown and foreign resources indistinguishable.
+
+Services compose within the existing trusted workspace transaction and share the account mutation lock. No external file/provider I/O occurs while the lock is held. Evidence, rows, values and review operations use savepoints; a failed multi-row operation leaves no partial batch. Deferred count constraints require exactly the declared rows and value components at commit. Since those declarations and children are immutable, later SQL inserts cannot expand a reviewed batch.
+
+Limits are 100 rows per batch, eight distinct value roles per row, and 1,000 records per owner/table. Read pages default to 25 and cap at 100; row cursors are exclusive occurrence numbers. Complete batch inspection is bounded by its 100-row limit and verifies its canonical digest. These are initial project limits, not provider format or production capacity claims.
+
+No filename, statement binary, unrestricted JSON/raw description, PAN, plaintext account reference, provider credential, or raw provider transaction identifier is accepted. Private source-account identity remains in [separate encrypted custody](accounts-source-mappings.md#private-references-and-keys). Normalized financial values are private data protected by database permissions, owner isolation and encrypted recovery; they are not logged or put in URLs/browser storage. Object representations suppress their contents.
+
+## Migration, recovery and verification
+
+Apply the [local migration command](database-foundation.md#commands-and-lifecycle) to reach `0008_import_staging`. Existing identities/accounts/instruments are preserved; no owner or financial data is seeded. Prior shared migrations are unchanged. Tests cover transactional migration failure and disposable downgrade/re-upgrade.
+
+Recovery format **4** covers 22 application tables: 20 durable tables and the two omitted session/admission tables. It includes source predecessors, normalization revisions, original and exact financial values, and all review decisions. Dates and decimals serialize as exact strings. The separate-cluster drill restores two owners with superseded batches, unknown basis, high-precision units and mapping-bound decisions, compares rows/constraints/grants/policies, validates separately recovered identifier keys, and rejects old sessions.
+
+Formats 1–3 require their matching repository/schema for restoration followed by tested forward migrations. The current reader does not relabel old manifests. [Recovery bounds and hosted gaps](local-packaging.md#encrypted-foundation-recovery) remain in effect.
+
+Synthetic tests cover exact replay, repeated occurrences, normalization changes, revised evidence, stale/concurrent review, archive/remapping, missing versus zero, SQL precision/ownership/immutability denials, complete-batch constraints, interrupted writes, pooled context and encrypted recovery. Check counts and actual CI results are recorded in the increment's PR.
+
+Next is [Step 4D.2: typed events and cash movements](financial-data-plan.md#delivery-increments). Uploads/parsers, browser review mutations, financial completion and connected UI remain separate increments.

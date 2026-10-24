@@ -129,3 +129,7 @@ The bounded encrypted foundation export omits sessions/provider state and recons
 ## Instrument identity persistence
 
 [Step 4C](instrument-identities.md) extends forced owner policies and composite references to securities, fund variants, listings, provider mappings and account positions. SQL constraints enforce check digits and explicit variant/currency relationships; provider corrections retain revision history. Security identifiers must come from supported source evidence, not name/ticker similarity. All six tables are included in encrypted recovery with reconstructed grants/policies; no financial route or real catalog seed is added.
+
+## Import evidence and review persistence
+
+[Step 4D.1](import-staging.md) uses immutable observations, normalized batches and append-only review revisions under forced owner policies. Exact SQL value constraints reject rounding/coercion, while composite references and current mapping checks prevent cross-owner or stale inclusion. Declared row/component counts prevent additions to reviewed evidence. A review choice has no financial posting effect. All five tables join encrypted recovery; no file upload, raw statement storage, unrestricted payload, financial route or provider connection is added.

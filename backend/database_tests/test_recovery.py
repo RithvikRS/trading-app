@@ -24,6 +24,13 @@ from trading_db.account_keys import ReferenceKeys, load_keys
 from trading_db.accounts import AccountDatabase, AccountDefinition
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.enrollment import provision_owner
+from trading_db.import_contracts import (
+    BatchDefinition,
+    CandidateDefinition,
+    ObservationDefinition,
+    StagedValue,
+)
+from trading_db.imports import ImportTransaction
 from trading_db.instruments import (
     IdentifierDefinition,
     InstrumentDefinition,
@@ -135,6 +142,51 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 )
                 securities.map(reference.id, direct.id, expected_revision=0)
                 securities.map(reference.id, regular.id, expected_revision=1)
+                staging = ImportTransaction(unit._unit)
+                evidence = staging.observation(
+                    source.id,
+                    ObservationDefinition(
+                        digest="a" * 64,
+                        coverage="snapshot",
+                        period_start="2026-10-24",
+                        period_end="2026-10-24",
+                    ),
+                )
+                candidate = CandidateDefinition(
+                    occurrence=1,
+                    kind="position_snapshot",
+                    instrument_identifier_id=reference.id,
+                    as_of_date="2026-10-24",
+                    values=(
+                        StagedValue(role="quantity", source="0.123456789012"),
+                        StagedValue(role="unit_price", source="76.50000", currency="INR"),
+                        StagedValue(
+                            role="reported_tax_basis",
+                            source=None,
+                            currency="INR",
+                            missing_reason="incomplete_history",
+                        ),
+                    ),
+                )
+                normalized = BatchDefinition(
+                    normalizer="synthetic", normalizer_version="1", rows=(candidate,)
+                )
+                first_batch = staging.stage(evidence.id, normalized, expected_revision=0)
+                first_row = staging.rows(first_batch.id)[0]
+                staging.decide(first_row.id, "include", expected_revision=0)
+                staging.decide(first_row.id, "exclude", expected_revision=1)
+                staging.decide(first_row.id, "include", expected_revision=2)
+                second_batch = staging.stage(
+                    evidence.id,
+                    normalized.model_copy(update={"normalizer_version": "2"}),
+                    expected_revision=1,
+                )
+                staging.decide(staging.rows(second_batch.id)[0].id, "include", expected_revision=0)
+                staging.observation(
+                    source.id,
+                    evidence.definition.model_copy(update={"digest": "b" * 64}),
+                    previous_id=evidence.id,
+                )
                 securities.position(first.id, direct.id, "folio")
                 securities.position(second.id, regular.id, "folio")
                 brokerage = unit.create(
@@ -253,6 +305,13 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             )
             assert counts["fund_schemes"] == counts["instrument_listings"] == 2
             assert counts["instrument_identifiers"] == 4
+            assert (
+                counts["source_observations"]
+                == counts["import_batches"]
+                == counts["staged_rows"]
+                == 4
+            )
+            assert counts["staged_values"] == 12 and counts["review_decisions"] == 8
             assert signature(restored_admin) == baseline
             restored_data = recovery.decode_snapshot(
                 recovery.export_snapshot(
@@ -296,6 +355,20 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                         )
                         assert securities.mapping(reference.id).instrument_id == record.id
                         assert [r.revision for r in securities.history(reference.id)] == [2, 1]
+                        staging = ImportTransaction(unit._unit)
+                        observations = staging.observations(source.id)
+                        assert len(observations) == 2
+                        original = next(item for item in observations if item.previous_id is None)
+                        latest = staging.latest_batch(original.id)
+                        assert latest.revision == 2
+                        row = staging.rows(latest.id)[0]
+                        assert row.status == "superseded"
+                        assert {value.role: value.source for value in row.definition.values} == {
+                            "quantity": "0.123456789012",
+                            "unit_price": "76.50000",
+                            "reported_tax_basis": None,
+                        }
+                        assert staging.history(row.id)[0].action == "include"
             finally:
                 restored_accounts.close()
             restored_workspace = WorkspaceDatabase(target.url("runtime"), target.project)

@@ -1,6 +1,6 @@
 # Step 4: Financial data model and persistence
 
-Status: [Step 4A exact value contracts](financial-values.md), [Step 4B accounts/source mappings](accounts-source-mappings.md), and [Step 4C instrument identities](instrument-identities.md) are implemented. Increments 4D–4G remain planned; financial endpoints, imports and connected interfaces are not implemented. Security, exact values, provenance, and recoverability are the acceptance criteria.
+Status: [Step 4A exact value contracts](financial-values.md), [Step 4B accounts/source mappings](accounts-source-mappings.md), [Step 4C instrument identities](instrument-identities.md), and [Step 4D.1 evidence/review staging](import-staging.md) are implemented. Increments 4D.2–4G remain planned; financial endpoints, file imports and connected interfaces are not implemented. Security, exact values, provenance, and recoverability are the acceptance criteria.
 
 ## Result and scope
 
@@ -14,21 +14,21 @@ Use fabricated fixtures and disposable PostgreSQL. The existing demo remains sep
 
 ## Delivery increments
 
-Each increment includes focused tests, updated documentation, a conventional commit on `dev`, and a PR into `main`. Steps 4A–4C are implemented; 4D–4G remain planned. Schema-changing increments include their own recovery-format update and restore tests; recovery is not deferred to the last increment.
+Each increment includes focused tests, updated documentation, a conventional commit on `dev`, and a PR into `main`. Steps 4A–4C and 4D.1 are implemented; 4D.2–4G remain planned. Schema-changing increments include their own recovery-format update and restore tests; recovery is not deferred to the last increment.
 
 | Increment | Deliverable | Acceptance evidence | Conventional commit |
 | --- | --- | --- | --- |
 | 4A | [Implemented exact financial value, currency, date, and missing-value contracts](financial-values.md) | Decimal strings round-trip exactly; floats, non-finite numbers, unsupported scales/ranges, invalid dates, and ambiguous timestamps fail; signs and rounding have independent examples | `feat(finance): define exact financial value contracts` |
 | 4B | [Implemented canonical accounts, currencies, protected source accounts, and versioned mappings](accounts-source-mappings.md) | HDFC/SBI and Indian/US/UBS accounts remain distinct; several sources can describe one canonical account; private references have protected custody; archive preserves history; composite ownership checks and recovery pass | `feat(accounts): persist owned accounts and source mappings` |
 | 4C | [Implemented instruments, listings, fund variants, provider identifiers and position identities](instrument-identities.md) | Same name/ticker cannot merge securities; direct/regular and growth/distribution variants remain distinct; positions at different accounts remain separate; identifiers and mapping revisions are constrained | `feat(investments): persist instruments and fund identities` |
-| 4D.1 | Provenance, import batches, normalized staged rows, and versioned review decisions | Source observations are immutable; staged data cannot change financial state; row/account/owner mappings are checked; invalid/conflicting data remains blocked; revised evidence invalidates stale decisions | `feat(imports): persist source evidence and review staging` |
+| 4D.1 | [Implemented provenance, import batches, normalized staged rows, and versioned review decisions](import-staging.md) | Source observations are immutable; staged data cannot change financial state; row/account/owner mappings are checked; invalid/conflicting data remains blocked; revised evidence invalidates stale decisions | `feat(imports): persist source evidence and review staging` |
 | 4D.2 | Typed investment events, quantity movements, and native cash movements | Buy/sell, subscription/redemption, dividends, fees/withholding, and cash movement contracts preserve independent components and dates; posted/pending state is explicit; invalid multi-row writes roll back | `feat(finance): persist investment events and cash movements` |
 | 4D.3 | Sourced acquisition/remaining-lot evidence and auditable corrections | Purchase cost differs from reported tax basis; missing basis stays unknown; lot balances need supporting coverage; corrections preserve prior versions and cannot apply twice or branch concurrently | `feat(investments): preserve lot evidence and correction history` |
 | 4E | Dated position/cash snapshots, quote/NAV and FX observations, and source selection | Snapshots do not create trades; duplicate descriptions of a position are not summed; missing prices/FX remain unavailable; date, source, scope and completeness survive persistence | `feat(portfolio): persist snapshots and valuation evidence` |
 | 4F | Atomic review completion, scoped deduplication, idempotency, and reconciliation receipts | Exact replay is a no-op; identical legitimate transactions survive; changed payload under the same identity conflicts; concurrent/stale commits, exclusions, partial failures and retries have deterministic results | `feat(imports): commit reviewed financial batches atomically` |
 | 4G | Protected financial read APIs and persistence acceptance | Active MFA/session ownership on every read; bounded pagination and filters; no financial values in logs/URLs; two-owner denial, unavailable/partial responses, restart persistence and expanded encrypted recovery pass | `feat(api): expose protected financial read models` |
 
-Step **4A** provides exact value contracts. Step **4B** adds four owner-scoped tables and internal account/mapping services with key rotation and recovery. Step **4C** adds six instrument/position identity tables and versioned provider mappings. These increments add no route, seed data, provider access, or frontend change. Next is **4D.1**, source evidence and review staging; later increments follow the table's order.
+Step **4A** provides exact value contracts. Step **4B** adds four owner-scoped tables and internal account/mapping services with key rotation and recovery. Step **4C** adds six instrument/position identity tables and versioned provider mappings. These increments add no route, seed data, provider access, or frontend change. Step **4D.1** adds five immutable evidence/staging/review tables without changing financial state. Next is **4D.2**, typed events and cash movements; later increments follow the table's order.
 
 ## Proposed records and relationships
 
@@ -69,7 +69,7 @@ An institution/provider is not an ownership boundary. Initially keep instrument 
 
 Use strict Python `Decimal` values created from validated decimal strings, with PostgreSQL exact numeric storage. Financial JSON values are decimal strings accompanied by currency/unit context; floats, JSON number coercion, booleans, NaN/infinity, exponent notation, thousands separators, and excessive input length are rejected at the normalized boundary. A future parser may normalize a documented source format before this boundary while preserving its evidence. Normalize negative zero consistently without rewriting the original supplied representation.
 
-Implemented Python bounds are project limits, not claims about provider export formats. SQL enforcement remains part of later schema increments:
+Implemented Python bounds are project limits, not claims about provider export formats. Step 4D.1 enforces the relevant staged quantity, price, cash and monetary-evidence bounds in PostgreSQL too. Posted events and other record-specific constraints follow in their schema increments:
 
 | Value | Fractional digits | Magnitude and interpretation |
 | --- | --- | --- |
@@ -141,7 +141,7 @@ Extend the existing browser boundary deliberately to these new route families: i
 
 Start from migration `0005_preference_revisions`. Each schema increment adds a forward migration and tests fresh creation, upgrade with existing owners/preferences/sessions, repeated application, atomic failure, role grants and owner constraints. Do not modify previously shared revisions. Preserve existing preference revisions and authentication behavior. Development migrations create no synthetic owners or financial rows; data fixtures belong only in disposable tests. Destructive downgrades remain confined to disposable clusters.
 
-The current [recovery format](local-packaging.md#encrypted-foundation-recovery) enumerates seventeen application tables, including the account/source and instrument/position identity tables and rejects uncovered schema. Every new table/column/revision must extend that format, its manifest/version and reconstruction order in the same increment. Classify every table as durable or explicitly reconstructible; do not remove the coverage check or silently omit staged decisions, provenance, corrections, mappings or receipts. Continue excluding sessions/provider state and writing revocation cutoffs.
+The current [recovery format](local-packaging.md#encrypted-foundation-recovery) enumerates 22 application tables, including account/source, instrument/position identity, and evidence/staging/review tables and rejects uncovered schema. Every new table/column/revision must extend that format, its manifest/version and reconstruction order in the same increment. Classify every table as durable or explicitly reconstructible; do not remove the coverage check or silently omit staged decisions, provenance, corrections, mappings or receipts. Continue excluding sessions/provider state and writing revocation cutoffs.
 
 An older encrypted object must either use a tested compatible reader or be restored with its matching repository/schema version and then upgraded through tested migrations. Never relabel a manifest or skip its digest/revision checks. Verify privately recovered identifier keys separately from the encrypted database object; wrong/unavailable keys cannot become blank identifiers. Keep export/restore and row limits bounded for the small synthetic exercise. General financial-volume backups, off-site retention, provider identity recovery and hosted deployment remain separate operational work.
 

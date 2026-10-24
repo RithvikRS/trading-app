@@ -73,6 +73,6 @@ Format 1 objects must be restored using their matching repository/schema revisio
 
 Synthetic tests cover account combinations, exact-reference matching and collision handling, owner/provider separation, authenticated-context tampering, unavailable keys, exclusive private key creation, forward rotation, mapping corrections/unlinks, archives, stale/concurrent writes, bounded pagination, direct-SQL denials, transaction/savepoint rollback, pool reuse, migration preservation, and encrypted restore into a second PostgreSQL cluster. Local and CI check results are recorded with this increment's PR. No real statement or hosted Supabase verification is represented by these tests.
 
-[Step 4C](instrument-identities.md) subsequently adds instruments/position identities and extends the current recovery format to 3. Older objects retain their matching-release restoration requirement.
+[Step 4C](instrument-identities.md) subsequently adds instruments/position identities and introduced recovery format 3. [Step 4D.1](import-staging.md) subsequently advances it to format 4 for evidence/staging/review. Older objects retain their matching-release restoration requirement.
 
 The local development database was migrated to `0006_accounts_sources` on 24 October 2026. All eleven application tables remain empty; no owner, account, source, or identifier key was seeded.
