@@ -1,0 +1,60 @@
+{
+  "checked_on": "2026-10-24",
+  "kind": "sanitized manual provider observations",
+  "public_discovery": {
+    "validator_passed": true,
+    "refresh_advertised": true,
+    "registration_advertised": true,
+    "response_issuer_advertised": false
+  },
+  "client_registration": {
+    "secret_expiry_present": false,
+    "auth_method_matches": true,
+    "status": 201,
+    "callback_matches": true,
+    "operation": "client_registration",
+    "scope_matches": true,
+    "credentials_saved_with_windows_user_encryption": true,
+    "client_id_issued": true,
+    "code_grant_echoed": true,
+    "account_authorized": false,
+    "refresh_grant_echoed": true,
+    "client_secret_issued": true,
+    "registration_management_advertised": false
+  },
+  "authorization_handoff": {
+    "content_type_html": false,
+    "location_https": true,
+    "location_loopback_callback": false,
+    "redirect_followed": false,
+    "content_type_json": false,
+    "status": 302,
+    "operation": "authorization_handoff",
+    "location_indmoney": true,
+    "location_present": true,
+    "account_authorized": false
+  },
+  "renewal_rejection": {
+    "unexpected_token_fields": false,
+    "operation": "unissued_refresh_rejection",
+    "invalid_grant": false,
+    "successful_renewal_verified": false,
+    "invalid_client": false,
+    "actual_refresh_token_used": false,
+    "unsupported_grant_type": false,
+    "status": 401
+  },
+  "account_access_verified": false,
+  "transaction_history_verified": false,
+  "successful_renewal_verified": false,
+  "mcp_protocol_version_verified": false,
+  "provider_credentials_included": false,
+  "protocol_initialization": {
+    "operation": "unauthenticated_protocol_initialization",
+    "status": 401,
+    "authentication_challenge_present": true,
+    "protocol_version_verified": false,
+    "credentials_sent": false,
+    "redirect_followed": false
+  }
+}

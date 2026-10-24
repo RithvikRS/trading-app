@@ -1,6 +1,6 @@
 # Integration plan
 
-Research baseline: 21 October 2026; INDmoney public discovery refreshed on 24 October 2026. Public documentation identifies possible interfaces; authenticated access, scopes, data coverage, and automation behavior still need verification against the owner's accounts. No provider connection has been established.
+Research baseline: 21 October 2026; INDmoney custom-client compatibility checked on 24 October 2026. Public documentation identifies possible interfaces; authenticated access, scopes, data coverage, and automation behavior still need verification against the owner's accounts. No provider connection has been established.
 
 The implemented [connection-status walkthroughs](ui-prototype.md#connections-and-source-coverage-step-2e1) illustrate coverage and recovery using bundled fictional evidence. [Bank and investment samples](import-samples.md) provide fictional evidence inspection, reversible review decisions, and session-only completion receipts. They do not verify a provider API/export format, establish a connection, or change the research baseline below. Simulated permissions and attempts must remain labeled separately from actual capabilities.
 
@@ -20,13 +20,13 @@ The implemented [connection-status walkthroughs](ui-prototype.md#connections-and
 
 ## INDmoney and INDstocks
 
-Prioritize the [official read-only portfolio route](indmoney-integration-plan.md) before selecting a mutual-fund statement format. Public OAuth discovery advertises the necessary capability candidates, but custom-client eligibility, actual coverage, permitted storage and renewal still require verification. Initial Stage 6 work now precedes the remaining Stage 5 file-parser work.
+Prioritize the [official read-only portfolio route](indmoney-integration-plan.md) before selecting a mutual-fund statement format. [Compatibility checks](indmoney-compatibility.md) verified local application registration and an authorization handoff. Account access, actual coverage, permitted storage and successful renewal still require verification. Initial Stage 6 work now precedes the remaining Stage 5 file-parser work.
 
 INDstocks documents equity holdings in a demat account and separate trading endpoints. Its FAQ describes 24-hour tokens and a TOTP-based unattended generation path. That path involves sensitive credentials and must not be enabled merely to eliminate a manual renewal step. Prefer a provider-enforced read-only route; a trading-capable token is not made read-only by hiding trade buttons. See [holdings documentation](https://api-docs.indstocks.com/portfolio_funds/) and [authentication FAQ](https://api-docs.indstocks.com/faq/).
 
-INDmoney advertises a read-only MCP connector covering holdings and market data, including investments held in its US account. This is a candidate data interface. Verify whether a deterministic backend client is supported and permitted, and whether refresh, scheduled access, and complete transaction history are available. Session expiry can require reauthorization. External UBS holdings need a separate source. See [INDmoney MCP](https://www.indmoney.com/mcp).
+INDmoney advertises a read-only MCP connector covering holdings and market data, including investments held in its US account. A dedicated local client registered successfully, but its account access is not yet verified. Complete the protected OAuth flow and confirm the direct backend use, retained data, renewal and transaction-history contract before enabling imports. Session expiry can require reauthorization. External UBS holdings need a separate source. See [INDmoney MCP](https://www.indmoney.com/mcp).
 
-Current holdings and average purchase prices cannot reconstruct a complete transaction ledger. Statements may still be required for historical lots, cash flows, fees, corporate actions, and reliable performance calculations. Tax reports may supplement evidence but are not assumed to contain all holdings or activity. See [INDmoney reports](https://www.indmoney.com/features/tax-centre).
+The published MCP tools do not establish a complete transaction ledger. INDstocks documents [order and trade books](https://api-docs.indstocks.com/normal_orders/) for the current trading day; per-order fills do not establish historical backfill coverage. Current holdings and average purchase prices cannot reconstruct a complete transaction ledger. Statements may still be required for historical lots, cash flows, fees, corporate actions, and reliable performance calculations. Tax reports may supplement evidence but are not assumed to contain all holdings or activity. See [INDmoney reports](https://www.indmoney.com/features/tax-centre).
 
 ## Mutual funds
 
