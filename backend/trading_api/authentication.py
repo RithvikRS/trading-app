@@ -142,7 +142,14 @@ class BrowserBoundary:
             or (unsafe and headers.get("origin") != self.policy.origin)
             or ("origin" in headers and headers["origin"] != self.policy.origin)
         )
-        for name in ("origin", "host", "content-type", "x-csrftoken", "content-length"):
+        for name in (
+            "origin",
+            "host",
+            "content-type",
+            "x-csrftoken",
+            "content-length",
+            "x-workspace-context",
+        ):
             invalid = invalid or len(headers.getlist(name)) > 1
         # Reject ambiguous duplicate auth cookies instead of accepting the last one.
         cookies = ";".join(headers.getlist("cookie"))

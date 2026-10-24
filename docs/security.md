@@ -159,3 +159,5 @@ Private provider references stay in authenticated encrypted custody and are chec
 ## Protected financial queries
 
 [Step 4G.1](financial-reads.md) adds strict identity projections under active MFA, bound CSRF, exact host/origin and forced owner policies. Financial filters stay in bounded JSON bodies; duplicate keys, nonfinite numbers and deep nesting are rejected. Session validity is checked after response construction, and revocation serializes against admitted reads without extending idle lifetime. Query failures do not log financial details or revoke otherwise valid sessions. Private source identifiers and their custody metadata are never queried or serialized by these routes. Explicit SQL limits, finite schemas, a response-size ceiling and generic unknown/foreign-parent responses bound the read surface. No financial write or export route is added.
+
+[Workspace context](workspace-context.md) prevents a stale browser view from silently following a replaced shared cookie into preference writes or financial reads. It adds a sign-in binding alongside authentication, with no client ownership selection. Markers remain memory-only; never log request headers.

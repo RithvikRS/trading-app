@@ -10,7 +10,7 @@ const preferences = () => ({ theme: 'light', display_currency: 'INR', amount_mas
 const factor = '40000000-0000-4000-8000-000000000001'
 const fetchMock = vi.fn<typeof fetch>()
 function response(data: unknown, status = 200) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', Date: new Date().toUTCString() } }) }
-function session() { return { status: 'authenticated', expires_at: new Date(Date.now() + 28_800_000).toISOString(), idle_expires_at: new Date(Date.now() + 900_000).toISOString(), fresh_until: new Date(Date.now() + 300_000).toISOString(), factors: [factor], unverified_factors: [] } }
+function session() { return { status: 'authenticated', workspace_context: 'a'.repeat(64), expires_at: new Date(Date.now() + 28_800_000).toISOString(), idle_expires_at: new Date(Date.now() + 900_000).toISOString(), fresh_until: new Date(Date.now() + 300_000).toISOString(), factors: [factor], unverified_factors: [] } }
 beforeEach(() => {
   document.cookie = 'trading_dev_csrf=synthetic-csrf-value-long-enough; Path=/'
   vi.stubGlobal('fetch', fetchMock); fetchMock.mockReset()

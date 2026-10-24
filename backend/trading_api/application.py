@@ -20,6 +20,7 @@ from trading_auth.models import (
     AuthenticationDenied,
     AuthenticationLimited,
     AuthenticationUnavailable,
+    WorkspaceContextChanged,
 )
 from trading_db.financial_reads import FinancialReadUnavailable
 from trading_db.workspace import WorkspaceDatabase
@@ -189,6 +190,13 @@ def create_app(
         if status == 429:
             response.headers["Retry-After"] = "5"
         return response
+
+    @api.exception_handler(WorkspaceContextChanged)
+    async def context_error(request: Request, exc: Exception) -> JSONResponse:
+        return JSONResponse(
+            {"error": "workspace_context_changed", "request_id": request.state.request_id},
+            status_code=412,
+        )
 
     @api.exception_handler(FinancialReadUnavailable)
     async def financial_error(request: Request, exc: Exception) -> JSONResponse:

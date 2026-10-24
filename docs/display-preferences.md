@@ -70,3 +70,5 @@ Local Windows verification on 24 October 2026 passed all four shared check group
 The local development database was upgraded to `0005_preference_revisions`; all seven application tables retained their existing empty row counts. No test identity or preference row was seeded into development.
 
 Hosted Supabase authentication/database TLS and pooling, cross-device delivery against a live provider, assistive-technology review on physical devices, and deployment remain unverified. No real identity or financial data is introduced. The subsequent [Step 3G](local-packaging.md) adds local packaging and recovery evidence; hosted checks remain outstanding.
+
+[Step 5E.0](workspace-context.md) requires `X-Workspace-Context` from the checked session on reads and saves. HTTP 412 indicates a replaced sign-in and clears the workspace; HTTP 409 remains a preference revision conflict. Initial loading cannot combine one session response with another sign-in's preferences.

@@ -70,6 +70,7 @@ function Password({ auth, busy }: { auth: AuthController; busy: boolean }) {
 }
 
 const problems = {
+  context: ['Your sign-in changed.', 'Check your session again to load the current workspace. Previous account data and display choices have been cleared.'],
   offline: ['You’re offline.', 'Reconnect, then check your session to continue. Your workspace is hidden while offline.'],
   unavailable: ['Connection unavailable.', 'We couldn’t verify your session. Check your connection or contact the operator if this continues.'],
   forbidden: ['Request blocked.', 'This request could not be verified. Open the workspace at its configured address and try again.'],

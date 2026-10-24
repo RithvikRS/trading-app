@@ -51,3 +51,5 @@ The existing separate-cluster encrypted recovery drill checks restored identity 
 Run the [shared verification groups](verification.md) and record their actual results in the increment's PR. Local synthetic reads do not verify hosted Supabase configuration, real source formats, Oracle capacity or financial-volume backup performance. No Supabase project or live source account is used.
 
 [Step 4G.3a](import-review-reads.md) adds source observations, normalized batch/row inspection and immutable review history, retaining exact evidence and current mapping validity. [Step 4G.3b](completion-receipt-reads.md) exposes immutable completion effects and frozen comparisons.
+
+[Step 5E.0](workspace-context.md) requires the checked sign-in's `X-Workspace-Context` on every read. Missing/malformed/mismatched context returns 412 before financial SQL and preserves the valid session. The marker is neither an owner identifier nor an authorization substitute.

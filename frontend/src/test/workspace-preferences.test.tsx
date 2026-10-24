@@ -8,7 +8,7 @@ import Workspace from '../../workspace/src/Workspace'
 const defaults = { theme: 'light', display_currency: 'INR', amount_masked: true, revision: 0 } as const
 const saved = { theme: 'dark', display_currency: 'USD', amount_masked: false, revision: 4 } as const
 const factor = '40000000-0000-4000-8000-000000000001'
-const session = () => ({ status: 'authenticated', expires_at: new Date(Date.now() + 28_800_000).toISOString(), idle_expires_at: new Date(Date.now() + 900_000).toISOString(), fresh_until: new Date(Date.now() + 300_000).toISOString(), factors: [factor], unverified_factors: [] })
+const session = () => ({ status: 'authenticated', workspace_context: 'a'.repeat(64), expires_at: new Date(Date.now() + 28_800_000).toISOString(), idle_expires_at: new Date(Date.now() + 900_000).toISOString(), fresh_until: new Date(Date.now() + 300_000).toISOString(), factors: [factor], unverified_factors: [] })
 function response(data: unknown, status = 200) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', Date: new Date().toUTCString() } }) }
 const fetchMock = vi.fn<typeof fetch>()
 let current: unknown
