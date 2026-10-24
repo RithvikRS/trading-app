@@ -53,6 +53,13 @@ from trading_db.workspace import PreferenceUpdate, WorkspaceDatabase
 
 
 def identity_pages(client, headers):
+    def query(resource, **body):
+        response = client.post(f"/api/v1/finance/{resource}", headers=headers, json=body)
+        assert response.status_code == 200
+        result = response.json()
+        assert result.get("next_after", result.get("next_before")) is None
+        return result
+
     pages = {}
     for resource in ("accounts", "sources", "instruments"):
         response = client.post(f"/api/v1/finance/{resource}/query", headers=headers, json={})
@@ -67,6 +74,26 @@ def identity_pages(client, headers):
         )
         assert response.status_code == 200
         pages["positions"][account["id"]] = response.json()
+    pages["events"] = {}
+    pages["event_history"] = {}
+    pages["lots"] = {}
+    pages["lot_observations"] = {}
+    pages["lot_history"] = {}
+    for account in pages["accounts"]["items"]:
+        events = query("events/query", account_id=account["id"])
+        pages["events"][account["id"]] = events
+        for record in events["items"]:
+            pages["event_history"][record["id"]] = query("events/history", id=record["id"])
+        for position in pages["positions"][account["id"]]["items"]:
+            lots = query("lots/query", position_id=position["id"])
+            pages["lots"][position["id"]] = lots
+            for lot in lots["items"]:
+                observations = query("lots/observations/query", lot_id=lot["id"])
+                pages["lot_observations"][lot["id"]] = observations
+                for observation in observations["items"]:
+                    pages["lot_history"][observation["id"]] = query(
+                        "lots/observations/history", id=observation["id"]
+                    )
     return pages
 
 
@@ -827,6 +854,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
         account_store.close()
     original_pages = identity_pages(client, headers)
     assert len(original_pages["accounts"]["items"]) == 3
+    assert original_pages["event_history"] and original_pages["lot_history"]
     key = Fernet.generate_key()
     started = time.monotonic()
     with pytest.raises(DatabaseFailure):
