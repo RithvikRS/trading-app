@@ -2,7 +2,7 @@
 
 Stage 5 provides reviewed investment evidence and connected portfolio views. Initial acquisition now prioritizes the [official INDmoney integration](indmoney-integration-plan.md); verify its custom-client access and actual coverage before selecting a statement format. The detailed CAS path below remains a fallback for missing history or unsupported folios. Direct and regular plans, growth and distribution options, and separate folios remain distinct.
 
-This plan follows the [financial persistence foundation](financial-data-plan.md). Its internal services and protected reads are implemented. File intake, actual CAS compatibility, browser financial mutations, NAV acquisition and connected investment screens are not yet implemented. The protected [account directory](connected-accounts.md) reads saved identities independently of those source-specific capabilities. The synthetic prototype remains separate.
+This plan follows the [financial persistence foundation](financial-data-plan.md). Its internal services and protected reads are implemented. [Step 6D](reviewed-snapshots.md) adds browser review/completion for saved snapshot evidence and connected investment list/detail views. File intake, actual CAS compatibility, live portfolio acquisition, activity completion screens and NAV/FX valuation remain outstanding. The protected [account directory](connected-accounts.md) reads saved identities independently of those source-specific capabilities. The synthetic prototype remains separate.
 
 ## Source evidence and unresolved compatibility
 
@@ -47,7 +47,7 @@ Keep the worker credential-free and treat its output as untrusted. Validate stru
 
 Default to no retained original statement. Process one bounded attempt in temporary memory, discard plaintext and password references after success or failure, and retain only minimized evidence needed for review and reconciliation. Memory cleanup is not a guarantee of physical erasure; real-data use additionally requires protected host storage/swap and crash handling. Any later original-retention feature needs encrypted private custody, authorization, an explicit retention period and recovery/deletion behavior.
 
-The current 4 KiB JSON financial boundary must remain strict. A file route needs its own narrowly defined streaming boundary with exact host/origin, active MFA, bound CSRF, duplicate-header rejection, request-size/deadline/concurrency enforcement and no body logging. Do not increase every financial endpoint's limit or put passwords in URLs, headers used by access logs, browser persistence or durable job payloads.
+The ordinary 4 KiB JSON financial boundary remains strict; only [snapshot completion manifests](reviewed-snapshots.md) have larger exact-path limits. A file route needs its own narrowly defined streaming boundary with exact host/origin, active MFA, bound CSRF, duplicate-header rejection, request-size/deadline/concurrency enforcement and no body logging. Do not increase every financial endpoint's limit or put passwords in URLs, headers used by access logs, browser persistence or durable job payloads.
 
 ## Financial normalization and reconciliation
 

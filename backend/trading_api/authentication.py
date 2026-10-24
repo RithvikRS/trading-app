@@ -189,7 +189,11 @@ class BrowserBoundary:
                         if message["type"] != "http.request":
                             raise ValueError("Incomplete body")
                         body.extend(message.get("body", b""))
-                        if len(body) > 4096:
+                        limit = {
+                            "/api/v1/finance/snapshot-review/preview": 65536,
+                            "/api/v1/finance/snapshot-review/complete": 131072,
+                        }.get(request.url.path, 4096)
+                        if len(body) > limit:
                             await error_response(413, request.state.request_id)(
                                 scope, receive, send
                             )
