@@ -1,8 +1,10 @@
 """Same-origin, bounded JSON browser endpoints with framework CSRF protection."""
 
 import asyncio
+import json
+import math
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Request
@@ -62,6 +64,44 @@ class SafeCSRF(CSRFMiddleware):
         return error_response(403, request.state.request_id)
 
 
+def unique_fields(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    values: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in values:
+            raise ValueError("Ambiguous JSON object.")
+        values[key] = value
+    return values
+
+
+def reject_nonfinite(value: str) -> None:
+    raise ValueError("Invalid JSON constant.")
+
+
+def finite_float(value: str) -> float:
+    result = float(value)
+    if not math.isfinite(result):
+        raise ValueError("Invalid JSON number.")
+    return result
+
+
+def validate_financial_json(body: bytearray) -> None:
+    document = json.loads(
+        body.decode("utf-8"),
+        object_pairs_hook=unique_fields,
+        parse_constant=reject_nonfinite,
+        parse_float=finite_float,
+    )
+    pending = [(document, 0)]
+    while pending:
+        value, depth = pending.pop()
+        if depth > 16:
+            raise ValueError("JSON nesting is too deep.")
+        if isinstance(value, dict):
+            pending.extend((child, depth + 1) for child in value.values())
+        elif isinstance(value, list):
+            pending.extend((child, depth + 1) for child in value)
+
+
 class BrowserBoundary:
     def __init__(self, app: ASGIApp, policy: CookiePolicy, secret: str) -> None:
         self.policy = policy
@@ -81,10 +121,14 @@ class BrowserBoundary:
         from trading_api.application import error_response
 
         request = Request(scope)
+        financial = request.url.path == "/api/v1/finance" or request.url.path.startswith(
+            "/api/v1/finance/"
+        )
         if not (
             request.url.path.startswith("/api/v1/auth/")
             or request.url.path == "/api/v1/preferences"
             or request.url.path.startswith("/api/v1/preferences/")
+            or financial
         ):
             await self.app(scope, receive, send)
             return
@@ -132,7 +176,9 @@ class BrowserBoundary:
                             return
                         if not message.get("more_body", False):
                             break
-            except TimeoutError, ValueError:
+                if financial:
+                    validate_financial_json(body)
+            except TimeoutError, ValueError, RecursionError:
                 await error_response(400, request.state.request_id)(scope, receive, send)
                 return
 

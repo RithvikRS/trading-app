@@ -131,12 +131,18 @@ class WorkspaceDatabase:
         self._engine.dispose()
 
     @contextmanager
-    def transaction(self, owner_id: UUID) -> Iterator[WorkspaceTransaction]:
+    def transaction(
+        self, owner_id: UUID, *, read_only: bool = False
+    ) -> Iterator[WorkspaceTransaction]:
         if not isinstance(owner_id, UUID) or owner_id.int == 0:
             raise OwnerAccessDenied()
+        if type(read_only) is not bool:
+            raise DatabaseFailure("Invalid transaction access mode.")
         unit: WorkspaceTransaction | None = None
         try:
             with self._engine.begin() as connection:
+                if read_only:
+                    connection.execute(text("SET TRANSACTION READ ONLY"))
                 verify_server(connection, str(self._engine.url.database), self._project)
                 role = connection.execute(
                     text("""

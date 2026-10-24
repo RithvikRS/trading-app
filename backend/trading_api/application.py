@@ -21,6 +21,7 @@ from trading_auth.models import (
     AuthenticationLimited,
     AuthenticationUnavailable,
 )
+from trading_db.financial_reads import FinancialReadUnavailable
 from trading_db.workspace import WorkspaceDatabase
 
 logger = logging.getLogger("trading_api")
@@ -162,9 +163,11 @@ def create_app(
     if browser is not None:
         api.include_router(routes(browser, policy))
         if workspace is not None:
+            from trading_api.financial_reads import routes as financial_routes
             from trading_api.preferences import routes as preference_routes
 
             api.include_router(preference_routes(browser, workspace, policy))
+            api.include_router(financial_routes(browser, workspace, policy))
     if config.frontend_enabled:
         from trading_api.frontend import routes as frontend_routes
 
@@ -186,6 +189,13 @@ def create_app(
         if status == 429:
             response.headers["Retry-After"] = "5"
         return response
+
+    @api.exception_handler(FinancialReadUnavailable)
+    async def financial_error(request: Request, exc: Exception) -> JSONResponse:
+        return JSONResponse(
+            {"error": "financial_data_unavailable", "request_id": request.state.request_id},
+            status_code=503,
+        )
 
     @api.get("/api/v1/health/live")
     async def liveness() -> dict[str, str]:
