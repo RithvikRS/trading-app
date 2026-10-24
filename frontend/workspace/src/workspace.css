@@ -86,10 +86,56 @@
 .ws-display-actions, .ws-display-actions > div { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
 .ws-display-actions { justify-content: space-between; border-top: 1px solid var(--border); margin-top: 22px; padding-top: 20px; }
 .ws-save-status { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--muted); }
+.ws-sidebar nav button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 46px; padding: 13px; margin: 5px 0; border-radius: 8px; font-size: 12px; text-align: left; color: var(--muted); }
+.ws-sidebar nav button[aria-current="page"] { background: var(--accent-soft); color: var(--accent-strong); font-weight: 600; }
+.ws-sidebar nav button > svg:last-child:not(:first-child) { margin-left: auto; }
+.ws-sidebar nav button:hover { background: var(--surface-soft); }
+.ws-mobile-nav { display: none; }
+.ws-accounts { border: 1px solid var(--border); border-radius: 17px; background: var(--surface); overflow: hidden; }
+.ws-accounts-intro { display: flex; gap: 20px; align-items: flex-start; padding: 30px; background: linear-gradient(115deg, var(--sidebar), var(--surface)); }
+.ws-accounts-icon { display: grid; place-items: center; width: 54px; height: 54px; flex-shrink: 0; background: var(--hero); border: 1px solid var(--accent-border); color: var(--accent-strong); border-radius: 16px; }
+.ws-accounts-intro .ws-eyebrow { margin-bottom: 9px; }
+.ws-accounts-intro h2 { font-size: 24px; font-weight: 530; letter-spacing: -.6px; }
+.ws-accounts-intro p { color: var(--muted); font-size: 12px; line-height: 1.8; max-width: 580px; margin-top: 12px; }
+.ws-accounts-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 16px 26px; border-block: 1px solid var(--border); }
+.ws-accounts-toolbar > span { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+.ws-account-list { list-style: none; padding: 0; margin: 0; }
+.ws-account { display: grid; grid-template-columns: 42px minmax(0, 1fr) 125px 80px; align-items: center; gap: 18px; padding: 22px 26px; border-bottom: 1px solid var(--border); }
+.ws-account-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-strong); }
+.ws-account-mark-us { background: var(--hero-end); }
+.ws-account-summary { min-width: 0; }
+.ws-account-summary > span { font-size: 10px; color: var(--muted); }
+.ws-account h3 { font-size: 14px; font-weight: 600; margin: 5px 0; overflow-wrap: anywhere; }
+.ws-account-summary p { font-size: 11px; color: var(--muted); line-height: 1.7; }
+.ws-account-currencies { display: grid; gap: 7px; font-size: 11px; color: var(--muted); }
+.ws-account-currencies strong { color: var(--text); font-weight: 550; font-variant-numeric: tabular-nums; }
+.ws-account-state { justify-self: end; font-size: 10px; color: var(--accent-strong); background: var(--accent-soft); border: 1px solid var(--accent-border); border-radius: 30px; padding: 6px 10px; }
+.ws-account-archived { color: var(--muted); background: var(--surface-soft); border-color: var(--border); }
+.ws-accounts-message { min-height: 235px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+.ws-accounts-message > svg { color: var(--accent-strong); margin-bottom: 18px; }
+.ws-accounts-message h3 { font-size: 18px; font-weight: 550; }
+.ws-accounts-message p { font-size: 12px; color: var(--muted); line-height: 1.8; max-width: 450px; margin-top: 12px; }
+.ws-account-pagination { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 20px 26px; }
+.ws-account-pagination p { font-size: 11px; color: var(--muted); }
+.ws-account-pagination > div { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.ws-account-pagination .ws-text { padding-inline: 10px; }
+.ws-accounts-note { display: flex; align-items: flex-start; gap: 10px; font-size: 11px; line-height: 1.8; color: var(--muted); padding: 18px 26px; background: var(--surface-soft); border-top: 1px solid var(--border); }
+.ws-accounts-note svg { flex-shrink: 0; margin-top: 2px; }
 @keyframes ws-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .ws-spin { animation: none; } }
 @media (max-width: 1000px) { .ws-story, .ws-auth { padding: 32px; } .ws-layout { grid-template-columns: 180px minmax(0, 1fr); } .ws-sidebar { padding: 30px 10px; } .ws-home-heading { align-items: flex-start; flex-direction: column; } }
 @media (max-width: 720px) {
+  .ws-mobile-nav { display: flex; gap: 6px; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .ws-mobile-nav button { min-height: 44px; padding: 10px 16px; border-radius: 8px; font-size: 12px; color: var(--muted); }
+  .ws-mobile-nav button[aria-current="page"] { color: var(--accent-strong); background: var(--accent-soft); font-weight: 600; }
+  .ws-accounts-intro { padding: 24px 18px; gap: 14px; } .ws-accounts-icon { width: 42px; height: 42px; border-radius: 12px; }
+  .ws-accounts-intro h2 { font-size: 20px; } .ws-accounts-toolbar { padding: 14px 18px; flex-wrap: wrap; }
+  .ws-account { grid-template-columns: 34px minmax(0, 1fr); gap: 12px; padding: 20px 18px; }
+  .ws-account-mark { width: 34px; height: 34px; border-radius: 10px; }
+  .ws-account-currencies { grid-column: 2; display: flex; gap: 10px; flex-wrap: wrap; }
+  .ws-account-state { grid-column: 2; justify-self: start; }
+  .ws-account-pagination { align-items: flex-start; flex-direction: column; padding: 18px; }
+  .ws-accounts-note { padding: 18px; }
   .ws-header { padding: 15px 20px; min-height: 74px; } .ws-header-label { display: none; }
   .ws-gate { display: block; margin: 24px auto; max-width: 500px; width: calc(100% - 32px); }
   .ws-story { padding: 25px; } .ws-story h2 { font-size: 28px; letter-spacing: -.9px; margin: 0; }

@@ -1,6 +1,6 @@
 # Step 3F.1: Protected frontend shell
 
-The protected application now has its own entry point, sign-in and authenticator screens, restricted password recovery, session controls, and an empty workspace. It uses the existing Indigo & Apricot light/dark design. Financial records, account connections, and imports are not available in this build. [Step 3F.2](display-preferences.md) adds authenticated account preferences to this shell; the captures and verification totals below record the original Step 3F.1 increment.
+The protected application now has its own entry point, sign-in and authenticator screens, restricted password recovery, session controls, and an empty workspace. It uses the existing Indigo & Apricot light/dark design. [Step 5E.1](connected-accounts.md) subsequently adds saved account identities through the protected API. Account connections, imports, balances and investment values remain unavailable in the protected build. [Step 3F.2](display-preferences.md) adds authenticated account preferences to this shell; the captures and verification totals below record the original Step 3F.1 increment.
 
 ## Separate builds and local entry
 
@@ -36,7 +36,7 @@ Static delivery is deliberately small: only `/` and the build's JS/CSS/font asse
 | First MFA enrollment | Display the setup key in memory for manual time-based authenticator entry; verify a six-digit code; clear setup material when the flow ends |
 | Existing MFA | Select an existing authenticator when two are available; submit a six-digit code; an unsuccessful attempt requires a new sign-in |
 | Recovery | Show email recovery only when bootstrap reports it enabled; generic email response, email code, existing authenticator, then new password; a fresh sign-in is required afterward |
-| Active workspace | Explicit empty financial content; no totals or sample records; authenticated display preferences with draft/save/discard and conflict review |
+| Active workspace | Empty financial overview and saved account directory; no totals or sample records; authenticated display preferences with draft/save/discard and conflict review |
 | Expired or revoked | Hide the workspace, discard earlier requests and clear transient state; local expiry also attempts server sign-out, with uncertain revocation shown separately |
 | Forbidden, offline, unavailable, invalid response, or limited | Hide protected content; fixed explanation and deliberate retry; never render provider error bodies |
 | Sign-out | Immediately hide content; revoke locally through the API; distinguish confirmed sign-out, unavailable provider cleanup, and unconfirmed server revocation |

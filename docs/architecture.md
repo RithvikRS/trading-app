@@ -103,3 +103,5 @@ Self-hosted PostgreSQL remains an alternative if managed-service constraints bec
 [Step 5E.0](workspace-context.md) adds a non-authorizing session-context marker to checked session responses and requires it on preference and financial requests. Comparison happens after authentication and before financial SQL. A stale marker returns 412 without revoking the valid replacement session; client state is cleared before rechecking.
 
 [Step 5B.1](parser-transport.md) defines a standalone standard-library framing contract for one bounded local parser request/reply. It accepts no owner IDs, paths or commands and has no successful parsed-data schema yet. Worker identity, isolation, provisioning and application authentication remain separate boundaries; the API package does not yet import or execute the transport.
+
+[Step 5E.1](connected-accounts.md) connects a memory-only account directory to the existing protected account query. Requests bind to the checked sign-in; the client validates exact bounded pages, retains only the current page and cursor history, and clears records on workspace invalidation. It introduces no source connection, financial mutation or valuation.
