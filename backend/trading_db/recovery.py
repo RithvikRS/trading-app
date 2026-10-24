@@ -13,9 +13,10 @@ from sqlalchemy import URL, Connection, text
 from trading_db import migrate
 from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
+from trading_db.provider_keys import ProviderKeys
 
-HEAD = "0012_market_evidence"
-FORMAT = 8
+HEAD = "0013_event_evidence"
+FORMAT = 9
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -351,6 +352,34 @@ COLUMNS.update(
         ),
     }
 )
+COLUMNS.update(
+    {
+        "event_provider_identities": (
+            "owner_id",
+            "id",
+            "source_id",
+            "kind",
+            "event_id",
+            "event_revision",
+            "key_version",
+            "key_check",
+            "fingerprint",
+            "encrypted_reference",
+            "key_revision",
+            "created_at",
+            "updated_at",
+        ),
+        "event_evidence_links": (
+            "owner_id",
+            "source_row_id",
+            "review_revision",
+            "identity_id",
+            "event_id",
+            "event_revision",
+            "created_at",
+        ),
+    }
+)
 OMITTED = ("auth_sessions", "auth_admissions")
 
 
@@ -426,6 +455,15 @@ def verify_references(rows: dict[str, list[dict[str, Any]]], keys: ReferenceKeys
         if identity in identities:
             raise ReferenceUnavailable()
         identities.add(identity)
+    provider_identities: set[tuple[str, str, str, str]] = set()
+    for row in rows["event_provider_identities"]:
+        if keys is None:
+            raise ReferenceUnavailable()
+        value = ProviderKeys(keys).open(row)
+        provider_identity = (str(row["owner_id"]), str(row["source_id"]), row["kind"], value)
+        if provider_identity in provider_identities:
+            raise ReferenceUnavailable()
+        provider_identities.add(provider_identity)
 
 
 def export_snapshot(

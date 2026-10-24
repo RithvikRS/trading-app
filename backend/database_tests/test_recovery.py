@@ -24,6 +24,7 @@ from trading_db.account_keys import ReferenceKeys, load_keys
 from trading_db.accounts import AccountDatabase, AccountDefinition
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.enrollment import provision_owner
+from trading_db.event_evidence import EventEvidenceTransaction
 from trading_db.events import EventTransaction
 from trading_db.import_contracts import (
     BatchDefinition,
@@ -562,7 +563,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                                     ),
                                 ),
                             )
-                            for index, state in enumerate(("posted", "pending"), 1)
+                            for index, state in enumerate(("posted", "pending", "posted"), 1)
                         ),
                     ),
                     expected_revision=0,
@@ -571,9 +572,15 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 for event_row in staging.rows(event_batch.id):
                     staging.decide(event_row.id, "include", expected_revision=0)
                     event_records.append(
-                        EventTransaction(unit._unit).record(
-                            event_row.id, expected_review_revision=1, position_id=position.id
+                        EventEvidenceTransaction(unit._unit, identifier_keys)
+                        .record(
+                            event_row.id,
+                            expected_review_revision=1,
+                            position_id=position.id,
+                            provider_reference="FAKE-EVENT-"
+                            + ("2" if event_row.definition.occurrence == 2 else "1"),
                         )
+                        .event
                     )
                 add_correction_history(
                     unit, staging, source, reference, position, event_batch, event_records
@@ -611,6 +618,9 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
         for owner in (own, other):
             with account_store.transaction(owner) as unit:
                 assert unit.rotate_references() == 1
+                assert (
+                    EventEvidenceTransaction(unit._unit, identifier_keys).rotate_references() == 2
+                )
     finally:
         account_store.close()
     key = Fernet.generate_key()
@@ -697,8 +707,8 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             assert counts["fund_schemes"] == counts["instrument_listings"] == 2
             assert counts["instrument_identifiers"] == 4
             assert counts["source_observations"] == 8
-            assert counts["import_batches"] == 10 and counts["staged_rows"] == 36
-            assert counts["staged_values"] == 90 and counts["review_decisions"] == 40
+            assert counts["import_batches"] == 10 and counts["staged_rows"] == 38
+            assert counts["staged_values"] == 96 and counts["review_decisions"] == 42
             assert counts["financial_events"] == 10
             assert counts["cash_movements"] == counts["quantity_movements"] == 8
             assert counts["event_components"] == 24
@@ -709,6 +719,8 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             assert counts["snapshot_selections"] == 10
             assert counts["market_observations"] == 14
             assert counts["market_selections"] == 10
+            assert counts["event_provider_identities"] == 4
+            assert counts["event_evidence_links"] == 6
             assert signature(restored_admin) == baseline
             restored_data = recovery.decode_snapshot(
                 recovery.export_snapshot(
@@ -816,6 +828,25 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                                     assert evidence.quote_currency == "INR"
                                     assert evidence.source == "83.123456789012"
                         assert sorted(item.revision for item in events.list(account_id)) == [2, 3]
+                        links = EventEvidenceTransaction(unit._unit, recovered_identifiers)
+                        all_links = [
+                            link
+                            for event in events.list(account_id)
+                            for link in links.list(event.id)
+                        ]
+                        assert len(all_links) == 3 and sum(link.reused for link in all_links) == 1
+                        for link in all_links:
+                            assert link.event.revision == 1
+                            assert (
+                                links.record(
+                                    link.source_row_id,
+                                    expected_review_revision=1,
+                                    position_id=link.event.position_id,
+                                    provider_reference="FAKE-EVENT-"
+                                    + ("2" if link.event.posting_state == "pending" else "1"),
+                                )
+                                == link
+                            )
                         assert (
                             events.movements(account_id, kind="cash", posting_state="pending") == ()
                         )

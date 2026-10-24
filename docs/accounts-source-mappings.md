@@ -76,3 +76,5 @@ Synthetic tests cover account combinations, exact-reference matching and collisi
 [Step 4C](instrument-identities.md) subsequently adds instruments/position identities and introduced recovery format 3. [Step 4D.1](import-staging.md) subsequently advances it to format 4 for evidence/staging/review. Older objects retain their matching-release restoration requirement.
 
 The local development database was migrated to `0006_accounts_sources` on 24 October 2026. All eleven application tables remain empty; no owner, account, source, or identifier key was seeded.
+
+[Provider transaction references](event-evidence.md#privacy-and-key-custody) share the versioned financial identifier key ring through separate derived purposes. Their rotation is explicit and separate from account-reference rotation. Verify both categories have moved to the active version before retiring an old key; recovery validates both categories.

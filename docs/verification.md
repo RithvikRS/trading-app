@@ -64,3 +64,5 @@ Record local results separately from the actual GitHub run. A local pass does no
 [Step 4E.1](snapshot-evidence.md) adds date/instant precision, source-conflict selection, retained correction/clear history, concurrent choices, direct-SQL bypass tests, legacy contract preservation, downgrade guard visibility and snapshot selection after encrypted recovery.
 
 [Step 4E.2](market-evidence.md) adds reported price/rate contracts, exact quote/NAV and FX targets, missing/nonpositive evidence, correction and selection retries, direct-SQL tampering, owner/role isolation and migration rollback tests. The encrypted recovery drill includes both market tables and verifies selected rates, corrected quotes, cleared NAV choices and original precision after restoration.
+
+[Step 4F.1](event-evidence.md) adds private provider-reference contract tests and real PostgreSQL evidence-reuse tests for numeric meaning, independent repeats, corrections, historical retries, direct-SQL bypass, owner isolation, concurrency, key rotation, failure rollback and migration preservation. Recovery verifies protected identities and corroborating links alongside their original event revisions.
