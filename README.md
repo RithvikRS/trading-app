@@ -18,6 +18,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 6B](docs/indmoney-authorization.md) adds opt-in INDmoney authorization controls, a browser-bound callback, encrypted credential custody, explicit renewal and local-first disconnect. It requires separately configured local HTTPS and MFA. Tests and screenshots use synthetic responses; no live account has been authorized, and financial imports remain disabled.
 
+[Step 6C](docs/indmoney-reader.md) implements a bounded read-only portfolio engine with exact values, strict protocol/schema checks, explicit incomplete coverage and cancellation/access-loss handling. It is tested with a fabricated contract. Live reads remain disabled until authenticated INDmoney schemas and coverage semantics are verified; no production adapter or import route is enabled.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
@@ -87,6 +89,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Integrations](docs/integrations.md) | Provider options and verification |
 | [INDmoney integration](docs/indmoney-integration-plan.md) | Read-only portfolio route, public discovery evidence, authorization design, coverage and statement fallbacks |
 | [INDmoney compatibility](docs/indmoney-compatibility.md) | Observed custom-client registration/handoff, history limitations, renewal findings and remaining account tests |
+| [INDmoney reader](docs/indmoney-reader.md) | Bounded read-only engine, exact evidence, incomplete coverage and the live schema compatibility gate |
 | [Operations](docs/operations.md) | Hosting, backups, recovery, incident handling |
 | [Development](docs/development.md) | Local commands, validation, conventional commits |
 | [Pull requests](docs/pull-requests.md) | Scope, evidence, merge policy |
