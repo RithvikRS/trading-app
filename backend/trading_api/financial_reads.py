@@ -27,11 +27,24 @@ from trading_api.read_contracts import (
     SourceView,
     WireModel,
 )
+from trading_api.valuation_read_contracts import (
+    InspectQuery,
+    ListingQuery,
+    ListingView,
+    MarketObservationView,
+    MarketQuery,
+    MarketResolution,
+    MarketSelectionView,
+    SnapshotQuery,
+    SnapshotResolution,
+    SnapshotSelectionView,
+    SnapshotView,
+)
 from trading_auth.browser import BrowserAuth
 from trading_auth.models import AuthenticationDenied
 from trading_db.connections import DatabaseFailure
-from trading_db.evidence_reads import EvidenceReadTransaction
 from trading_db.financial_reads import FinancialReadUnavailable
+from trading_db.valuation_reads import ValuationReadTransaction
 from trading_db.workspace import OwnerAccessDenied, WorkspaceDatabase
 
 MAX_RESPONSE_BYTES = 262144
@@ -42,7 +55,7 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
 
     def execute[T: WireModel](
         request: Request,
-        operation: Callable[[EvidenceReadTransaction], T | None],
+        operation: Callable[[ValuationReadTransaction], T | None],
     ) -> Response:
         unavailable = False
         content = None
@@ -53,7 +66,7 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
         ) as (owner, validate):
             try:
                 with database.transaction(owner, read_only=True) as unit:
-                    reads = EvidenceReadTransaction(unit)
+                    reads = ValuationReadTransaction(unit)
                     with reads.consistent():
                         result = operation(reads)
                         content = None if result is None else result.model_dump_json().encode()
@@ -107,5 +120,49 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
     @router.post("/lots/observations/history", response_model=HistoryPage[LotObservationView])
     def lot_history(body: HistoryQuery, request: Request) -> Response:
         return execute(request, lambda reads: reads.lot_history(body))
+
+    @router.post("/snapshots/query", response_model=FinancialPage[SnapshotView])
+    def snapshots(body: SnapshotQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.snapshots(body))
+
+    @router.post("/snapshots/history", response_model=HistoryPage[SnapshotView])
+    def snapshot_history(body: HistoryQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.snapshot_history(body))
+
+    @router.post("/snapshots/selections/query", response_model=FinancialPage[SnapshotSelectionView])
+    def snapshot_selections(body: SnapshotQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.snapshot_selections(body))
+
+    @router.post("/snapshots/selections/history", response_model=HistoryPage[SnapshotSelectionView])
+    def snapshot_selection_history(body: HistoryQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.snapshot_selection_history(body))
+
+    @router.post("/snapshots/selections/resolve", response_model=SnapshotResolution)
+    def snapshot_resolution(body: InspectQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.snapshot_resolution(body))
+
+    @router.post("/listings/query", response_model=FinancialPage[ListingView])
+    def listings(body: ListingQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.listings(body))
+
+    @router.post("/markets/observations/query", response_model=FinancialPage[MarketObservationView])
+    def market_observations(body: MarketQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.market_observations(body))
+
+    @router.post("/markets/observations/inspect", response_model=MarketObservationView)
+    def market_inspect(body: InspectQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.market_inspect(body))
+
+    @router.post("/markets/selections/query", response_model=FinancialPage[MarketSelectionView])
+    def market_selections(body: MarketQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.market_selections(body))
+
+    @router.post("/markets/selections/history", response_model=HistoryPage[MarketSelectionView])
+    def market_selection_history(body: HistoryQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.market_selection_history(body))
+
+    @router.post("/markets/selections/resolve", response_model=MarketResolution)
+    def market_resolution(body: InspectQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.market_resolution(body))
 
     return router
