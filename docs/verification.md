@@ -62,3 +62,5 @@ Record local results separately from the actual GitHub run. A local pass does no
 [Step 4D.3](lot-evidence-corrections.md) adds acquisition/remaining-lot contracts, independent cost/discount/basis evidence, sourced correction/cancellation/reinstatement, exact and conflicting concurrent retries, cross-table source consumption checks, legacy contract preservation and effective-read verification after separate-cluster recovery.
 
 [Step 4E.1](snapshot-evidence.md) adds date/instant precision, source-conflict selection, retained correction/clear history, concurrent choices, direct-SQL bypass tests, legacy contract preservation, downgrade guard visibility and snapshot selection after encrypted recovery.
+
+[Step 4E.2](market-evidence.md) adds reported price/rate contracts, exact quote/NAV and FX targets, missing/nonpositive evidence, correction and selection retries, direct-SQL tampering, owner/role isolation and migration rollback tests. The encrypted recovery drill includes both market tables and verifies selected rates, corrected quotes, cleared NAV choices and original precision after restoration.

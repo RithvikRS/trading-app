@@ -20,7 +20,7 @@ All magnitudes must be strictly below 10^18. These are project bounds, not verif
 | `fx_rate` | 0–12 | Distinct INR/USD base and quote currencies; strictly positive quote units per one base unit |
 | `display_amount` | 0–2 | INR/USD; signed derived display value, distinct from booked cash |
 
-Unused context fields must be null. Currency codes are exactly `INR` or `USD`. Record-specific rules such as fee direction, lot identity, event dates, valid source coverage and price freshness remain the responsibility of later domain records/services. Zero/nonpositive reported quotes may later be retained as source evidence but cannot construct a usable `unit_price`.
+Unused context fields must be null. Currency codes are exactly `INR` or `USD`. Record-specific rules such as fee direction, lot identity, event dates, valid source coverage and price freshness remain the responsibility of containing records/services. [Step 4E.2](market-evidence.md) adds `ReportedMarketValue` for exact source quotes/rates, including missing, zero or negative reports. It retains the same bounds and currency/pair rules; only a positive report can produce a usable `FinancialValue`. Market selection separately checks quote adjustment, identity and supersession. Reported evidence never weakens the positive `unit_price`/`fx_rate` calculation contract.
 
 An absent value requires `source=None` and one of `not_supplied`, `incomplete_history`, `unsupported` or `conflicting_evidence` as `missing_reason`. Known values cannot have a missing reason, including a known zero. Required kind/currency/meaning context is still checked for absent values. Calculations reject unknown operands.
 
