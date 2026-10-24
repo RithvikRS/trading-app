@@ -1,6 +1,6 @@
 # First complete investment flow
 
-Stage 5 connects the protected workspace to mutual-fund evidence: a detailed statement, explicit folio and fund mapping, review, saved completion, dated NAV evidence and a portfolio view. The first release supports one verified detailed CAS format. Direct and regular plans, growth and distribution options, and separate folios remain distinct.
+Stage 5 provides reviewed investment evidence and connected portfolio views. Initial acquisition now prioritizes the [official INDmoney integration](indmoney-integration-plan.md); verify its custom-client access and actual coverage before selecting a statement format. The detailed CAS path below remains a fallback for missing history or unsupported folios. Direct and regular plans, growth and distribution options, and separate folios remain distinct.
 
 This plan follows the [financial persistence foundation](financial-data-plan.md). Its internal services and protected reads are implemented. File intake, actual CAS compatibility, browser financial mutations, NAV acquisition and connected investment screens are not yet implemented. The protected [account directory](connected-accounts.md) reads saved identities independently of those source-specific capabilities. The synthetic prototype remains separate.
 
@@ -21,6 +21,8 @@ CAS compatibility requires a reproducible, irreversibly sanitized representative
 
 ## Delivery sequence
 
+Initial Stage 6 discovery and compatibility work now precedes further file-parser implementation. Completed 5A, 5B.1, 5E.0 and 5E.1 remain in use; step numbers are retained. An API snapshot can supply only the evidence it actually contains. The statement sequence below resumes when a verified source gap requires it.
+
 Each increment has its own conventional commit and `dev` to `main` PR, documentation, review and final-revision checks. Complete independent work while source-specific evidence is unavailable. The 5E.0 sign-in binding precedes financial screens and does not require a source adapter. Do not enable an unverified source adapter to make the interface appear complete.
 
 | Step | Deliverable | Acceptance |
@@ -33,7 +35,7 @@ Each increment has its own conventional commit and `dev` to `main` PR, documenta
 | 5F | NAV acquisition and valuation | An allowlisted bounded public-data fetch, persisted exact source evidence and explicit source choice, safe retries and dated valuation for mapped fund positions. No holdings changes from a NAV update. |
 | 5G | End-to-end acceptance and recovery | Synthetic statement-to-portfolio checks, repeat/overlap/conflict imports, two-owner denial, encrypted restore, resource measurements, failure recovery and documented source/hosted limitations. |
 
-Step 5B.1 implements only bounded transport contracts. Worker provisioning, native parser isolation and authenticated intake remain separate increments; no file route or supported PDF adapter is enabled. Split a step when necessary to keep a schema change, isolation boundary or interface change independently reviewable. Keep future banking, UBS, INDmoney, cards, unattended schedules and returns outside this first mutual-fund flow.
+Step 5B.1 implements only bounded transport contracts. Worker provisioning, native parser isolation and authenticated intake remain separate increments; no file route or supported PDF adapter is enabled. Split a step when necessary to keep a schema change, isolation boundary or interface change independently reviewable. INDmoney acquisition now follows the separate integration plan ahead of file parsing. Banking, UBS, cards, unattended schedules and returns remain separate capabilities.
 
 ## File and parser boundary
 
