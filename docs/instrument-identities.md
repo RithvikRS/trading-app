@@ -57,3 +57,7 @@ Formats 1 and 2 must be restored with their matching repository/schema, then mig
 Tests cover checksum errors, explicit fund variants, same-name/ticker collisions, provider qualifiers, wrong listing links, cross-owner references, archived/incompatible accounts, concurrent creation/correction, rollback, bounds and recovery. Public checksum examples and fabricated unassigned identifiers are test data, not a registry or personal portfolio. Actual check counts and CI results are recorded in the PR.
 
 [Step 4D.1](import-staging.md) subsequently adds source evidence and review staging and advances recovery to format 4.
+
+## Protected identity inspection
+
+[Step 4G.1](financial-reads.md) exposes owned instrument definitions and account-specific position identities through bounded authenticated JSON queries. ISIN, explicit fund variant and holding form remain distinct; no quantity, balance, valuation or position merger is inferred from identity. Unknown and foreign required accounts produce the same generic result.

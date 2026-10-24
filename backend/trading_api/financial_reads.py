@@ -1,0 +1,80 @@
+"""Read-only financial queries inside the authenticated browser and owner boundaries."""
+
+from collections.abc import Callable
+
+from fastapi import APIRouter, HTTPException, Request
+from sqlalchemy.exc import SQLAlchemyError
+from starlette.responses import Response
+
+from trading_api.authentication import CookiePolicy
+from trading_api.read_contracts import (
+    AccountView,
+    FinancialPage,
+    IdentityView,
+    InstrumentView,
+    PageQuery,
+    PositionQuery,
+    PositionView,
+    SourceView,
+)
+from trading_auth.browser import BrowserAuth
+from trading_auth.models import AuthenticationDenied
+from trading_db.connections import DatabaseFailure
+from trading_db.financial_reads import FinancialReadTransaction, FinancialReadUnavailable
+from trading_db.workspace import OwnerAccessDenied, WorkspaceDatabase
+
+MAX_RESPONSE_BYTES = 262144
+
+
+def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePolicy) -> APIRouter:
+    router = APIRouter(prefix="/api/v1/finance")
+
+    def execute[T: IdentityView](
+        request: Request,
+        operation: Callable[[FinancialReadTransaction], FinancialPage[T] | None],
+    ) -> Response:
+        unavailable = False
+        content = None
+        with browser.workspace_access(
+            request.cookies.get(policy.session, ""),
+            request.headers.get("x-csrftoken", ""),
+            request.state.request_id,
+        ) as (owner, validate):
+            try:
+                with database.transaction(owner, read_only=True) as unit:
+                    reads = FinancialReadTransaction(unit)
+                    with reads.consistent():
+                        result = operation(reads)
+                        content = None if result is None else result.model_dump_json().encode()
+                        if content is not None and len(content) > MAX_RESPONSE_BYTES:
+                            raise FinancialReadUnavailable()
+                    validate()
+            except OwnerAccessDenied:
+                raise AuthenticationDenied() from None
+            except DatabaseFailure, SQLAlchemyError:
+                # The auth guard must exit normally for an application-data failure.
+                # Its registry wrapper deliberately maps unknown errors to auth outages.
+                unavailable = True
+        if unavailable:
+            raise FinancialReadUnavailable()
+        if content is None:
+            raise HTTPException(404)
+        return Response(content, media_type="application/json")
+
+    @router.post("/accounts/query", response_model=FinancialPage[AccountView])
+    def accounts(body: PageQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.accounts(body))
+
+    @router.post("/sources/query", response_model=FinancialPage[SourceView])
+    def sources(body: PageQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.sources(body))
+
+    @router.post("/instruments/query", response_model=FinancialPage[InstrumentView])
+    def instruments(body: PageQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.instruments(body))
+
+    @router.post("/positions/query", response_model=FinancialPage[PositionView])
+    def positions(body: PositionQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.positions(body))
+
+    return router

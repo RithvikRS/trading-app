@@ -78,3 +78,7 @@ Synthetic tests cover account combinations, exact-reference matching and collisi
 The local development database was migrated to `0006_accounts_sources` on 24 October 2026. All eleven application tables remain empty; no owner, account, source, or identifier key was seeded.
 
 [Provider transaction references](event-evidence.md#privacy-and-key-custody) share the versioned financial identifier key ring through separate derived purposes. Their rotation is explicit and separate from account-reference rotation. Verify both categories have moved to the active version before retiring an old key; recovery validates both categories.
+
+## Protected identity inspection
+
+[Step 4G.1](financial-reads.md) exposes safe account and current source-mapping projections through active MFA sessions. Archived and unmapped states remain explicit; private external references, ciphertext, keyed fingerprints and key versions are excluded. Reads require no financial-identifier decryption key and expose no account mutation route.

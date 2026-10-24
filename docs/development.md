@@ -122,3 +122,7 @@ CI and automated secret detection are defined by [the verification workflow](ver
 Update the plan for scope/status, architecture for component/financial decisions, security for trust boundaries, integrations for verified provider behavior, and operations for actual recovery/deployment procedures. Keep README commands and the PR template accurate. Record significant decisions with their rationale; exclude credentials, account details, and full incident payloads.
 
 For authenticated display preferences, apply migration `0005_preference_revisions`, build the protected frontend, and restart the API. Follow the [preference contract and recovery notes](display-preferences.md). Local tests use real disposable PostgreSQL with synthetic authentication responses; they do not create a development login bypass or configure a hosted project.
+
+## Protected financial identity queries
+
+[Step 4G.1](financial-reads.md) adds read-only account/source/instrument/position queries on the configured API origin. The route table documents finite JSON bodies, pagination and explicit response fields. Use the normal active MFA session and CSRF header; there is no development owner override or seed endpoint. Tests populate fabricated records only in disposable clusters. An empty development database stays empty, and the separate prototype is not connected to these APIs. No hosted project or real financial records are required for the checks.

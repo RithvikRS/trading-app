@@ -52,6 +52,24 @@ from trading_db.snapshots import SnapshotTransaction
 from trading_db.workspace import PreferenceUpdate, WorkspaceDatabase
 
 
+def identity_pages(client, headers):
+    pages = {}
+    for resource in ("accounts", "sources", "instruments"):
+        response = client.post(f"/api/v1/finance/{resource}/query", headers=headers, json={})
+        assert response.status_code == 200
+        pages[resource] = response.json()
+    pages["positions"] = {}
+    for account in pages["accounts"]["items"]:
+        response = client.post(
+            "/api/v1/finance/positions/query",
+            headers=headers,
+            json={"account_id": account["id"]},
+        )
+        assert response.status_code == 200
+        pages["positions"][account["id"]] = response.json()
+    return pages
+
+
 def signature(engine):
     return {
         "policies": sql(
@@ -807,6 +825,8 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 assert completion_baselines[owner] == before_rotation
     finally:
         account_store.close()
+    original_pages = identity_pages(client, headers)
+    assert len(original_pages["accounts"]["items"]) == 3
     key = Fernet.generate_key()
     started = time.monotonic()
     with pytest.raises(DatabaseFailure):
@@ -1142,9 +1162,17 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 ) as recovered_client:
                     recovered_client.cookies.update(client.cookies)
                     assert (
+                        recovered_client.post(
+                            "/api/v1/finance/accounts/query", headers=headers, json={}
+                        ).status_code
+                        == 401
+                    )
+                    assert (
                         recovered_client.get("/api/v1/preferences", headers=headers).status_code
                         == 401
                     )
+                    fresh_headers = login(recovered_client)
+                    assert identity_pages(recovered_client, fresh_headers) == original_pages
             finally:
                 restored_workspace.close()
                 restored_sessions.close()
