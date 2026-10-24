@@ -14,8 +14,8 @@ from trading_db import migrate
 from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 
-HEAD = "0008_import_staging"
-FORMAT = 4
+HEAD = "0009_financial_events"
+FORMAT = 5
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -141,6 +141,7 @@ COLUMNS.update(
             "normalizer_version",
             "normalized_digest",
             "row_count",
+            "contract_version",
             "created_at",
         ),
         "staged_rows": (
@@ -156,6 +157,7 @@ COLUMNS.update(
             "value_date",
             "as_of_date",
             "blocked_reason",
+            "posting_state",
             "value_count",
             "created_at",
         ),
@@ -181,6 +183,41 @@ COLUMNS.update(
             "instrument_mapping_revision",
             "created_at",
         ),
+    }
+)
+COLUMNS.update(
+    {
+        "financial_events": (
+            "owner_id",
+            "id",
+            "revision",
+            "previous_revision",
+            "source_row_id",
+            "source_review_revision",
+            "account_id",
+            "position_id",
+            "instrument_id",
+            "kind",
+            "posting_state",
+            "trade_date",
+            "settlement_date",
+            "booking_date",
+            "value_date",
+            "value_count",
+            "created_at",
+        ),
+        "event_components": (
+            "owner_id",
+            "event_id",
+            "revision",
+            "role",
+            "source",
+            "amount",
+            "currency",
+            "missing_reason",
+        ),
+        "quantity_movements": ("owner_id", "event_id", "revision", "position_id", "amount"),
+        "cash_movements": ("owner_id", "event_id", "revision", "account_id", "currency", "amount"),
     }
 )
 OMITTED = ("auth_sessions", "auth_admissions")

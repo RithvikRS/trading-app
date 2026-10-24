@@ -67,9 +67,13 @@ class StagedRow:
     decision: ReviewDecision | None
 
 
-def canonical(definition: BatchDefinition) -> str:
+def canonical(definition: BatchDefinition, contract_version: int = 2) -> str:
+    if type(contract_version) is not int or contract_version not in (1, 2):
+        raise ImportUnavailable()
     value = definition.model_dump(mode="json")
     for row in value["rows"]:
+        if contract_version == 1:
+            row.pop("posting_state")
         row["values"].sort(key=lambda item: item["role"])
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
@@ -225,7 +229,7 @@ class ImportTransaction:
         )
         if (
             len(definition.rows) != row["row_count"]
-            or hashlib.sha256(canonical(definition).encode()).hexdigest()
+            or hashlib.sha256(canonical(definition, row["contract_version"]).encode()).hexdigest()
             != row["normalized_digest"]
         ):
             raise ImportUnavailable()
@@ -279,9 +283,9 @@ class ImportTransaction:
             batch_id = uuid4()
             self._execute(
                 "INSERT INTO app.import_batches (owner_id,id,observation_id,revision,"
-                "previous_revision,normalizer,normalizer_version,normalized_digest,"
-                "row_count) VALUES (:owner,:id,:observation,:revision,:previous,:normalizer,"
-                ":version,:digest,:count)",
+                "previous_revision,normalizer,normalizer_version,normalized_digest,row_count,"
+                "contract_version) VALUES (:owner,:id,:observation,:revision,:previous,"
+                ":normalizer,:version,:digest,:count,2)",
                 id=batch_id,
                 observation=observation_id,
                 revision=expected + 1,
@@ -296,10 +300,10 @@ class ImportTransaction:
                 self._execute(
                     "INSERT INTO app.staged_rows (owner_id,id,batch_id,occurrence,kind,"
                     "instrument_identifier_id,trade_date,settlement_date,booking_date,"
-                    "value_date,as_of_date,blocked_reason,value_count) VALUES (:owner,:id,"
-                    ":batch,:occurrence,:kind,:instrument_identifier_id,:trade_date,"
-                    ":settlement_date,:booking_date,:value_date,:as_of_date,:blocked_reason,"
-                    ":count)",
+                    "value_date,as_of_date,blocked_reason,value_count,posting_state) VALUES "
+                    "(:owner,:id,:batch,:occurrence,:kind,:instrument_identifier_id,"
+                    ":trade_date,:settlement_date,:booking_date,:value_date,:as_of_date,"
+                    ":blocked_reason,:count,:posting_state)",
                     id=row_id,
                     batch=batch_id,
                     count=len(candidate.values),

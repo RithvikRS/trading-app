@@ -24,6 +24,7 @@ from trading_db.account_keys import ReferenceKeys, load_keys
 from trading_db.accounts import AccountDatabase, AccountDefinition
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.enrollment import provision_owner
+from trading_db.events import EventTransaction
 from trading_db.import_contracts import (
     BatchDefinition,
     CandidateDefinition,
@@ -182,13 +183,46 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                     expected_revision=1,
                 )
                 staging.decide(staging.rows(second_batch.id)[0].id, "include", expected_revision=0)
-                staging.observation(
+                revised_evidence = staging.observation(
                     source.id,
                     evidence.definition.model_copy(update={"digest": "b" * 64}),
                     previous_id=evidence.id,
                 )
                 securities.position(first.id, direct.id, "folio")
-                securities.position(second.id, regular.id, "folio")
+                position = securities.position(second.id, regular.id, "folio")
+                event_batch = staging.stage(
+                    revised_evidence.id,
+                    BatchDefinition(
+                        normalizer="synthetic",
+                        normalizer_version="1",
+                        rows=tuple(
+                            CandidateDefinition(
+                                occurrence=index,
+                                kind="subscription",
+                                posting_state=state,
+                                instrument_identifier_id=reference.id,
+                                trade_date="2026-10-24",
+                                values=(
+                                    StagedValue(role="quantity", source="0.123456789012"),
+                                    StagedValue(role="net_cash", source="-12.30", currency="INR"),
+                                    StagedValue(
+                                        role="fee",
+                                        source=None,
+                                        currency="INR",
+                                        missing_reason="not_supplied",
+                                    ),
+                                ),
+                            )
+                            for index, state in enumerate(("posted", "pending"), 1)
+                        ),
+                    ),
+                    expected_revision=0,
+                )
+                for event_row in staging.rows(event_batch.id):
+                    staging.decide(event_row.id, "include", expected_revision=0)
+                    EventTransaction(unit._unit).record(
+                        event_row.id, expected_review_revision=1, position_id=position.id
+                    )
                 brokerage = unit.create(
                     AccountDefinition(
                         kind="brokerage",
@@ -305,13 +339,16 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             )
             assert counts["fund_schemes"] == counts["instrument_listings"] == 2
             assert counts["instrument_identifiers"] == 4
+            assert counts["source_observations"] == 4
+            assert counts["import_batches"] == 6 and counts["staged_rows"] == 8
+            assert counts["staged_values"] == 24 and counts["review_decisions"] == 12
             assert (
-                counts["source_observations"]
-                == counts["import_batches"]
-                == counts["staged_rows"]
+                counts["financial_events"]
+                == counts["cash_movements"]
+                == counts["quantity_movements"]
                 == 4
             )
-            assert counts["staged_values"] == 12 and counts["review_decisions"] == 8
+            assert counts["event_components"] == 12
             assert signature(restored_admin) == baseline
             restored_data = recovery.decode_snapshot(
                 recovery.export_snapshot(
