@@ -147,3 +147,9 @@ The bounded encrypted foundation export omits sessions/provider state and recons
 [Step 4F.2](reconciliation-contracts.md) adds conditional native-ledger calculations with strict bounded inputs, exact arithmetic and private diagnostics. Incomplete coverage, unknown balances, unresolved components and exclusions cannot produce a balanced claim. Source and combined checkpoints must agree. Completion must derive ownership, coverage and baseline facts from database evidence; browser-supplied assertions are not trusted inputs to that future transaction.
 
 [Statement boundary metadata](statement-boundaries.md) is immutable and owner-scoped. Normalized cash date basis requires known activity coverage; boundary labels require compatible dated checkpoints tied to their source period. PostgreSQL enforces the same rules during direct writes and restoration. Unknown labels cannot hide same-day conflicts, and exact-instant conflicts remain blocked.
+
+## Import completion integrity
+
+[Limited-coverage completion](completion-receipts.md) binds current owned source reviews, mappings and economic targets to immutable receipts in one transaction. PostgreSQL enforces canonical public manifests, composite owner references, exact source relationships, current revisions, complete row membership and append-only grants. A waiting INSERT must recheck fresh owner state after obtaining the common lock.
+
+Private provider references stay in authenticated encrypted custody and are checked separately on retries. Completed occurrences cannot be re-reviewed or posted through another primitive. Full-activity statements cannot bypass reconciliation by requesting limited completion. These internal controls add no upload parser or financial HTTP mutation route.

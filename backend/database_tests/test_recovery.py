@@ -22,7 +22,9 @@ from trading_auth.session_models import verifier
 from trading_db import migrate, recovery
 from trading_db.account_keys import ReferenceKeys, load_keys
 from trading_db.accounts import AccountDatabase, AccountDefinition
+from trading_db.completion import CompletionTransaction
 from trading_db.completion_baseline import CompletionBaseline
+from trading_db.completion_contracts import CompletionRequest, CompletionRow, CompletionSelection
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.enrollment import provision_owner
 from trading_db.event_evidence import EventEvidenceTransaction
@@ -430,6 +432,135 @@ def add_snapshot_history(store, owner):
         )
 
 
+def add_completion_history(store, owner, keys):
+    saved = []
+    with store.transaction(owner) as unit:
+        broker = next(account for account in unit.list() if account.definition.kind == "brokerage")
+        source = unit.source("indmoney_us", "FAKE-COMPLETION")
+        unit.map(source.id, broker.id, expected_revision=0)
+    previous = None
+    event_id = snapshot_id = None
+    for version in (1, 2):
+        with store.transaction(owner) as unit:
+            imports = ImportTransaction(unit._unit)
+            completion = CompletionTransaction(unit._unit, keys)
+            observed = imports.observation(
+                source.id,
+                ObservationDefinition(
+                    digest=uuid4().hex * 2,
+                    coverage="partial_activity",
+                    period_start="2026-10-01",
+                    period_end="2026-10-24",
+                ),
+                previous_id=previous,
+            )
+            values = [
+                CandidateDefinition(
+                    occurrence=1,
+                    kind="cash_movement",
+                    posting_state="posted",
+                    booking_date="2026-10-24",
+                    values=(
+                        StagedValue(
+                            role="net_cash",
+                            source="-20.00" if version == 1 else "-22.00",
+                            currency="USD",
+                        ),
+                    ),
+                ),
+                CandidateDefinition(
+                    occurrence=2,
+                    kind="cash_snapshot",
+                    as_of_date="2026-10-24",
+                    snapshot_scope="native_cash",
+                    values=(
+                        StagedValue(
+                            role="net_cash",
+                            source="100.00" if version == 1 else "98.00",
+                            currency="USD",
+                        ),
+                    ),
+                ),
+            ]
+            if version == 1:
+                values.append(
+                    CandidateDefinition(
+                        occurrence=3,
+                        kind="cash_movement",
+                        posting_state="posted",
+                        booking_date="2026-10-24",
+                        values=(StagedValue(role="net_cash", source="99.00", currency="USD"),),
+                    )
+                )
+            staged = imports.stage(
+                observed.id,
+                BatchDefinition(normalizer="synthetic", normalizer_version="1", rows=tuple(values)),
+                expected_revision=0,
+            )
+            rows = imports.rows(staged.id)
+            for row in rows:
+                imports.decide(
+                    row.id,
+                    "exclude" if row.definition.occurrence == 3 else "include",
+                    expected_revision=0,
+                )
+            if version == 1:
+                choices = (
+                    CompletionRow(
+                        row_id=rows[0].id,
+                        review_revision=1,
+                        operation="record",
+                        provider_reference="FAKE-COMPLETED-EVENT",
+                    ),
+                    CompletionRow(row_id=rows[1].id, review_revision=1, operation="record"),
+                    CompletionRow(row_id=rows[2].id, review_revision=1, operation="exclude"),
+                )
+            else:
+                choices = (
+                    CompletionRow(
+                        row_id=rows[0].id,
+                        review_revision=1,
+                        operation="correct",
+                        target_kind="event",
+                        target_id=event_id,
+                        target_revision=1,
+                        correction_reason="source_correction",
+                    ),
+                    CompletionRow(
+                        row_id=rows[1].id,
+                        review_revision=1,
+                        operation="correct",
+                        target_kind="snapshot",
+                        target_id=snapshot_id,
+                        target_revision=1,
+                        correction_reason="source_correction",
+                    ),
+                )
+            request = CompletionRequest(
+                idempotency_key=uuid4(),
+                batch_id=staged.id,
+                batch_revision=1,
+                baseline=completion.baseline(),
+                mode="limited",
+                rows=choices,
+                selections=(
+                    CompletionSelection(
+                        row_id=rows[1].id,
+                        expected_revision=version - 1,
+                        reason="reviewed" if version == 1 else "correction",
+                    ),
+                ),
+            )
+            receipt = completion.complete(request)
+            saved.append((request, receipt))
+            event_id = next(row.event_id for row in receipt.rows if row.event_id is not None)
+            snapshot_id = next(
+                row.snapshot_id for row in receipt.rows if row.snapshot_id is not None
+            )
+            previous = observed.id
+    return saved
+
+
 def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(environment, database):
     client, service, workspace, _, admin = environment
     source_url, source_project = database
@@ -456,6 +587,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
     identifier_material = {1: b"a" * 32, 2: b"b" * 32}
     identifier_keys = ReferenceKeys({1: identifier_material[1]}, 1)
     account_store = AccountDatabase(source_url("runtime"), source_project, identifier_keys)
+    completed_imports = {}
     try:
         for owner in (own, other):
             with account_store.transaction(owner) as unit:
@@ -614,6 +746,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 unit.archive(first.id, expected_revision=1)
             add_snapshot_history(account_store, owner)
             add_market_history(account_store, owner)
+            completed_imports[owner] = add_completion_history(account_store, owner, identifier_keys)
     finally:
         account_store.close()
     identifier_keys = ReferenceKeys(identifier_material, 2)
@@ -623,9 +756,9 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
         for owner in (own, other):
             with account_store.transaction(owner) as unit:
                 before_rotation = CompletionBaseline(unit._unit).current()
-                assert unit.rotate_references() == 1
+                assert unit.rotate_references() == 2
                 assert (
-                    EventEvidenceTransaction(unit._unit, identifier_keys).rotate_references() == 2
+                    EventEvidenceTransaction(unit._unit, identifier_keys).rotate_references() == 3
                 )
                 completion_baselines[owner] = CompletionBaseline(unit._unit).current()
                 assert completion_baselines[owner] == before_rotation
@@ -710,7 +843,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             )
             assert counts["auth_sessions"] == counts["auth_admissions"] == 0
             assert counts["financial_accounts"] == counts["account_currencies"] == 6
-            assert counts["source_accounts"] == 2 and counts["source_account_mappings"] == 4
+            assert counts["source_accounts"] == 4 and counts["source_account_mappings"] == 6
             assert (
                 counts["instruments"]
                 == counts["account_positions"]
@@ -719,21 +852,22 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             )
             assert counts["fund_schemes"] == counts["instrument_listings"] == 2
             assert counts["instrument_identifiers"] == 4
-            assert counts["source_observations"] == 8
-            assert counts["import_batches"] == 10 and counts["staged_rows"] == 38
-            assert counts["staged_values"] == 96 and counts["review_decisions"] == 42
-            assert counts["financial_events"] == 10
-            assert counts["cash_movements"] == counts["quantity_movements"] == 8
-            assert counts["event_components"] == 24
+            assert counts["source_observations"] == 12
+            assert counts["import_batches"] == 14 and counts["staged_rows"] == 48
+            assert counts["staged_values"] == 106 and counts["review_decisions"] == 52
+            assert counts["financial_events"] == 14
+            assert counts["cash_movements"] == 12 and counts["quantity_movements"] == 8
+            assert counts["event_components"] == 28
             assert counts["lots"] == 2 and counts["lot_observations"] == 10
             assert counts["lot_components"] == 32
-            assert counts["snapshot_records"] == 12
-            assert counts["snapshot_components"] == 22
-            assert counts["snapshot_selections"] == 10
+            assert counts["snapshot_records"] == 16
+            assert counts["snapshot_components"] == 26
+            assert counts["snapshot_selections"] == 14
             assert counts["market_observations"] == 14
             assert counts["market_selections"] == 10
-            assert counts["event_provider_identities"] == 4
-            assert counts["event_evidence_links"] == 6
+            assert counts["event_provider_identities"] == 6
+            assert counts["event_evidence_links"] == 8
+            assert counts["completion_receipts"] == 4 and counts["completion_rows"] == 10
             assert signature(restored_admin) == baseline
             restored_data = recovery.decode_snapshot(
                 recovery.export_snapshot(
@@ -764,6 +898,14 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                         assert (
                             CompletionBaseline(unit._unit).current() == completion_baselines[owner]
                         )
+                        completed = CompletionTransaction(unit._unit, recovered_identifiers)
+                        assert len(completed.list()) == 2
+                        for request, receipt in completed_imports[owner]:
+                            assert completed.get(receipt.id) == receipt
+                            assert completed.complete(request) == receipt
+                        other_owner = other if owner == own else own
+                        for _, foreign in completed_imports[other_owner]:
+                            assert completed.get(foreign.id) is None
                         assert len(unit.list()) == 3
                         source = unit.source("cas", "FAKE-FOLIO")
                         assert source.revision == 2

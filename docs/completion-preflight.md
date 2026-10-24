@@ -1,6 +1,6 @@
 # Completion requests and stale-state protection
 
-Step **4F.3.2a** defines the internal request boundary and database state token needed before atomic import completion. It adds no completion endpoint, receipt or financial write operation. Receipt persistence and binding reconciliation to owned evidence follow in **4F.3.2b**.
+Step **4F.3.2a** defines the internal request boundary and database state token needed before atomic import completion. It adds no completion endpoint, receipt or financial write operation. [Step 4F.3.2b](completion-receipts.md) subsequently adds atomic limited-coverage receipt persistence. Full reconciliation follows in **4F.3.2c**.
 
 ## Request contract
 
@@ -22,7 +22,7 @@ Each table read is limited to 1,001 records, and any count above 1,000 fails ins
 
 The database function is explicitly `VOLATILE`: after waiting for another writer, its queries observe that writer's committed change. Repeatable-read and serializable contexts are rejected here because they can retain an earlier transaction snapshot. The [internal guard](../backend/trading_db/completion_baseline.py) compares the expected token under the same lock and savepoint as dependent work. Failure rolls back that work; the surrounding transaction may still continue safely. The lock lasts until the outer transaction ends, so callers must keep it short and perform no provider or network I/O inside it.
 
-A baseline is an anti-staleness token, not proof of complete history or a substitute for reconciliation evidence. Future receipt writes must also enforce the token in PostgreSQL, retain immutable compared inputs, and add receipt identities to the versioned baseline. Exact completed retries must resolve the original receipt before comparing live state.
+A baseline is an anti-staleness token, not proof of complete history or a substitute for reconciliation evidence. [Step 4F.3.2b](completion-receipts.md) enforces the token in PostgreSQL and adds receipt identities to the versioned baseline. Full reconciled completion must also retain immutable compared inputs. Exact completed retries must resolve the original receipt before comparing live state.
 
 ## Migration and recovery
 
@@ -33,3 +33,5 @@ Disposable downgrade/re-upgrade removes/restores the new function and eight inse
 ## Verification
 
 Synthetic tests cover private-reference omission, exact manifest parsing, malformed copied models, directive conflicts, owner/role denial, stale token rejection, failed-write rollback, bounded state, key rotation and recovery. Real concurrent PostgreSQL tests hold the owner lock, start a competing statement, verify that it is actually waiting, then commit and check the resulting token. A second race checks that raw identity inserts respect an existing baseline guard.
+
+The current [receipt schema and recovery format](completion-receipts.md#recovery-and-verification) supersede the preflight-only inventory above.

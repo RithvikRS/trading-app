@@ -15,8 +15,8 @@ from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 from trading_db.provider_keys import ProviderKeys
 
-HEAD = "0015_completion_baseline"
-FORMAT = 11
+HEAD = "0016_completion_receipts"
+FORMAT = 12
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -379,6 +379,40 @@ COLUMNS.update(
             "event_id",
             "event_revision",
             "created_at",
+        ),
+    }
+)
+COLUMNS.update(
+    {
+        "completion_receipts": (
+            "owner_id",
+            "id",
+            "idempotency_key",
+            "batch_id",
+            "batch_revision",
+            "baseline_digest",
+            "request_canonical",
+            "request_digest",
+            "mode",
+            "coverage",
+            "row_count",
+            "selection_count",
+            "created_at",
+        ),
+        "completion_rows": (
+            "owner_id",
+            "receipt_id",
+            "source_row_id",
+            "review_revision",
+            "operation",
+            "outcome",
+            "event_id",
+            "lot_observation_id",
+            "snapshot_id",
+            "record_revision",
+            "provider_identity_id",
+            "selection_id",
+            "selection_revision",
         ),
     }
 )

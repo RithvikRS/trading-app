@@ -38,6 +38,7 @@ def payload():
         lambda value: value.update(format=8),
         lambda value: value.update(format=9),
         lambda value: value.update(format=10),
+        lambda value: value.update(format=11),
         lambda value: value.update(extra="unexpected"),
         lambda value: value["rows"].update(auth_sessions=[]),
         lambda value: value["rows"].update(owners=[{}]),
