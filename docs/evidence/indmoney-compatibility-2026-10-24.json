@@ -48,5 +48,13 @@
   "transaction_history_verified": false,
   "successful_renewal_verified": false,
   "mcp_protocol_version_verified": false,
-  "provider_credentials_included": false
+  "provider_credentials_included": false,
+  "protocol_initialization": {
+    "operation": "unauthenticated_protocol_initialization",
+    "status": 401,
+    "authentication_challenge_present": true,
+    "protocol_version_verified": false,
+    "credentials_sent": false,
+    "redirect_followed": false
+  }
 }
