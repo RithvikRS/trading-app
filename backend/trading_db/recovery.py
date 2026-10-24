@@ -13,8 +13,8 @@ from trading_db import migrate
 from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 
-HEAD = "0006_accounts_sources"
-FORMAT = 2
+HEAD = "0007_instruments"
+FORMAT = 3
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -71,6 +71,48 @@ COLUMNS = {
         "previous_revision",
         "account_id",
         "reason",
+        "created_at",
+    ),
+    "fund_schemes": ("owner_id", "id", "name", "created_at"),
+    "instruments": (
+        "owner_id",
+        "id",
+        "asset_class",
+        "name",
+        "isin",
+        "fund_scheme_id",
+        "fund_plan",
+        "fund_option",
+        "fund_currency",
+        "created_at",
+    ),
+    "instrument_listings": (
+        "owner_id",
+        "id",
+        "instrument_id",
+        "venue",
+        "symbol",
+        "series",
+        "quote_currency",
+        "created_at",
+    ),
+    "instrument_identifiers": ("owner_id", "id", "namespace", "value", "qualifier", "created_at"),
+    "instrument_mappings": (
+        "owner_id",
+        "identifier_id",
+        "revision",
+        "previous_revision",
+        "instrument_id",
+        "listing_id",
+        "reason",
+        "created_at",
+    ),
+    "account_positions": (
+        "owner_id",
+        "id",
+        "account_id",
+        "instrument_id",
+        "holding_form",
         "created_at",
     ),
 }

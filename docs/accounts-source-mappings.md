@@ -63,7 +63,7 @@ Retain old keys until every owner's rows have been rewrapped and every retained 
 
 Apply the normal [local migration command](database-foundation.md#commands-and-lifecycle) to reach `0006_accounts_sources`. Existing identities, sessions, and preference revisions are preserved; no accounts or keys are seeded. Reapplying the migration is a no-op. Disposable tests exercise upgrade, downgrade/re-upgrade, and complete rollback after an injected mid-migration failure. Destructive downgrade remains restricted to disposable databases.
 
-Recovery format **2** covers eleven application tables: nine durable tables, with sessions/admissions explicitly omitted. It includes all four account tables, encrypted references, key versions, currencies, archive state, and mapping predecessors. Parent rows restore before children; the mapping predecessor foreign key is deferred so backup row order cannot corrupt history. The outer encrypted object still binds schema revision and migration-source digest.
+Step 4B introduced recovery format **2**, covering eleven application tables: nine durable tables, with sessions/admissions explicitly omitted. It includes all four account tables, encrypted references, key versions, currencies, archive state, and mapping predecessors. Parent rows restore before children; the mapping predecessor foreign key is deferred so backup row order cannot corrupt history. The outer encrypted object still binds schema revision and migration-source digest.
 
 Export and restore require a separately supplied identifier key ring whenever source references exist. Every ciphertext and exact source identity is checked before restore writes. Wrong/missing keys, duplicate identities, altered context, uncovered columns, incompatible manifests, or constraints abort without partial data. Keys themselves are never included in the database object. The separate-cluster drill recovers the encrypted object, its encryption key, and identifier key independently; compares all durable rows, revisions, constraints, column/table grants and policies; and denies old sessions.
 
@@ -73,6 +73,6 @@ Format 1 objects must be restored using their matching repository/schema revisio
 
 Synthetic tests cover account combinations, exact-reference matching and collision handling, owner/provider separation, authenticated-context tampering, unavailable keys, exclusive private key creation, forward rotation, mapping corrections/unlinks, archives, stale/concurrent writes, bounded pagination, direct-SQL denials, transaction/savepoint rollback, pool reuse, migration preservation, and encrypted restore into a second PostgreSQL cluster. Local and CI check results are recorded with this increment's PR. No real statement or hosted Supabase verification is represented by these tests.
 
-The next increment is [4C: instruments and fund identities](financial-data-plan.md#delivery-increments).
+[Step 4C](instrument-identities.md) subsequently adds instruments/position identities and extends the current recovery format to 3. Older objects retain their matching-release restoration requirement.
 
 The local development database was migrated to `0006_accounts_sources` on 24 October 2026. All eleven application tables remain empty; no owner, account, source, or identifier key was seeded.
