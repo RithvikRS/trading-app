@@ -22,6 +22,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 6D](docs/reviewed-snapshots.md) adds protected investment holdings/details and review of saved snapshots. Explicit mappings and row decisions lead to a rollback-only preview, atomic completion and an immutable receipt. Source quantities/prices retain their native currency and exact precision; incomplete coverage and unavailable values remain visible. Live acquisition and current portfolio valuation remain separate capabilities.
 
+[Step 6E.1](docs/source-history.md) adds source-history coverage inspection from investment details. Reported periods, partial/snapshot-only coverage and superseded evidence are visible without implying completed imports, lifetime history or tax basis. A verified activity contract or detailed statement layout is still required for historical ingestion.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
