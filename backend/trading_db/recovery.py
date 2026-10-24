@@ -2,7 +2,8 @@
 
 import hashlib
 import json
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
@@ -13,8 +14,8 @@ from trading_db import migrate
 from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 
-HEAD = "0007_instruments"
-FORMAT = 3
+HEAD = "0008_import_staging"
+FORMAT = 4
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -116,6 +117,72 @@ COLUMNS = {
         "created_at",
     ),
 }
+COLUMNS.update(
+    {
+        "source_observations": (
+            "owner_id",
+            "id",
+            "source_id",
+            "previous_id",
+            "digest",
+            "digest_algorithm",
+            "period_start",
+            "period_end",
+            "coverage",
+            "created_at",
+        ),
+        "import_batches": (
+            "owner_id",
+            "id",
+            "observation_id",
+            "revision",
+            "previous_revision",
+            "normalizer",
+            "normalizer_version",
+            "normalized_digest",
+            "row_count",
+            "created_at",
+        ),
+        "staged_rows": (
+            "owner_id",
+            "id",
+            "batch_id",
+            "occurrence",
+            "kind",
+            "instrument_identifier_id",
+            "trade_date",
+            "settlement_date",
+            "booking_date",
+            "value_date",
+            "as_of_date",
+            "blocked_reason",
+            "value_count",
+            "created_at",
+        ),
+        "staged_values": (
+            "owner_id",
+            "row_id",
+            "role",
+            "source",
+            "amount",
+            "currency",
+            "missing_reason",
+        ),
+        "review_decisions": (
+            "owner_id",
+            "row_id",
+            "revision",
+            "previous_revision",
+            "action",
+            "reason",
+            "source_id",
+            "account_mapping_revision",
+            "instrument_identifier_id",
+            "instrument_mapping_revision",
+            "created_at",
+        ),
+    }
+)
 OMITTED = ("auth_sessions", "auth_admissions")
 
 
@@ -174,6 +241,10 @@ def encode(value: Any) -> str:
         return str(value)
     if isinstance(value, datetime) and value.tzinfo is not None:
         return value.isoformat()
+    if type(value) is date:
+        return value.isoformat()
+    if isinstance(value, Decimal) and value.is_finite():
+        return format(value, "f")
     raise DatabaseFailure("Unsupported recovery value.")
 
 
