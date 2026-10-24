@@ -9,6 +9,11 @@ from sqlalchemy import Connection, text
 
 from trading_auth.models import AuthenticationDenied, AuthenticationLimited
 from trading_auth.session_models import Event, Outcome, SessionRow, Stage
+from trading_connectors.indmoney_models import (
+    ConnectorBusy,
+    ConnectorRejected,
+    ConnectorUnavailable,
+)
 from trading_db.identities import IdentityDatabase
 
 # Serializes small registry mutations, including revocation versus in-flight completion.
@@ -45,6 +50,12 @@ def event(
 
 
 class SessionDatabase(IdentityDatabase):
+    expected_errors = IdentityDatabase.expected_errors + (
+        ConnectorRejected,
+        ConnectorUnavailable,
+        ConnectorBusy,
+    )
+
     @contextmanager
     def workspace_guard(self, key: bytes, owner: UUID) -> Iterator[Callable[[], None]]:
         # Share the revocation/renewal lock only during short local SQL work.

@@ -16,6 +16,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 5A](docs/amfi-nav-contracts.md) begins the [connected investment flow](docs/investment-flow-plan.md) with bounded public NAV parsing and exact fund matching. Missing, stale, ambiguous or unsupported evidence cannot supply a usable valuation. [Step 5B.1](docs/parser-transport.md) adds bounded worker transport contracts. The [INDmoney integration plan](docs/indmoney-integration-plan.md) prioritizes official read-only acquisition before further statement parsing; Step 6A.1 implements bounded public discovery validation; [6A.2](docs/indmoney-compatibility.md) verified local client registration and the authorization handoff. Account access, history coverage and successful token renewal remain unverified. The worker, statement intake and connected investment screens remain later increments. [Step 5E.1](docs/connected-accounts.md) connects the protected Accounts page to saved account identities, with bounded pagination, explicit unavailable states and sign-in-bound requests. It shows no balances or provider connection claims.
 
+[Step 6B](docs/indmoney-authorization.md) adds opt-in INDmoney authorization controls, a browser-bound callback, encrypted credential custody, explicit renewal and local-first disconnect. It requires separately configured local HTTPS and MFA. Tests and screenshots use synthetic responses; no live account has been authorized, and financial imports remain disabled.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:

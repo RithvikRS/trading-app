@@ -1,5 +1,7 @@
 # Repeatable verification
 
+[Step 6B](indmoney-authorization.md) adds synthetic OAuth/callback/encryption tests, real PostgreSQL authorization and revocation races, minimal grants, key rotation, migration guards and recovery without live connector state. Protected UI tests verify exact authorization destinations, CSRF/session binding, late-response disposal, explicit completion and uncertain revocation feedback. Browser evidence covers both themes at desktop/mobile widths. CI uses no live provider credentials; real account access and token behavior remain separate acceptance items.
+
 The repository now has one check entry point and a GitHub Actions workflow using the same commands. All checks use synthetic data. [Step 3C](database-foundation.md) adds a disposable local PostgreSQL service for database checks. Hosted identity, production credentials, deployment jobs, and cloud permissions remain absent.
 
 ## Local commands
@@ -24,6 +26,8 @@ The launcher needs Python 3.11 or newer. Backend commands run with the pinned Py
 Dependencies are installed from committed lockfiles. Python audit tooling and its transitive dependencies are locked as development dependencies and are excluded from runtime-only installs. Gitleaks 8.30.1 and actionlint 1.7.12 are fetched from official release archives into ignored `.cache/check-tools/`. Archive hashes are checked before reading the binary, and the binary hash is checked on every invocation, including cache hits. `scripts/tools.json` records both hashes for Windows/Linux x86_64. Other platforms fail explicitly until verified pins are added.
 
 Frontend test files run with one worker to keep DOM-heavy integration tests from competing for resources on local machines and CI. Per-file isolation, test assertions, and their time limits remain active. Import-inspector keyboard checks wait for cancellation's next-frame focus restoration before sending Tab, asserting restoration and containment as separate interactions.
+
+The full database suite has an 18-minute subprocess limit within the existing 20-minute runner/CI cap. Step 6B's expanded suite reached 97% without assertion failures before the former 15-minute local limit stopped it. The increased bound preserves every test, disposal guard and failure check; run this Docker-intensive group without competing local builds when measuring its duration.
 
 The commands need network access for initial downloads, dependency installation, and fresh advisory queries. The API and database suites need loopback socket access. Database checks also need the local Docker socket and the digest-pinned PostgreSQL image; the first image pull requires network access. Test credentials are generated per run and removed after successful container cleanup. An unavailable audit service, missing tool, stale lock, checksum mismatch, scan error, or shallow Git history is a failure; there is no offline-success or skip switch. For a shallow checkout, fetch its complete history before running repository checks. Tool commands have a 20-minute timeout, except the clean frontend install, which allows 45 minutes for slower local filesystems. Windows invokes npm through Node directly so an install timeout terminates npm instead of leaving it behind a terminated command wrapper. Hosted CI jobs retain their independent 20-minute limit.
 

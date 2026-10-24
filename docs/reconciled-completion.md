@@ -39,7 +39,7 @@ Exact retries return the original receipt and comparisons before checking live s
 
 ## Migration, recovery and verification
 
-The current head is `0017_reconciled_completion`. Existing limited receipts remain readable with no comparison scopes. Earlier shared migrations are unchanged. Empty comparison tables can be downgraded to the prior schema; persisted reconciliation evidence prevents downgrade. Development uses forward migration.
+This increment introduced `0017_reconciled_completion`; see [development](development.md#local-postgresql) for the current head. Existing limited receipts remain readable with no comparison scopes. Earlier shared migrations are unchanged. Empty comparison tables can be downgraded to the prior schema; persisted reconciliation evidence prevents downgrade. Development uses forward migration.
 
 Recovery format **13** covers **40 application tables**, with 38 durable tables and two intentionally omitted session/admission tables. The encrypted two-owner drill retains limited and full receipts, exact comparison inputs, subsequent event/checkpoint corrections, selected balances and rotated private provider references. It compares all durable rows, constraints, grants and policies, replays historical requests using recovered keys, and keeps old sessions revoked. Older recovery objects require their matching release/schema before forward migration and re-export.
 

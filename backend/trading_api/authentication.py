@@ -103,8 +103,11 @@ def validate_financial_json(body: bytearray) -> None:
 
 
 class BrowserBoundary:
-    def __init__(self, app: ASGIApp, policy: CookiePolicy, secret: str) -> None:
+    def __init__(
+        self, app: ASGIApp, policy: CookiePolicy, secret: str, *, indmoney: bool = False
+    ) -> None:
         self.policy = policy
+        self.raw_app, self.indmoney = app, indmoney
         self.app = SafeCSRF(
             app,
             secret=secret,
@@ -121,14 +124,24 @@ class BrowserBoundary:
         from trading_api.application import error_response
 
         request = Request(scope)
+        # The dedicated callback validates its own bounded query and Lax correlation
+        # cookie. Do not create/replace a Strict CSRF cookie on this cross-site GET.
+        if self.indmoney and request.url.path == "/api/v1/connections/indmoney/callback":
+            await self.raw_app(scope, receive, send)
+            return
         financial = request.url.path == "/api/v1/finance" or request.url.path.startswith(
             "/api/v1/finance/"
+        )
+        connector = (
+            request.url.path == "/api/v1/connections/indmoney"
+            or request.url.path.startswith("/api/v1/connections/indmoney/")
         )
         if not (
             request.url.path.startswith("/api/v1/auth/")
             or request.url.path == "/api/v1/preferences"
             or request.url.path.startswith("/api/v1/preferences/")
             or financial
+            or connector
         ):
             await self.app(scope, receive, send)
             return
@@ -183,7 +196,7 @@ class BrowserBoundary:
                             return
                         if not message.get("more_body", False):
                             break
-                if financial:
+                if financial or connector:
                     validate_financial_json(body)
             except TimeoutError, ValueError, RecursionError:
                 await error_response(400, request.state.request_id)(scope, receive, send)

@@ -22,6 +22,7 @@ COPY --from=dependencies /opt/venv /opt/venv
 COPY backend/trading_api ./trading_api
 COPY backend/trading_auth ./trading_auth
 COPY backend/trading_db ./trading_db
+COPY backend/trading_connectors ./trading_connectors
 COPY --from=frontend /build/frontend/workspace/dist /app/frontend/workspace/dist
 USER 10001:10001
 ENTRYPOINT ["python", "-m", "trading_api.packaged"]

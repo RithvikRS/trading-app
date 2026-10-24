@@ -1,5 +1,7 @@
 // Only opaque cookies cross the session boundary. This module has no storage adapter.
 import { parsePreferences } from './preferences'
+import { authorizationTarget, parseConnection } from './indmoney'
+import type { ConnectionAction, ConnectionState } from './indmoney'
 import { ACCOUNT_PAGE_SIZE, accountCursor, parseAccountPage } from './accounts'
 import type { AccountNavigation, AccountsState } from './accounts'
 import type { DisplayPreferences, PreferenceSnapshot, PreferenceStatus } from './preferences'
@@ -11,7 +13,7 @@ export type Screen =
   | { kind: 'mfa'; pending: Pending; deadline: number }
   | { kind: 'recovery'; sent: boolean; message?: string }
   | { kind: 'password'; deadline: number }
-  | { kind: 'workspace'; session: Session; deadline: number; preferences: PreferenceSnapshot; preferenceStatus: PreferenceStatus; accounts: AccountsState }
+  | { kind: 'workspace'; session: Session; deadline: number; preferences: PreferenceSnapshot; preferenceStatus: PreferenceStatus; accounts: AccountsState; connection?: ConnectionState }
   | { kind: 'blocked'; reason: 'offline' | 'unavailable' | 'forbidden' | 'limited' | 'context' | 'protocol' | 'signout'; retryAt?: number; notice?: string }
 
 export type State = { screen: Screen; busy: boolean; recovery: boolean }
@@ -22,6 +24,7 @@ const record = (value: unknown): value is Json => !!value && typeof value === 'o
 const exact = (value: Json, keys: string[]) => Object.keys(value).every(key => keys.includes(key))
 const invalid = () => new AuthError('protocol')
 class PreferenceConflict extends Error {}
+class ConnectionNotConfigured extends Error {}
 
 export class AuthError extends Error {
   constructor(readonly reason: 'unauthorized' | 'offline' | 'unavailable' | 'forbidden' | 'limited' | 'context' | 'protocol', readonly retryAt?: number) { super('Authentication request failed.') }
@@ -41,13 +44,14 @@ async function request(path: string, signal: AbortSignal, body?: Json, method?: 
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (path !== '/bootstrap') headers['X-CSRFToken'] = csrf()
   if (body !== undefined) headers['Content-Type'] = 'application/json'
-  if (path === '/preferences' || path === '/finance/accounts/query') {
+  const connector = path === '/connections/indmoney' || path.startsWith('/connections/indmoney/')
+  if (path === '/preferences' || path === '/finance/accounts/query' || connector) {
     if (typeof workspaceContext !== 'string' || !/^[0-9a-f]{64}$/.test(workspaceContext)) throw invalid()
     headers['X-Workspace-Context'] = workspaceContext
   }
   let response: Response
   try {
-    response = await fetch(path === '/finance/accounts/query' ? '/api/v1/finance/accounts/query' : path === '/preferences' ? '/api/v1/preferences' : `/api/v1/auth${path}`, {
+    response = await fetch(connector ? `/api/v1${path}` : path === '/finance/accounts/query' ? '/api/v1/finance/accounts/query' : path === '/preferences' ? '/api/v1/preferences' : `/api/v1/auth${path}`, {
       method: method ?? (body === undefined ? 'GET' : 'POST'), headers,
       credentials: 'same-origin', mode: 'same-origin', redirect: 'error', cache: 'no-store',
       referrerPolicy: 'no-referrer', signal, body: body === undefined ? undefined : JSON.stringify(body),
@@ -55,6 +59,7 @@ async function request(path: string, signal: AbortSignal, body?: Json, method?: 
   } catch { throw new AuthError(navigator.onLine === false ? 'offline' : 'unavailable') }
   if (!response.ok) {
     void response.body?.cancel()
+    if (connector && response.status === 404) throw new ConnectionNotConfigured()
     if (response.status === 401) throw new AuthError('unauthorized')
     if (response.status === 403) throw new AuthError('forbidden')
     if (response.status === 412) throw new AuthError('context')
@@ -106,6 +111,7 @@ function pending(data: Json): Pending {
 }
 
 export class AuthController {
+  constructor(private readonly navigate: (url: string) => void = url => window.location.assign(url)) {}
   private state: State = { screen: { kind: 'checking' }, busy: false, recovery: false }
   private listeners = new Set<() => void>()
   private generation = 0
@@ -146,7 +152,7 @@ export class AuthController {
     const preferences = loaded ?? (previous.kind === 'workspace' ? previous.preferences : undefined)
     if (!preferences) throw invalid()
     this.lastCheck = performance.now()
-    this.set({ kind: 'workspace', session, preferences, accounts: previous.kind === 'workspace' ? previous.accounts : { kind: 'idle' }, preferenceStatus: loaded ? 'idle' : previous.kind === 'workspace' ? previous.preferenceStatus : 'idle', deadline: performance.now() + Math.min(Date.parse(session.expires_at), Date.parse(session.idle_expires_at)) - now })
+    this.set({ kind: 'workspace', session, preferences, accounts: previous.kind === 'workspace' ? previous.accounts : { kind: 'idle' }, connection: previous.kind === 'workspace' ? previous.connection : undefined, preferenceStatus: loaded ? 'idle' : previous.kind === 'workspace' ? previous.preferenceStatus : 'idle', deadline: performance.now() + Math.min(Date.parse(session.expires_at), Date.parse(session.idle_expires_at)) - now })
   }
   private async openWorkspace(signal: AbortSignal, current: () => boolean) {
     const session = await request('/session', signal)
@@ -233,6 +239,37 @@ export class AuthController {
         if (error instanceof AuthError && ['unavailable', 'limited'].includes(error.reason)) {
           this.set({ ...previous, accounts: { kind: 'failed', cursor, limited: error.reason === 'limited' } })
         } else throw error
+      }
+    })
+  }
+  connection = (action: ConnectionAction) => {
+    const previous = this.state.screen
+    if (previous.kind !== 'workspace') return Promise.resolve()
+    return this.run(async (signal, current, latest) => {
+      if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+      this.set({ ...previous, connection: { kind: 'loading' } }, true)
+      try {
+        const path = '/connections/indmoney' + (action === 'status' ? '' : `/${action}`)
+        const result = await request(path, signal, action === 'status' ? undefined : {}, undefined, previous.session.workspace_context)
+        if (!current()) { if (latest()) throw new AuthError('unavailable'); return }
+        if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+        if (action === 'authorize') { this.navigate(authorizationTarget(result.data)); return }
+        if (action === 'status') { this.set({ ...previous, connection: { kind: 'ready', value: parseConnection(result.data) } }); return }
+        if (action === 'disconnect') {
+          if (!exact(result.data, ['status', 'provider_cleanup']) || result.data.status !== 'disconnected' || !['confirmed', 'unavailable', 'not_needed'].includes(String(result.data.provider_cleanup))) throw invalid()
+          this.set({ ...previous, connection: { kind: 'ready', value: { status: 'disconnected', can_complete: false, expires_at: null, financial_access_enabled: false }, cleanup: result.data.provider_cleanup as 'confirmed' | 'unavailable' | 'not_needed' } }); return
+        }
+        if (!exact(result.data, ['status']) || result.data.status !== 'authorized') throw invalid()
+        const status = await request('/connections/indmoney', signal, undefined, undefined, previous.session.workspace_context)
+        if (!current()) { if (latest()) throw new AuthError('unavailable'); return }
+        if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+        this.set({ ...previous, connection: { kind: 'ready', value: parseConnection(status.data) } })
+      } catch (error) {
+        if (!latest()) return
+        if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+        if (error instanceof ConnectionNotConfigured) this.set({ ...previous, connection: { kind: 'unconfigured' } })
+        else if (error instanceof AuthError && ['unavailable', 'limited'].includes(error.reason)) this.set({ ...previous, connection: { kind: 'failed' } })
+        else throw error
       }
     })
   }
