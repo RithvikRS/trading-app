@@ -7,20 +7,31 @@ from sqlalchemy.exc import SQLAlchemyError
 from starlette.responses import Response
 
 from trading_api.authentication import CookiePolicy
+from trading_api.evidence_read_contracts import (
+    EventQuery,
+    EventView,
+    HistoryPage,
+    HistoryQuery,
+    LotObservationQuery,
+    LotObservationView,
+    LotQuery,
+    LotView,
+)
 from trading_api.read_contracts import (
     AccountView,
     FinancialPage,
-    IdentityView,
     InstrumentView,
     PageQuery,
     PositionQuery,
     PositionView,
     SourceView,
+    WireModel,
 )
 from trading_auth.browser import BrowserAuth
 from trading_auth.models import AuthenticationDenied
 from trading_db.connections import DatabaseFailure
-from trading_db.financial_reads import FinancialReadTransaction, FinancialReadUnavailable
+from trading_db.evidence_reads import EvidenceReadTransaction
+from trading_db.financial_reads import FinancialReadUnavailable
 from trading_db.workspace import OwnerAccessDenied, WorkspaceDatabase
 
 MAX_RESPONSE_BYTES = 262144
@@ -29,9 +40,9 @@ MAX_RESPONSE_BYTES = 262144
 def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePolicy) -> APIRouter:
     router = APIRouter(prefix="/api/v1/finance")
 
-    def execute[T: IdentityView](
+    def execute[T: WireModel](
         request: Request,
-        operation: Callable[[FinancialReadTransaction], FinancialPage[T] | None],
+        operation: Callable[[EvidenceReadTransaction], T | None],
     ) -> Response:
         unavailable = False
         content = None
@@ -42,7 +53,7 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
         ) as (owner, validate):
             try:
                 with database.transaction(owner, read_only=True) as unit:
-                    reads = FinancialReadTransaction(unit)
+                    reads = EvidenceReadTransaction(unit)
                     with reads.consistent():
                         result = operation(reads)
                         content = None if result is None else result.model_dump_json().encode()
@@ -76,5 +87,25 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
     @router.post("/positions/query", response_model=FinancialPage[PositionView])
     def positions(body: PositionQuery, request: Request) -> Response:
         return execute(request, lambda reads: reads.positions(body))
+
+    @router.post("/events/query", response_model=FinancialPage[EventView])
+    def events(body: EventQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.events(body))
+
+    @router.post("/events/history", response_model=HistoryPage[EventView])
+    def event_history(body: HistoryQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.event_history(body))
+
+    @router.post("/lots/query", response_model=FinancialPage[LotView])
+    def lots(body: LotQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.lots(body))
+
+    @router.post("/lots/observations/query", response_model=FinancialPage[LotObservationView])
+    def lot_observations(body: LotObservationQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.lot_observations(body))
+
+    @router.post("/lots/observations/history", response_model=HistoryPage[LotObservationView])
+    def lot_history(body: HistoryQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.lot_history(body))
 
     return router

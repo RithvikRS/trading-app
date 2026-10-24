@@ -2,7 +2,7 @@
 
 Step 4G.1 exposes owned account, source-mapping, instrument and position identities through the authenticated Python API. These records carry no inferred balances, holdings quantities or valuation totals. The protected frontend remains empty; connected views follow with their complete data flow in Stage 5.
 
-Step 4G.2 adds dated event, lot, snapshot and market evidence. Step 4G.3 adds import/review/receipt inspection and the remaining persistence acceptance checks. No financial mutation, upload, download from a provider, export or administrative route is introduced by these read increments.
+[Step 4G.2a](event-lot-reads.md) adds dated event/lot evidence and retained history. Step 4G.2b adds snapshot and market evidence/selection reads. Step 4G.3 adds import/review/receipt inspection and the remaining persistence acceptance checks. No financial mutation, upload, download from a provider, export or administrative route is introduced by these read increments.
 
 ## Request contract
 
@@ -30,7 +30,7 @@ An empty owned account produces an empty positions page. An unknown or foreign r
 
 Database projections and frozen response schemas independently allowlist these fields. They do not serialize internal database objects or use unrestricted table projections. No owner ID, encrypted private reference, fingerprint, key metadata, provider token, account number or folio reference is returned. Identity reads require no financial-identifier decryption key and do not query private custody columns.
 
-Responses are fully validated and encoded inside the bounded owner transaction, with a 256 KiB response ceiling. Oversized or invalid stored projections fail as unavailable; they are not truncated. These identity responses contain no monetary values. Later financial evidence routes must retain exact decimal strings, native currency, separate dates, completeness and missing reasons.
+Responses are fully validated and encoded inside the bounded owner transaction, with a 256 KiB response ceiling. Oversized or invalid stored projections fail as unavailable; they are not truncated. These identity responses contain no monetary values. The [event/lot routes](event-lot-reads.md) retain exact decimal strings, native currency, separate dates, coverage and missing reasons.
 
 ## Authentication and failure boundary
 
