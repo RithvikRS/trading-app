@@ -34,4 +34,4 @@ Recovery format **9** covers **36 application tables**: 34 durable and two inten
 
 [Contract tests](../backend/tests/test_provider_keys.py) exercise key/scope substitution, tampering, unavailable keys and domain separation. [Database tests](../backend/database_tests/test_event_evidence.py) cover exact reuse, legitimate repetition, changed economics, correction/retry history, owner isolation, direct SQL, concurrency, rotation, rollback and migration safety. The [recovery drill](../backend/database_tests/test_recovery.py) includes both tables. All fixtures are fabricated.
 
-Step 4F.2 adds source and combined-state reconciliation contracts. Step 4F.3 adds bounded atomic batch completion with durable idempotency and immutable receipts. A matching event alone does not attest complete history, reconcile a statement or resolve lot/snapshot overlap.
+[Step 4F.2](reconciliation-contracts.md) adds source and combined-state reconciliation contracts. Step 4F.3 adds bounded atomic batch completion with durable idempotency and immutable receipts. A matching event alone does not attest complete history, reconcile a statement or resolve lot/snapshot overlap.
