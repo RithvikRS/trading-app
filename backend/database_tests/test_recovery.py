@@ -57,7 +57,10 @@ def financial_pages(client, headers):
         response = client.post(f"/api/v1/finance/{resource}", headers=headers, json=body)
         assert response.status_code == 200
         result = response.json()
-        assert result.get("next_after", result.get("next_before")) is None
+        assert (
+            result.get("next_after", result.get("next_before", result.get("next_after_occurrence")))
+            is None
+        )
         return result
 
     pages = {}
@@ -138,6 +141,25 @@ def financial_pages(client, headers):
             pages["market_resolution"][choice["id"]] = query(
                 "markets/selections/resolve", id=choice["id"]
             )
+    pages["source_observations"] = {}
+    pages["import_batches"] = {}
+    pages["import_rows"] = {}
+    pages["row_inspection"] = {}
+    pages["review_history"] = {}
+    for source in pages["sources"]["items"]:
+        observations = query("imports/observations/query", source_id=source["id"])
+        pages["source_observations"][source["id"]] = observations
+        for observation in observations["items"]:
+            batches = query("imports/batches/query", observation_id=observation["id"])
+            pages["import_batches"][observation["id"]] = batches
+            for batch in batches["items"]:
+                rows = query("imports/rows/query", batch_id=batch["id"])
+                pages["import_rows"][batch["id"]] = rows
+                for row in rows["items"]:
+                    pages["row_inspection"][row["id"]] = query("imports/rows/inspect", id=row["id"])
+                    pages["review_history"][row["id"]] = query(
+                        "imports/reviews/history", id=row["id"]
+                    )
     return pages
 
 
@@ -900,6 +922,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
     assert len(original_pages["accounts"]["items"]) == 3
     assert original_pages["event_history"] and original_pages["lot_history"]
     assert original_pages["snapshot_history"] and original_pages["market_resolution"]
+    assert original_pages["row_inspection"] and original_pages["review_history"]
     key = Fernet.generate_key()
     started = time.monotonic()
     with pytest.raises(DatabaseFailure):

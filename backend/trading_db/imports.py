@@ -203,7 +203,9 @@ class ImportTransaction:
             id=observation_id,
         ).scalar_one()
 
-    def _candidate(self, row: Any) -> CandidateDefinition:
+    def _candidate(
+        self, row: Any, values: tuple[StagedValue, ...] | None = None
+    ) -> CandidateDefinition:
         fields = {key: row[key] for key in CandidateDefinition.model_fields if key != "values"}
         for key in (
             "trade_date",
@@ -214,12 +216,14 @@ class ImportTransaction:
             "acquisition_date",
         ):
             fields[key] = fields[key].isoformat() if fields[key] else None
-        values = self._execute(
-            "SELECT role,source,currency,missing_reason FROM app.staged_values WHERE "
-            "owner_id=:owner AND row_id=:id ORDER BY role",
-            id=row["id"],
-        ).mappings()
-        fields["values"] = tuple(StagedValue.model_validate(dict(value)) for value in values)
+        if values is None:
+            components = self._execute(
+                "SELECT role,source,currency,missing_reason FROM app.staged_values WHERE "
+                "owner_id=:owner AND row_id=:id ORDER BY role",
+                id=row["id"],
+            ).mappings()
+            values = tuple(StagedValue.model_validate(dict(value)) for value in components)
+        fields["values"] = values
         return CandidateDefinition.model_validate(fields)
 
     def get_batch(self, batch_id: UUID) -> Batch | None:
@@ -233,16 +237,54 @@ class ImportTransaction:
         )
         if row is None:
             return None
-        candidates = self._execute(
-            "SELECT * FROM app.staged_rows WHERE owner_id=:owner AND batch_id=:id ORDER BY "
-            "occurrence LIMIT 101",
-            id=batch_id,
-        ).mappings()
+        candidates = (
+            self._execute(
+                "SELECT * FROM app.staged_rows WHERE owner_id=:owner AND batch_id=:id ORDER BY "
+                "occurrence LIMIT 101",
+                id=batch_id,
+            )
+            .mappings()
+            .all()
+        )
+        if len(candidates) > 100:
+            raise ImportUnavailable()
+        components = (
+            self._execute(
+                "SELECT v.row_id,v.role,v.source,v.currency,v.missing_reason "
+                "FROM app.staged_values v "
+                "JOIN app.staged_rows r ON r.owner_id=v.owner_id AND r.id=v.row_id "
+                "WHERE r.owner_id=:owner AND r.batch_id=:id ORDER BY v.row_id,v.role LIMIT 801",
+                id=batch_id,
+            )
+            .mappings()
+            .all()
+        )
+        if len(components) > 800:
+            raise ImportUnavailable()
+        grouped: dict[UUID, list[StagedValue]] = {candidate["id"]: [] for candidate in candidates}
+        for component in components:
+            if component["row_id"] not in grouped:
+                raise ImportUnavailable()
+            grouped[component["row_id"]].append(
+                StagedValue.model_validate(
+                    {
+                        name: component[name]
+                        for name in ("role", "source", "currency", "missing_reason")
+                    }
+                )
+            )
+        if any(
+            len(grouped[candidate["id"]]) != candidate["value_count"] for candidate in candidates
+        ):
+            raise ImportUnavailable()
         definition = BatchDefinition(
             normalizer=row["normalizer"],
             normalizer_version=row["normalizer_version"],
             cash_date_basis=row["cash_date_basis"],
-            rows=tuple(self._candidate(candidate) for candidate in candidates),
+            rows=tuple(
+                self._candidate(candidate, tuple(grouped[candidate["id"]]))
+                for candidate in candidates
+            ),
         )
         if (
             len(definition.rows) != row["row_count"]
@@ -424,6 +466,15 @@ class ImportTransaction:
         decisions = self.history(raw["id"], limit=1)
         decision = decisions[0] if decisions else None
         context = self._context(raw)
+        return self._row_from_parts(raw, candidate, decision, context)
+
+    @staticmethod
+    def _row_from_parts(
+        raw: Any,
+        candidate: CandidateDefinition,
+        decision: ReviewDecision | None,
+        context: dict[str, Any],
+    ) -> StagedRow:
         issue = candidate.issue()
         if context["superseded"]:
             status, issue = "superseded", "revised_evidence"
