@@ -509,7 +509,8 @@ class ImportTransaction:
             "SELECT EXISTS(SELECT 1 FROM app.financial_events WHERE owner_id=:owner AND "
             "source_row_id=:id) OR EXISTS(SELECT 1 FROM app.lot_observations WHERE "
             "owner_id=:owner AND source_row_id=:id) OR EXISTS(SELECT 1 FROM "
-            "app.snapshot_records WHERE owner_id=:owner AND source_row_id=:id)",
+            "app.snapshot_records WHERE owner_id=:owner AND source_row_id=:id) OR EXISTS "
+            "(SELECT 1 FROM app.event_evidence_links WHERE owner_id=:owner AND source_row_id=:id)",
             id=row_id,
         ).scalar_one():
             raise ImportUnavailable()
