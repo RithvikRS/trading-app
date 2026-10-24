@@ -23,10 +23,10 @@ def test_database_suite_budget_cleanup_and_safe_failure(monkeypatch, capsys, out
 
     def execute(arguments, **options):
         assert arguments[-3:] == ["database_tests", "--tb=short", "--maxfail=1"]
-        assert options["timeout"] == 900 and options["check"] is False
+        assert options["timeout"] == 1080 and options["check"] is False
         assert options["env"]["TRADING_TEST_CONTEXT"] == "synthetic-context"
         if outcome == "timeout":
-            raise subprocess.TimeoutExpired("synthetic-private-command", 900)
+            raise subprocess.TimeoutExpired("synthetic-private-command", 1080)
         return SimpleNamespace(returncode=0 if outcome == "success" else 1)
 
     monkeypatch.setattr(command, "disposable", isolated)
@@ -37,4 +37,4 @@ def test_database_suite_budget_cleanup_and_safe_failure(monkeypatch, capsys, out
     output = capsys.readouterr()
     assert "synthetic-private" not in output.err + output.out
     if outcome == "timeout":
-        assert output.err == "Database verification exceeded its 15-minute limit.\n"
+        assert output.err == "Database verification exceeded its 18-minute limit.\n"
