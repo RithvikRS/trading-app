@@ -47,4 +47,4 @@ select = ["E", "F", "I", "UP", "B", "ASYNC"]
 [tool.mypy]
 python_version = "3.14"
 strict = true
-files = ["trading_api", "trading_db", "trading_auth"]
+files = ["trading_api", "trading_db", "trading_auth", "trading_parser"]

@@ -26,14 +26,14 @@ Each increment has its own conventional commit and `dev` to `main` PR, documenta
 | Step | Deliverable | Acceptance |
 | --- | --- | --- |
 | 5A | Public NAV report contracts and exact identifier matching | Pure, bounded parsing of the observed current format; exact decimal/date preservation; explicit missing/ambiguous/unsupported outcomes; separate payout/growth and reinvestment ISIN roles; no network, database writes or automatic identity creation. |
-| 5B | Isolated document intake | A fixed, non-root, network-disabled parser boundary with no database/provider/session secrets; strict file, time, memory, concurrency and output limits; authenticated bounded intake and cancellation; temporary plaintext/password cleanup. |
+| 5B | Isolated document intake; [5B.1 transport contracts](parser-transport.md) implemented | A fixed, non-root, network-disabled parser boundary with no database/provider/session secrets; strict file, time, memory, concurrency and output limits; authenticated bounded intake and cancellation; temporary plaintext/password cleanup. |
 | 5C | One verified detailed CAS adapter | Original row order and reported balances preserved; explicit provider/layout version, folio and fund evidence; unsupported transaction types retained as blocked; verified known examples and hostile documents. |
 | 5D | Owned staging and reviewed completion | Server-derived ownership, explicit account/folio/instrument mappings, revision checks, overlap/conflict review, immutable completion and source-specific reconciliation. Missing cash checkpoints cannot be replaced with invented balances. |
 | 5E | Connected import and investment screens; [5E.0 sign-in context](workspace-context.md) implemented | Protected upload/review/receipt workflow and holdings/detail pages, Indigo & Apricot in both themes, accessible keyboard/mobile interactions, exact amounts and visible coverage/freshness. Lock/revocation discards private state and pending requests. |
 | 5F | NAV acquisition and valuation | An allowlisted bounded public-data fetch, persisted exact source evidence and explicit source choice, safe retries and dated valuation for mapped fund positions. No holdings changes from a NAV update. |
 | 5G | End-to-end acceptance and recovery | Synthetic statement-to-portfolio checks, repeat/overlap/conflict imports, two-owner denial, encrypted restore, resource measurements, failure recovery and documented source/hosted limitations. |
 
-Split a step when necessary to keep a schema change, isolation boundary or interface change independently reviewable. Keep future banking, UBS, INDmoney, cards, unattended schedules and returns outside this first mutual-fund flow.
+Step 5B.1 implements only bounded transport contracts. Worker provisioning, native parser isolation and authenticated intake remain separate increments; no file route or supported PDF adapter is enabled. Split a step when necessary to keep a schema change, isolation boundary or interface change independently reviewable. Keep future banking, UBS, INDmoney, cards, unattended schedules and returns outside this first mutual-fund flow.
 
 ## File and parser boundary
 
