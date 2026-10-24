@@ -56,3 +56,5 @@ Record local results separately from the actual GitHub run. A local pass does no
 [Step 4D.2](financial-events.md) extends database checks with exact source-bound event/component constraints, explicit posted/pending isolation, dividend net cash, concurrent replay, review locks, interrupted-write rollback, legacy digest preservation and event-inclusive encrypted recovery. No hosted provider credentials are used.
 
 [Step 4D.3](lot-evidence-corrections.md) adds acquisition/remaining-lot contracts, independent cost/discount/basis evidence, sourced correction/cancellation/reinstatement, exact and conflicting concurrent retries, cross-table source consumption checks, legacy contract preservation and effective-read verification after separate-cluster recovery.
+
+[Step 4E.1](snapshot-evidence.md) adds date/instant precision, source-conflict selection, retained correction/clear history, concurrent choices, direct-SQL bypass tests, legacy contract preservation, downgrade guard visibility and snapshot selection after encrypted recovery.

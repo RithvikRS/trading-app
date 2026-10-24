@@ -18,6 +18,7 @@ from trading_db.connections import engine_for
 from trading_db.events import EventTransaction
 from trading_db.import_contracts import ObservationDefinition, StagedValue
 from trading_db.imports import ImportDatabase, ImportTransaction, canonical
+from trading_db.recovery import HEAD
 
 
 def test_legacy_event_digest_and_values_survive_upgrade_failure_and_repeated_upgrade(
@@ -171,7 +172,7 @@ def test_legacy_event_digest_and_values_survive_upgrade_failure_and_repeated_upg
             )
         with pytest.raises(DBAPIError):
             migrate.apply(url(), project, direction="downgrade", target="0009_financial_events")
-        assert migrate.revision(url(), project) == "0010_lots_corrections"
+        assert migrate.revision(url(), project) == HEAD
         with admin.connect() as connection:
             assert (
                 connection.execute(text("SELECT count(*) FROM app.financial_events")).scalar_one()
