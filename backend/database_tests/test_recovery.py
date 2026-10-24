@@ -24,6 +24,13 @@ from trading_db.account_keys import ReferenceKeys, load_keys
 from trading_db.accounts import AccountDatabase, AccountDefinition
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.enrollment import provision_owner
+from trading_db.instruments import (
+    IdentifierDefinition,
+    InstrumentDefinition,
+    InstrumentTransaction,
+    ListingDefinition,
+    SchemeDefinition,
+)
 from trading_db.local import ROOT, disposable, private_directory
 from trading_db.sessions import SessionDatabase
 from trading_db.workspace import PreferenceUpdate, WorkspaceDatabase
@@ -101,6 +108,57 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 source = unit.source("cas", "FAKE-FOLIO")
                 unit.map(source.id, first.id, expected_revision=0)
                 unit.map(source.id, second.id, expected_revision=1)
+                securities = InstrumentTransaction(unit._unit)
+                scheme = securities.scheme(SchemeDefinition(name="Synthetic scheme"))
+                direct = securities.create(
+                    InstrumentDefinition(
+                        name="Synthetic Direct",
+                        asset_class="mutual_fund",
+                        isin="ZZ0000000016",
+                        fund_scheme_id=scheme.id,
+                        fund_plan="direct",
+                        fund_option="growth",
+                        fund_currency="INR",
+                    )
+                )
+                regular = securities.create(
+                    direct.definition.model_copy(
+                        update={
+                            "name": "Synthetic Regular",
+                            "isin": "ZZ0000000024",
+                            "fund_plan": "regular",
+                        }
+                    )
+                )
+                reference = securities.identifier(
+                    IdentifierDefinition(namespace="indmoney_funds", value="FAKE-FUND")
+                )
+                securities.map(reference.id, direct.id, expected_revision=0)
+                securities.map(reference.id, regular.id, expected_revision=1)
+                securities.position(first.id, direct.id, "folio")
+                securities.position(second.id, regular.id, "folio")
+                brokerage = unit.create(
+                    AccountDefinition(
+                        kind="brokerage",
+                        institution="indmoney",
+                        market="US",
+                        label="Synthetic brokerage",
+                        currencies=("USD",),
+                    )
+                )
+                equity = securities.create(
+                    InstrumentDefinition(
+                        name="Synthetic Equity", asset_class="equity", isin="ZZ0000000032"
+                    )
+                )
+                listing = securities.listing(
+                    equity.id, ListingDefinition(venue="XNYS", symbol="FAKE", quote_currency="USD")
+                )
+                reference = securities.identifier(
+                    IdentifierDefinition(namespace="indmoney_us", value="FAKE-EQUITY")
+                )
+                securities.map(reference.id, equity.id, expected_revision=0, listing_id=listing.id)
+                securities.position(brokerage.id, equity.id, "custody")
                 unit.archive(first.id, expected_revision=1)
     finally:
         account_store.close()
@@ -185,8 +243,16 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 == 2
             )
             assert counts["auth_sessions"] == counts["auth_admissions"] == 0
-            assert counts["financial_accounts"] == counts["account_currencies"] == 4
+            assert counts["financial_accounts"] == counts["account_currencies"] == 6
             assert counts["source_accounts"] == 2 and counts["source_account_mappings"] == 4
+            assert (
+                counts["instruments"]
+                == counts["account_positions"]
+                == counts["instrument_mappings"]
+                == 6
+            )
+            assert counts["fund_schemes"] == counts["instrument_listings"] == 2
+            assert counts["instrument_identifiers"] == 4
             assert signature(restored_admin) == baseline
             restored_data = recovery.decode_snapshot(
                 recovery.export_snapshot(
@@ -214,11 +280,22 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             try:
                 for owner in (own, other):
                     with restored_accounts.transaction(owner) as unit:
-                        assert len(unit.list()) == 2
+                        assert len(unit.list()) == 3
                         source = unit.source("cas", "FAKE-FOLIO")
                         assert source.revision == 2
                         assert [row.revision for row in unit.history(source.id)] == [2, 1]
                         assert unit.get(unit.mapping(source.id).account_id).archived_at is None
+                        securities = InstrumentTransaction(unit._unit)
+                        assert len(securities.list()) == 3
+                        for account in unit.list():
+                            assert len(securities.positions(account.id)) == 1
+                        record = securities.by_isin("ZZ0000000024")
+                        assert record.definition.fund_plan == "regular"
+                        reference = securities.identifier(
+                            IdentifierDefinition(namespace="indmoney_funds", value="FAKE-FUND")
+                        )
+                        assert securities.mapping(reference.id).instrument_id == record.id
+                        assert [r.revision for r in securities.history(reference.id)] == [2, 1]
             finally:
                 restored_accounts.close()
             restored_workspace = WorkspaceDatabase(target.url("runtime"), target.project)

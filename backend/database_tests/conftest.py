@@ -33,6 +33,12 @@ def database():
     require_disposable(url(), context["project"])
     engine = engine_for(url("bootstrap"), migration=True)
     try:
+        # Hundreds of fresh-schema tests produce more WAL than the bounded tmpfs
+        # can retain until the default timed checkpoint. Recycle completed test
+        # history without disabling fsync/full_page_writes or increasing limits.
+        with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
+            verify_server(connection, "trading_test", context["project"])
+            connection.execute(text("CHECKPOINT"))
         with engine.begin() as connection:
             verify_server(connection, "trading_test", context["project"])
             connection.execute(text("DROP SCHEMA IF EXISTS app CASCADE"))
