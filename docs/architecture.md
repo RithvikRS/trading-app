@@ -97,3 +97,5 @@ Self-hosted PostgreSQL remains an alternative if managed-service constraints bec
 [Step 4G.3a](import-review-reads.md) adds read-only source observations, normalized batches/rows and review histories. Row inspection validates the original normalized checksum and shares current mapping/status rules with persistence; completion remains a separate operation.
 
 [Step 4G.3b](completion-receipt-reads.md) completes the persistence/read boundary with immutable receipt effects and frozen source/combined comparisons. Reads reconstruct one bounded historical comparison at a time under owner isolation; current portfolio calculations remain a separate data flow.
+
+[Step 5A](amfi-nav-contracts.md) adds a pure, bounded public NAV parser and explicit target matcher. Original report bytes determine its digest; original line/occurrence, decimal strings and observation dates survive parsing. No automatic identity creation, provider request or database write occurs. [Stage 5](investment-flow-plan.md) defines the separate private document, review and connected portfolio boundaries.
