@@ -2,7 +2,7 @@
 
 Step 4G.1 exposes owned account, source-mapping, instrument and position identities through the authenticated Python API. These records carry no inferred balances, holdings quantities or valuation totals. The protected frontend remains empty; connected views follow with their complete data flow in Stage 5.
 
-[Step 4G.2a](event-lot-reads.md) adds dated event/lot evidence and retained history. [Step 4G.2b](snapshot-market-reads.md) adds dated snapshot/market evidence, listings and selection history/resolution. Step 4G.3 adds import/review/receipt inspection and the remaining persistence acceptance checks. No financial mutation, upload, download from a provider, export or administrative route is introduced by these read increments.
+[Step 4G.2a](event-lot-reads.md) adds dated event/lot evidence and retained history. [Step 4G.2b](snapshot-market-reads.md) adds dated snapshot/market evidence, listings and selection history/resolution. [Step 4G.3a](import-review-reads.md) adds source/import/review inspection; [4G.3b](completion-receipt-reads.md) completes immutable receipt/comparison inspection and synthetic persistence acceptance. No financial mutation, upload, download from a provider, export or administrative route is introduced by these read increments.
 
 ## Request contract
 
@@ -50,4 +50,4 @@ The existing separate-cluster encrypted recovery drill checks restored identity 
 
 Run the [shared verification groups](verification.md) and record their actual results in the increment's PR. Local synthetic reads do not verify hosted Supabase configuration, real source formats, Oracle capacity or financial-volume backup performance. No Supabase project or live source account is used.
 
-[Step 4G.3a](import-review-reads.md) adds source observations, normalized batch/row inspection and immutable review history, retaining exact evidence and current mapping validity. Completion receipt/comparison reads follow in 4G.3b.
+[Step 4G.3a](import-review-reads.md) adds source observations, normalized batch/row inspection and immutable review history, retaining exact evidence and current mapping validity. [Step 4G.3b](completion-receipt-reads.md) exposes immutable completion effects and frozen comparisons.

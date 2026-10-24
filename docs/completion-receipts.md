@@ -57,3 +57,5 @@ Recovery format **13** covers **40 application tables**: 38 durable tables and t
 Populated receipts prevent downgrade. Disposable tests verify empty downgrade/re-upgrade and complete rollback of an interrupted migration. Development uses forward migrations; older recovery objects require their matching source revision before a tested forward migration.
 
 Tests cover concurrency, exact and conflicting retries, source overlap, legitimate repeated payments, explicit corrections, selection/lot dependencies, late failure rollback, direct SQL tampering, stale context after root insertion, inactive/foreign owners, role denial and immutable grants. Hosted Supabase behavior remains unverified. [Full reconciliation receipts](reconciled-completion.md) extend this boundary. Uploads/parsers, browser review mutations and connected screens remain separate increments.
+
+[Step 4G.3b](completion-receipt-reads.md) exposes bounded receipt metadata and immutable completed-row effects through authenticated read-only routes. Private retry/baseline/request material remains internal; historical effects keep their original review and record revisions.
