@@ -5,6 +5,7 @@ import type { ConnectionAction, ConnectionState } from './indmoney'
 import { ACCOUNT_PAGE_SIZE, accountCursor, parseAccountPage } from './accounts'
 import type { AccountNavigation, AccountsState } from './accounts'
 import type { DisplayPreferences, PreferenceSnapshot, PreferenceStatus } from './preferences'
+import type { FinancePath } from './investments'
 export type Session = { status: 'authenticated'; workspace_context: string; expires_at: string; idle_expires_at: string; fresh_until: string; factors: string[]; unverified_factors: string[] }
 export type Pending = { status: 'mfa_required'; factors: string[]; setup_key?: string }
 export type Screen =
@@ -25,6 +26,9 @@ const exact = (value: Json, keys: string[]) => Object.keys(value).every(key => k
 const invalid = () => new AuthError('protocol')
 class PreferenceConflict extends Error {}
 class ConnectionNotConfigured extends Error {}
+export class FinancialRequestError extends Error {
+  constructor(readonly conflict = false) { super('Saved evidence could not be verified. Reload before trying again.') }
+}
 
 export class AuthError extends Error {
   constructor(readonly reason: 'unauthorized' | 'offline' | 'unavailable' | 'forbidden' | 'limited' | 'context' | 'protocol', readonly retryAt?: number) { super('Authentication request failed.') }
@@ -45,13 +49,14 @@ async function request(path: string, signal: AbortSignal, body?: Json, method?: 
   if (path !== '/bootstrap') headers['X-CSRFToken'] = csrf()
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   const connector = path === '/connections/indmoney' || path.startsWith('/connections/indmoney/')
-  if (path === '/preferences' || path === '/finance/accounts/query' || connector) {
+  const financial = path.startsWith('/finance/')
+  if (path === '/preferences' || financial || connector) {
     if (typeof workspaceContext !== 'string' || !/^[0-9a-f]{64}$/.test(workspaceContext)) throw invalid()
     headers['X-Workspace-Context'] = workspaceContext
   }
   let response: Response
   try {
-    response = await fetch(connector ? `/api/v1${path}` : path === '/finance/accounts/query' ? '/api/v1/finance/accounts/query' : path === '/preferences' ? '/api/v1/preferences' : `/api/v1/auth${path}`, {
+    response = await fetch(connector || financial ? `/api/v1${path}` : path === '/preferences' ? '/api/v1/preferences' : `/api/v1/auth${path}`, {
       method: method ?? (body === undefined ? 'GET' : 'POST'), headers,
       credentials: 'same-origin', mode: 'same-origin', redirect: 'error', cache: 'no-store',
       referrerPolicy: 'no-referrer', signal, body: body === undefined ? undefined : JSON.stringify(body),
@@ -64,6 +69,7 @@ async function request(path: string, signal: AbortSignal, body?: Json, method?: 
     if (response.status === 403) throw new AuthError('forbidden')
     if (response.status === 412) throw new AuthError('context')
     if (response.status === 409 && path === '/preferences') throw new PreferenceConflict()
+    if (financial && [404, 409].includes(response.status)) throw new FinancialRequestError(true)
     if (response.status === 429) throw new AuthError('limited', Date.now() + 5_000)
     throw new AuthError('unavailable')
   }
@@ -78,7 +84,7 @@ async function request(path: string, signal: AbortSignal, body?: Json, method?: 
       const { done, value } = await reader.read()
       if (done) break
       size += value.length
-      if (size > (path === '/finance/accounts/query' ? 256 * 1024 : 8192)) throw invalid()
+      if (size > (financial ? 256 * 1024 : 8192)) throw invalid()
       chunks.push(value)
     }
   } finally { await reader.cancel() }
@@ -241,6 +247,27 @@ export class AuthController {
         } else throw error
       }
     })
+  }
+  finance = async <T,>(path: FinancePath, body: Json, parse: (value: unknown) => T): Promise<T | undefined> => {
+    const previous = this.state.screen
+    if (previous.kind !== 'workspace' || this.state.busy) return undefined
+    let result: T | undefined, failure: FinancialRequestError | undefined
+    await this.run(async (signal, current, latest) => {
+      if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+      try {
+        const response = await request(`/finance${path}`, signal, body, undefined, previous.session.workspace_context)
+        if (!current()) { if (latest()) throw new AuthError('unavailable'); return }
+        if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+        result = parse(response.data)
+      } catch (error) {
+        if (!latest()) return
+        if (performance.now() >= previous.deadline) throw new AuthError('unauthorized')
+        if (error instanceof FinancialRequestError || error instanceof AuthError && ['unavailable', 'limited'].includes(error.reason)) failure = new FinancialRequestError(error instanceof FinancialRequestError)
+        else throw error
+      }
+    })
+    if (failure) throw failure
+    return this.state.screen.kind === 'workspace' && this.state.screen.session.workspace_context === previous.session.workspace_context ? result : undefined
   }
   connection = (action: ConnectionAction) => {
     const previous = this.state.screen

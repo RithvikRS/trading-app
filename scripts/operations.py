@@ -170,6 +170,20 @@ def probe(context):
         request(context, "/api/v1/auth/login", body=b"x" * 4097)[0] == 413,
         "Oversized body reached API.",
     )
+    for suffix, limit in (("preview", 65536), ("complete", 131072)):
+        path = "/api/v1/finance/snapshot-review/" + suffix
+        require(
+            request(context, path, body=b"{}" + b" " * 4096)[0] == 404,
+            "Exact snapshot route did not inherit its bounded allowance.",
+        )
+        require(
+            request(context, path, body=b"x" * (limit + 1))[0] == 413,
+            "Oversized snapshot manifest reached API.",
+        )
+        require(
+            request(context, path + "/", body=b"x" * 4097)[0] == 413,
+            "Snapshot body allowance escaped its exact route.",
+        )
     return assets
 
 
