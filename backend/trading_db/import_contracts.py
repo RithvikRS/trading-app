@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import Field, model_validator
 
-from trading_api.finance import EvidenceMeaning, FinancialDate, FinancialValue
+from trading_api.finance import EvidenceMeaning, FinancialDate, FinancialInstant, FinancialValue
 from trading_db.instruments import Definition
 
 type CandidateKind = Literal[
@@ -148,6 +148,8 @@ class CandidateDefinition(Definition):
     value_date: str | None = Field(default=None, repr=False)
     as_of_date: str | None = Field(default=None, repr=False)
     acquisition_date: str | None = Field(default=None, repr=False)
+    as_of_instant: str | None = Field(default=None, repr=False)
+    snapshot_scope: Literal["selected_position", "native_cash", "full_account"] | None = None
     blocked_reason: Literal["not_supplied", "unsupported", "conflicting_evidence"] | None = None
     values: tuple[StagedValue, ...] = Field(default=(), max_length=8, repr=False)
 
@@ -159,6 +161,17 @@ class CandidateDefinition(Definition):
             raise ValueError("This evidence does not have an activity posting state.")
         if self.acquisition_date is not None and self.kind not in LOT_KINDS:
             raise ValueError("Acquisition dates require lot evidence.")
+        if self.as_of_instant is not None or self.snapshot_scope is not None:
+            if self.kind not in ("position_snapshot", "cash_snapshot"):
+                raise ValueError("Snapshot metadata requires position or cash evidence.")
+        if self.as_of_instant is not None:
+            FinancialInstant(self.as_of_instant)
+            if self.as_of_date != self.as_of_instant[:10]:
+                raise ValueError("Snapshot date must agree with its source-local instant date.")
+        if (self.snapshot_scope == "selected_position" and self.kind != "position_snapshot") or (
+            self.snapshot_scope == "native_cash" and self.kind != "cash_snapshot"
+        ):
+            raise ValueError("Snapshot scope does not match the supplied evidence.")
         for name in (
             "trade_date",
             "settlement_date",

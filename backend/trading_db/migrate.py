@@ -45,7 +45,38 @@ def apply(
             if direction == "upgrade":
                 command.upgrade(config, target)
             else:
+                # A forced owner policy hides records from the migrator too. Lock
+                # disposable tables before making guards visible to their owner;
+                # restore FORCE before commit, including tables retained by a downgrade.
+                tables = tuple(
+                    connection.execute(
+                        text(
+                            "SELECT relname FROM pg_class WHERE "
+                            "relnamespace=to_regnamespace('app') "
+                            "AND relkind='r' AND relforcerowsecurity ORDER BY relname"
+                        )
+                    ).scalars()
+                )
+                quote = connection.dialect.identifier_preparer.quote
+                for table in tables:
+                    connection.execute(
+                        text(f"LOCK TABLE app.{quote(table)} IN ACCESS EXCLUSIVE MODE")
+                    )
+                for table in tables:
+                    connection.execute(
+                        text(f"ALTER TABLE app.{quote(table)} NO FORCE ROW LEVEL SECURITY")
+                    )
                 command.downgrade(config, target)
+                remaining = set(
+                    connection.execute(
+                        text("SELECT tablename FROM pg_tables WHERE schemaname='app'")
+                    ).scalars()
+                )
+                for table in tables:
+                    if table in remaining:
+                        connection.execute(
+                            text(f"ALTER TABLE app.{quote(table)} FORCE ROW LEVEL SECURITY")
+                        )
     finally:
         engine.dispose()
 

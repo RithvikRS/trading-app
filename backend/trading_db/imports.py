@@ -67,8 +67,8 @@ class StagedRow:
     decision: ReviewDecision | None
 
 
-def canonical(definition: BatchDefinition, contract_version: int = 3) -> str:
-    if type(contract_version) is not int or contract_version not in (1, 2, 3):
+def canonical(definition: BatchDefinition, contract_version: int = 4) -> str:
+    if type(contract_version) is not int or contract_version not in (1, 2, 3, 4):
         raise ImportUnavailable()
     value = definition.model_dump(mode="json")
     for row in value["rows"]:
@@ -76,6 +76,9 @@ def canonical(definition: BatchDefinition, contract_version: int = 3) -> str:
             row.pop("posting_state")
         if contract_version < 3:
             row.pop("acquisition_date")
+        if contract_version < 4:
+            row.pop("as_of_instant")
+            row.pop("snapshot_scope")
         row["values"].sort(key=lambda item: item["role"])
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
@@ -294,7 +297,7 @@ class ImportTransaction:
                 "INSERT INTO app.import_batches (owner_id,id,observation_id,revision,"
                 "previous_revision,normalizer,normalizer_version,normalized_digest,row_count,"
                 "contract_version) VALUES (:owner,:id,:observation,:revision,:previous,"
-                ":normalizer,:version,:digest,:count,3)",
+                ":normalizer,:version,:digest,:count,4)",
                 id=batch_id,
                 observation=observation_id,
                 revision=expected + 1,
@@ -310,10 +313,11 @@ class ImportTransaction:
                     "INSERT INTO app.staged_rows (owner_id,id,batch_id,occurrence,kind,"
                     "instrument_identifier_id,trade_date,settlement_date,booking_date,"
                     "value_date,as_of_date,blocked_reason,value_count,posting_state,"
-                    "acquisition_date) VALUES (:owner,:id,:batch,:occurrence,:kind,"
+                    "acquisition_date,as_of_instant,snapshot_scope) VALUES "
+                    "(:owner,:id,:batch,:occurrence,:kind,"
                     ":instrument_identifier_id,:trade_date,:settlement_date,:booking_date,"
                     ":value_date,:as_of_date,:blocked_reason,:count,:posting_state,"
-                    ":acquisition_date)",
+                    ":acquisition_date,:as_of_instant,:snapshot_scope)",
                     id=row_id,
                     batch=batch_id,
                     count=len(candidate.values),
@@ -504,7 +508,8 @@ class ImportTransaction:
         if self._execute(
             "SELECT EXISTS(SELECT 1 FROM app.financial_events WHERE owner_id=:owner AND "
             "source_row_id=:id) OR EXISTS(SELECT 1 FROM app.lot_observations WHERE "
-            "owner_id=:owner AND source_row_id=:id)",
+            "owner_id=:owner AND source_row_id=:id) OR EXISTS(SELECT 1 FROM "
+            "app.snapshot_records WHERE owner_id=:owner AND source_row_id=:id)",
             id=row_id,
         ).scalar_one():
             raise ImportUnavailable()

@@ -14,8 +14,8 @@ from trading_db import migrate
 from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 
-HEAD = "0010_lots_corrections"
-FORMAT = 6
+HEAD = "0011_snapshots"
+FORMAT = 7
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -158,6 +158,8 @@ COLUMNS.update(
             "as_of_date",
             "acquisition_date",
             "blocked_reason",
+            "as_of_instant",
+            "snapshot_scope",
             "posting_state",
             "value_count",
             "created_at",
@@ -252,6 +254,54 @@ COLUMNS.update(
             "amount",
             "currency",
             "missing_reason",
+        ),
+    }
+)
+COLUMNS.update(
+    {
+        "snapshot_records": (
+            "owner_id",
+            "id",
+            "revision",
+            "previous_revision",
+            "source_row_id",
+            "source_review_revision",
+            "account_id",
+            "position_id",
+            "instrument_id",
+            "currency",
+            "kind",
+            "status",
+            "correction_reason",
+            "as_of_date",
+            "as_of_instant",
+            "snapshot_scope",
+            "booking_date",
+            "value_count",
+            "created_at",
+        ),
+        "snapshot_components": (
+            "owner_id",
+            "snapshot_id",
+            "revision",
+            "role",
+            "source",
+            "amount",
+            "currency",
+            "missing_reason",
+        ),
+        "snapshot_selections": (
+            "owner_id",
+            "id",
+            "revision",
+            "previous_revision",
+            "account_id",
+            "position_id",
+            "currency",
+            "snapshot_id",
+            "snapshot_revision",
+            "reason",
+            "created_at",
         ),
     }
 )

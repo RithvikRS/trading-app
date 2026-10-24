@@ -42,6 +42,7 @@ from trading_db.instruments import (
 from trading_db.local import ROOT, disposable, private_directory
 from trading_db.lots import LotTransaction
 from trading_db.sessions import SessionDatabase
+from trading_db.snapshots import SnapshotTransaction
 from trading_db.workspace import PreferenceUpdate, WorkspaceDatabase
 
 
@@ -217,6 +218,131 @@ def add_correction_history(unit, staging, source, reference, position, event_bat
         expected_review_revision=1,
         reason="reinstatement",
     )
+
+
+def add_snapshot_history(store, owner):
+    with store.transaction(owner) as unit:
+        source = unit.source("cas", "FAKE-FOLIO")
+        account_id = unit.mapping(source.id).account_id
+        securities = InstrumentTransaction(unit._unit)
+        reference = securities.identifier(
+            IdentifierDefinition(namespace="indmoney_funds", value="FAKE-FUND")
+        )
+        position = securities.positions(account_id)[0]
+        staging = ImportTransaction(unit._unit)
+        evidence = staging.observation(
+            source.id,
+            ObservationDefinition(
+                digest="d" * 64,
+                coverage="snapshot",
+                period_start="2026-10-24",
+                period_end="2026-10-25",
+            ),
+        )
+        original = CandidateDefinition(
+            occurrence=1,
+            kind="position_snapshot",
+            instrument_identifier_id=reference.id,
+            as_of_date="2026-10-24",
+            snapshot_scope="full_account",
+            values=(
+                StagedValue(role="quantity", source="0.123456789012"),
+                StagedValue(role="unit_price", source="76.50000", currency="INR"),
+                StagedValue(
+                    role="reported_tax_basis",
+                    source=None,
+                    currency="INR",
+                    missing_reason="incomplete_history",
+                ),
+            ),
+        )
+        cash = CandidateDefinition(
+            occurrence=2,
+            kind="cash_snapshot",
+            as_of_date="2026-10-24",
+            snapshot_scope="native_cash",
+            values=(StagedValue(role="net_cash", source="100.00", currency="INR"),),
+        )
+        changed = original.model_copy(
+            update={
+                "occurrence": 3,
+                "as_of_date": "2026-10-25",
+                "as_of_instant": "2026-10-25T00:30:00.120+05:30",
+                "snapshot_scope": "selected_position",
+                "values": (
+                    StagedValue(role="quantity", source="0.223456789012"),
+                    *original.values[1:],
+                ),
+            }
+        )
+        cancel = CandidateDefinition(occurrence=4, kind="cancellation", booking_date="2026-10-25")
+        restore = cash.model_copy(
+            update={
+                "occurrence": 5,
+                "as_of_date": "2026-10-25",
+                "values": (StagedValue(role="net_cash", source="125.00", currency="INR"),),
+            }
+        )
+        duplicate = changed.model_copy(
+            update={
+                "occurrence": 6,
+                "as_of_date": "2026-10-24",
+                "as_of_instant": "2026-10-24T19:00:00.120Z",
+            }
+        )
+        staged = staging.stage(
+            evidence.id,
+            BatchDefinition(
+                normalizer="synthetic",
+                normalizer_version="1",
+                rows=(original, cash, changed, cancel, restore, duplicate),
+            ),
+            expected_revision=0,
+        )
+        rows = staging.rows(staged.id)
+        for row in rows:
+            staging.decide(row.id, "include", expected_revision=0)
+        snapshots = SnapshotTransaction(unit._unit)
+        first = snapshots.record(rows[0].id, expected_review_revision=1, position_id=position.id)
+        balance = snapshots.record(rows[1].id, expected_review_revision=1)
+        chosen = snapshots.select(first.id, expected_snapshot_revision=1, expected_revision=0)
+        cash_choice = snapshots.select(
+            balance.id, expected_snapshot_revision=1, expected_revision=0
+        )
+    with store.transaction(owner) as unit:
+        snapshots = SnapshotTransaction(unit._unit)
+        snapshots.correct(
+            first.id,
+            rows[2].id,
+            expected_revision=1,
+            expected_review_revision=1,
+            reason="source_correction",
+        )
+        snapshots.correct(
+            balance.id,
+            rows[3].id,
+            expected_revision=1,
+            expected_review_revision=1,
+            reason="cancellation",
+        )
+        snapshots.correct(
+            balance.id,
+            rows[4].id,
+            expected_revision=2,
+            expected_review_revision=1,
+            reason="reinstatement",
+        )
+        snapshots.record(rows[5].id, expected_review_revision=1, position_id=position.id)
+        assert (
+            snapshots.resolve(chosen.id).state == snapshots.resolve(cash_choice.id).state == "stale"
+        )
+        snapshots.select(
+            first.id, expected_snapshot_revision=2, expected_revision=1, reason="correction"
+        )
+        snapshots.clear(cash_choice.id, expected_revision=1)
+        snapshots.select(
+            balance.id, expected_snapshot_revision=3, expected_revision=2, reason="correction"
+        )
 
 
 def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(environment, database):
@@ -395,6 +521,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 securities.map(reference.id, equity.id, expected_revision=0, listing_id=listing.id)
                 securities.position(brokerage.id, equity.id, "custody")
                 unit.archive(first.id, expected_revision=1)
+            add_snapshot_history(account_store, owner)
     finally:
         account_store.close()
     identifier_keys = ReferenceKeys(identifier_material, 2)
@@ -488,14 +615,17 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             )
             assert counts["fund_schemes"] == counts["instrument_listings"] == 2
             assert counts["instrument_identifiers"] == 4
-            assert counts["source_observations"] == 6
-            assert counts["import_batches"] == 8 and counts["staged_rows"] == 24
-            assert counts["staged_values"] == 68 and counts["review_decisions"] == 28
+            assert counts["source_observations"] == 8
+            assert counts["import_batches"] == 10 and counts["staged_rows"] == 36
+            assert counts["staged_values"] == 90 and counts["review_decisions"] == 40
             assert counts["financial_events"] == 10
             assert counts["cash_movements"] == counts["quantity_movements"] == 8
             assert counts["event_components"] == 24
             assert counts["lots"] == 2 and counts["lot_observations"] == 10
             assert counts["lot_components"] == 32
+            assert counts["snapshot_records"] == 12
+            assert counts["snapshot_components"] == 22
+            assert counts["snapshot_selections"] == 10
             assert signature(restored_admin) == baseline
             restored_data = recovery.decode_snapshot(
                 recovery.export_snapshot(
@@ -541,7 +671,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                         assert [r.revision for r in securities.history(reference.id)] == [2, 1]
                         staging = ImportTransaction(unit._unit)
                         observations = staging.observations(source.id)
-                        assert len(observations) == 3
+                        assert len(observations) == 4
                         original = next(
                             item for item in observations if item.definition.digest == "a" * 64
                         )
@@ -556,6 +686,30 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                         }
                         assert staging.history(row.id)[0].action == "include"
                         account_id = unit.mapping(source.id).account_id
+                        snapshots = SnapshotTransaction(unit._unit)
+                        selections = snapshots.selections(account_id)
+                        assert len(selections) == 2 and len(snapshots.list(account_id)) == 3
+                        for selection in selections:
+                            selected = snapshots.resolve(selection.id)
+                            assert selected.state == "selected"
+                            record = selected.snapshot
+                            assert record.coverage == "snapshot"
+                            if selection.position_id is None:
+                                assert record.components[0].source == "125.00"
+                                assert len(snapshots.history(record.id)) == 3
+                                history = snapshots.selection_history(selection.id)
+                                assert len(history) == 3 and history[1].reason == "clear"
+                            else:
+                                assert record.as_of_instant == "2026-10-25T00:30:00.120+05:30"
+                                assert record.snapshot_scope == "selected_position"
+                                assert len(snapshots.history(record.id)) == 2
+                                assert len(snapshots.selection_history(selection.id)) == 2
+                                assert (
+                                    next(
+                                        v.source for v in record.components if v.role == "quantity"
+                                    )
+                                    == "0.223456789012"
+                                )
                         events = EventTransaction(unit._unit)
                         assert sorted(item.revision for item in events.list(account_id)) == [2, 3]
                         assert (

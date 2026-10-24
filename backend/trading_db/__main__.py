@@ -21,7 +21,7 @@ def main() -> int:
                     os.environ, TRADING_TEST_CONTEXT=str(service.write_test_context())
                 )
                 result = subprocess.run(
-                    [sys.executable, "-m", "pytest", "database_tests", "--tb=short"],
+                    [sys.executable, "-m", "pytest", "database_tests", "--tb=short", "--maxfail=1"],
                     env=environment,
                     check=False,
                     timeout=600,
