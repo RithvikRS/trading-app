@@ -33,7 +33,9 @@ type ValueKind = Literal[
     "fx_rate",
     "display_amount",
 ]
-type EvidenceMeaning = Literal["acquisition_cost", "reported_tax_basis", "fee", "withholding"]
+type EvidenceMeaning = Literal[
+    "acquisition_cost", "reported_tax_basis", "discount_amount", "fee", "withholding"
+]
 type MissingReason = Literal[
     "not_supplied", "incomplete_history", "unsupported", "conflicting_evidence"
 ]
@@ -61,7 +63,7 @@ _SCALES = {
 _MONEY_KINDS = {"cash", "monetary_evidence", "unit_price", "display_amount"}
 _QUANTITY_KINDS = {"quantity_movement", "position_quantity", "lot_quantity"}
 _REASONS = {"not_supplied", "incomplete_history", "unsupported", "conflicting_evidence"}
-_MEANINGS = {"acquisition_cost", "reported_tax_basis", "fee", "withholding"}
+_MEANINGS = {"acquisition_cost", "reported_tax_basis", "discount_amount", "fee", "withholding"}
 
 
 class FinancialValueError(ValueError):

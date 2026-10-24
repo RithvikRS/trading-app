@@ -13,7 +13,7 @@ All magnitudes must be strictly below 10^18. These are project bounds, not verif
 | Kind | Fractional digits | Required context and signs |
 | --- | --- | --- |
 | `cash` | 0–2 | INR/USD; signed posted amount, with transaction role supplied by its containing event |
-| `monetary_evidence` | 0–8 | INR/USD and `acquisition_cost`, `reported_tax_basis`, `fee` or `withholding`; signed evidence, not a cash posting |
+| `monetary_evidence` | 0–8 | INR/USD and `acquisition_cost`, `reported_tax_basis`, `discount_amount`, `fee` or `withholding`; signed evidence, not a cash posting |
 | `quantity_movement` | 0–12 | Signed security units; containing event supplies instrument identity |
 | `position_quantity`, `lot_quantity` | 0–12 | Nonnegative security units; containing position/lot supplies instrument identity |
 | `unit_price` | 0–12 | INR/USD per security unit; strictly positive usable quote/NAV |

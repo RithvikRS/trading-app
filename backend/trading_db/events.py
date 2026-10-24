@@ -34,6 +34,8 @@ class FinancialEvent:
     account_id: UUID
     position_id: UUID | None
     instrument_id: UUID | None
+    status: str
+    correction_reason: str | None
     kind: str
     posting_state: str
     trade_date: date | None
@@ -109,118 +111,233 @@ class EventTransaction:
             with self._accounts._write():
                 prior = self.by_source(row_id)
                 if prior:
-                    if prior.source_review_revision != expected or prior.position_id != position_id:
-                        raise EventUnavailable()
-                    return prior
-                source = self._imports.get_row(row_id)
-                if (
-                    source is None
-                    or source.status != "included"
-                    or source.decision is None
-                    or source.decision.revision != expected
-                    or source.definition.kind not in EVENT_KINDS
-                ):
-                    raise EventUnavailable()
-                candidate = source.definition
-                raw = (
-                    self._execute(
-                        "SELECT * FROM app.staged_rows WHERE owner_id=:owner AND id=:id",
-                        id=row_id,
-                    )
-                    .mappings()
-                    .one()
-                )
-                context = self._imports._context(raw)
-                account, instrument = context["account"], context["instrument"]
-                if account is None or (position_id is None) != (instrument is None):
-                    raise EventUnavailable()
-                if (
-                    position_id is not None
-                    and not self._execute(
-                        "SELECT EXISTS(SELECT 1 FROM app.account_positions WHERE "
-                        "owner_id=:owner AND id=:id AND account_id=:account AND "
-                        "instrument_id=:instrument)",
-                        id=position_id,
-                        account=account.id,
-                        instrument=instrument,
-                    ).scalar_one()
-                ):
-                    raise EventUnavailable()
-                values = {value.role: value for value in candidate.values}
-                cash = values["net_cash"]
-                native = context["quote_currency"] or context["fund_currency"]
-                if (native is not None and cash.currency != native) or any(
-                    value.currency is not None and value.currency != cash.currency
-                    for value in candidate.values
-                ):
-                    raise EventUnavailable()
-                # Validate the immutable batch's versioned digest before consuming its evidence.
-                self._imports.get_batch(source.batch_id)
-                for table, additional in (
-                    ("financial_events", 1),
-                    ("event_components", len(values)),
-                    ("cash_movements", 1),
-                    ("quantity_movements", int(candidate.kind in TRADE_KINDS)),
-                ):
                     if (
-                        self._execute(
-                            f"SELECT count(*) FROM app.{table} WHERE owner_id=:owner"
-                        ).scalar_one()
-                        + additional
-                        > MAX_RECORDS
+                        prior.revision != 1
+                        or prior.source_review_revision != expected
+                        or prior.position_id != position_id
                     ):
                         raise EventUnavailable()
-                event_id = uuid4()
-                self._execute(
-                    "INSERT INTO app.financial_events (owner_id,id,revision,source_row_id,"
-                    "source_review_revision,account_id,position_id,instrument_id,kind,"
-                    "posting_state,trade_date,settlement_date,booking_date,value_date,"
-                    "value_count) VALUES (:owner,:id,1,:row,:review,:account,:position,"
-                    ":instrument,:kind,:state,:trade,:settlement,:booking,:value,:count)",
-                    id=event_id,
-                    row=row_id,
-                    review=expected,
-                    account=account.id,
-                    position=position_id,
-                    instrument=instrument,
-                    kind=candidate.kind,
-                    state=candidate.posting_state,
-                    trade=candidate.trade_date,
-                    settlement=candidate.settlement_date,
-                    booking=candidate.booking_date,
-                    value=candidate.value_date,
-                    count=len(values),
-                )
-                for component in candidate.values:
-                    self._execute(
-                        "INSERT INTO app.event_components (owner_id,event_id,revision,role,"
-                        "source,amount,currency,missing_reason) VALUES (:owner,:event,1,"
-                        ":role,:source,:amount,:currency,:missing_reason)",
-                        event=event_id,
-                        amount=component.financial().value,
-                        **component.model_dump(),
-                    )
-                if candidate.kind in TRADE_KINDS:
-                    self._execute(
-                        "INSERT INTO app.quantity_movements (owner_id,event_id,revision,"
-                        "position_id,amount) VALUES (:owner,:event,1,:position,:amount)",
-                        event=event_id,
-                        position=position_id,
-                        amount=values["quantity"].financial().value,
-                    )
-                self._execute(
-                    "INSERT INTO app.cash_movements (owner_id,event_id,revision,account_id,"
-                    "currency,amount) VALUES (:owner,:event,1,:account,:currency,:amount)",
-                    event=event_id,
-                    account=account.id,
-                    currency=cash.currency,
-                    amount=cash.financial().value,
-                )
-                result = self.get(event_id)
-                assert result is not None
-                return result
+                    return prior
+                return self._persist(row_id, expected, position_id, None, None)
         except AccountUnavailable, ImportUnavailable:
             raise EventUnavailable() from None
+
+    def correct(
+        self,
+        event_id: UUID,
+        row_id: UUID,
+        *,
+        expected_revision: int,
+        expected_review_revision: int,
+        reason: str,
+    ) -> FinancialEvent:
+        identifier(event_id)
+        identifier(row_id)
+        expected = revision(expected_revision)
+        review = revision(expected_review_revision)
+        if type(reason) is not str or reason not in {
+            "source_correction",
+            "posting_update",
+            "cancellation",
+            "reinstatement",
+        }:
+            raise EventUnavailable()
+        try:
+            with self._accounts._write():
+                replay = self.by_source(row_id)
+                if replay:
+                    if (
+                        replay.id != event_id
+                        or replay.revision != expected + 1
+                        or replay.source_review_revision != review
+                        or replay.correction_reason != reason
+                    ):
+                        raise EventUnavailable()
+                    return replay
+                current = self.get(event_id)
+                if current is None or current.revision != expected:
+                    raise EventUnavailable()
+                return self._persist(row_id, review, current.position_id, current, reason)
+        except AccountUnavailable, ImportUnavailable:
+            raise EventUnavailable() from None
+
+    def _persist(
+        self,
+        row_id: UUID,
+        review: int,
+        position_id: UUID | None,
+        previous: FinancialEvent | None,
+        reason: str | None,
+    ) -> FinancialEvent:
+        source, context = self._imports.reviewed(row_id, review)
+        candidate = source.definition
+        cancelled = candidate.kind == "cancellation"
+        account, instrument = context["account"], context["instrument"]
+        if account is None or (candidate.kind not in EVENT_KINDS and not cancelled):
+            raise EventUnavailable()
+        status = "cancelled" if cancelled else "active"
+        if previous:
+            if (
+                account.id != previous.account_id
+                or (not cancelled and instrument != previous.instrument_id)
+                or (
+                    cancelled
+                    and candidate.instrument_identifier_id is not None
+                    and instrument != previous.instrument_id
+                )
+            ):
+                raise EventUnavailable()
+            if (
+                (cancelled and (previous.status != "active" or reason != "cancellation"))
+                or (not cancelled and previous.status == "cancelled" and reason != "reinstatement")
+                or (
+                    not cancelled
+                    and previous.status == "active"
+                    and reason not in {"source_correction", "posting_update"}
+                )
+            ):
+                raise EventUnavailable()
+            if not cancelled and candidate.kind != previous.kind:
+                raise EventUnavailable()
+            if cancelled:
+                instrument = previous.instrument_id
+        elif cancelled:
+            raise EventUnavailable()
+        if (position_id is None) != (instrument is None):
+            raise EventUnavailable()
+        if (
+            position_id is not None
+            and not self._execute(
+                "SELECT EXISTS(SELECT 1 FROM app.account_positions WHERE owner_id=:owner AND "
+                "id=:id AND account_id=:account AND instrument_id=:instrument)",
+                id=position_id,
+                account=account.id,
+                instrument=instrument,
+            ).scalar_one()
+        ):
+            raise EventUnavailable()
+        values = {value.role: value for value in candidate.values}
+        if not cancelled:
+            cash = values["net_cash"]
+            native = context["quote_currency"] or context["fund_currency"]
+            if (native is not None and cash.currency != native) or any(
+                value.currency is not None and value.currency != cash.currency
+                for value in candidate.values
+            ):
+                raise EventUnavailable()
+        if reason == "posting_update":
+            assert previous is not None
+            old_values = {
+                value.role: (value.financial().value, value.currency, value.missing_reason)
+                for value in previous.components
+            }
+            new_values = {
+                value.role: (value.financial().value, value.currency, value.missing_reason)
+                for value in candidate.values
+            }
+            old_date = previous.trade_date.isoformat() if previous.trade_date else None
+            if (
+                previous.posting_state != "pending"
+                or candidate.posting_state != "posted"
+                or old_values != new_values
+                or old_date != candidate.trade_date
+            ):
+                raise EventUnavailable()
+        quantity = not cancelled and candidate.kind in TRADE_KINDS
+        for table, additional in (
+            ("financial_events", 1),
+            ("event_components", len(values)),
+            ("cash_movements", int(not cancelled)),
+            ("quantity_movements", int(quantity)),
+        ):
+            if (
+                self._execute(
+                    f"SELECT count(*) FROM app.{table} WHERE owner_id=:owner"
+                ).scalar_one()
+                + additional
+                > MAX_RECORDS
+            ):
+                raise EventUnavailable()
+        event_id = previous.id if previous else uuid4()
+        version = previous.revision + 1 if previous else 1
+        self._execute(
+            "INSERT INTO app.financial_events (owner_id,id,revision,previous_revision,"
+            "source_row_id,source_review_revision,account_id,position_id,instrument_id,kind,"
+            "posting_state,status,correction_reason,trade_date,settlement_date,booking_date,"
+            "value_date,value_count) VALUES (:owner,:id,:revision,:previous,:row,:review,"
+            ":account,:position,:instrument,:kind,:state,:status,:reason,:trade,:settlement,"
+            ":booking,:value,:count)",
+            id=event_id,
+            revision=version,
+            previous=previous.revision if previous else None,
+            row=row_id,
+            review=review,
+            account=account.id,
+            position=position_id,
+            instrument=instrument,
+            kind=previous.kind if cancelled and previous else candidate.kind,
+            state=previous.posting_state if cancelled and previous else candidate.posting_state,
+            status=status,
+            reason=reason,
+            trade=candidate.trade_date,
+            settlement=candidate.settlement_date,
+            booking=candidate.booking_date,
+            value=candidate.value_date,
+            count=len(values),
+        )
+        for component in candidate.values:
+            self._execute(
+                "INSERT INTO app.event_components (owner_id,event_id,revision,role,source,"
+                "amount,currency,missing_reason) VALUES (:owner,:event,:revision,:role,"
+                ":source,:amount,:currency,:missing_reason)",
+                event=event_id,
+                revision=version,
+                amount=component.financial().value,
+                **component.model_dump(),
+            )
+        if quantity:
+            self._execute(
+                "INSERT INTO app.quantity_movements (owner_id,event_id,revision,position_id,"
+                "amount) VALUES (:owner,:event,:revision,:position,:amount)",
+                event=event_id,
+                revision=version,
+                position=position_id,
+                amount=values["quantity"].financial().value,
+            )
+        if not cancelled:
+            cash = values["net_cash"]
+            self._execute(
+                "INSERT INTO app.cash_movements (owner_id,event_id,revision,account_id,"
+                "currency,amount) VALUES (:owner,:event,:revision,:account,:currency,:amount)",
+                event=event_id,
+                revision=version,
+                account=account.id,
+                currency=cash.currency,
+                amount=cash.financial().value,
+            )
+        result = self.get(event_id)
+        assert result is not None
+        return result
+
+    def history(
+        self,
+        event_id: UUID,
+        *,
+        limit: int = 25,
+        before: int | None = None,
+    ) -> tuple[FinancialEvent, ...]:
+        page(limit, None)
+        if before is not None:
+            revision(before)
+        rows = self._execute(
+            "SELECT * FROM app.financial_events WHERE owner_id=:owner AND id=:id AND "
+            "(CAST(:before AS bigint) IS NULL OR revision<:before) ORDER BY revision DESC "
+            "LIMIT :limit",
+            id=identifier(event_id),
+            before=before,
+            limit=limit,
+        ).mappings()
+        return tuple(self._event(row) for row in rows)
 
     def list(
         self, account_id: UUID, *, limit: int = 25, after: UUID | None = None
@@ -261,10 +378,10 @@ class EventTransaction:
             f"SELECT e.*,m.amount,{currency} AS currency FROM app.{kind}_movements m "
             "JOIN app.financial_events e ON e.owner_id=m.owner_id AND e.id=m.event_id AND "
             f"e.revision=m.revision WHERE e.owner_id=:owner AND m.{parent}_id=:parent "
-            "AND e.posting_state=:state AND (CAST(:after AS uuid) IS NULL OR "
-            "e.id>CAST(:after AS uuid)) AND NOT EXISTS (SELECT 1 FROM app.financial_events n "
-            "WHERE n.owner_id=e.owner_id AND n.id=e.id AND n.revision>e.revision) ORDER BY "
-            "e.id LIMIT :limit",
+            "AND e.status='active' AND e.posting_state=:state AND (CAST(:after AS uuid) IS "
+            "NULL OR e.id>CAST(:after AS uuid)) AND NOT EXISTS (SELECT 1 FROM "
+            "app.financial_events n WHERE n.owner_id=e.owner_id AND n.id=e.id AND "
+            "n.revision>e.revision) ORDER BY e.id LIMIT :limit",
             parent=identifier(parent_id),
             state=posting_state,
             after=after,

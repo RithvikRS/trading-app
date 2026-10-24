@@ -14,8 +14,8 @@ from trading_db import migrate
 from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 
-HEAD = "0009_financial_events"
-FORMAT = 5
+HEAD = "0010_lots_corrections"
+FORMAT = 6
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -156,6 +156,7 @@ COLUMNS.update(
             "booking_date",
             "value_date",
             "as_of_date",
+            "acquisition_date",
             "blocked_reason",
             "posting_state",
             "value_count",
@@ -199,6 +200,8 @@ COLUMNS.update(
             "instrument_id",
             "kind",
             "posting_state",
+            "status",
+            "correction_reason",
             "trade_date",
             "settlement_date",
             "booking_date",
@@ -218,6 +221,38 @@ COLUMNS.update(
         ),
         "quantity_movements": ("owner_id", "event_id", "revision", "position_id", "amount"),
         "cash_movements": ("owner_id", "event_id", "revision", "account_id", "currency", "amount"),
+    }
+)
+COLUMNS.update(
+    {
+        "lots": ("owner_id", "id", "position_id", "created_at"),
+        "lot_observations": (
+            "owner_id",
+            "id",
+            "revision",
+            "previous_revision",
+            "lot_id",
+            "scope",
+            "source_row_id",
+            "source_review_revision",
+            "status",
+            "correction_reason",
+            "as_of_date",
+            "acquisition_date",
+            "booking_date",
+            "value_count",
+            "created_at",
+        ),
+        "lot_components": (
+            "owner_id",
+            "observation_id",
+            "revision",
+            "role",
+            "source",
+            "amount",
+            "currency",
+            "missing_reason",
+        ),
     }
 )
 OMITTED = ("auth_sessions", "auth_admissions")

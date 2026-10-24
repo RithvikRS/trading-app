@@ -67,13 +67,15 @@ class StagedRow:
     decision: ReviewDecision | None
 
 
-def canonical(definition: BatchDefinition, contract_version: int = 2) -> str:
-    if type(contract_version) is not int or contract_version not in (1, 2):
+def canonical(definition: BatchDefinition, contract_version: int = 3) -> str:
+    if type(contract_version) is not int or contract_version not in (1, 2, 3):
         raise ImportUnavailable()
     value = definition.model_dump(mode="json")
     for row in value["rows"]:
         if contract_version == 1:
             row.pop("posting_state")
+        if contract_version < 3:
+            row.pop("acquisition_date")
         row["values"].sort(key=lambda item: item["role"])
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
@@ -196,7 +198,14 @@ class ImportTransaction:
 
     def _candidate(self, row: Any) -> CandidateDefinition:
         fields = {key: row[key] for key in CandidateDefinition.model_fields if key != "values"}
-        for key in ("trade_date", "settlement_date", "booking_date", "value_date", "as_of_date"):
+        for key in (
+            "trade_date",
+            "settlement_date",
+            "booking_date",
+            "value_date",
+            "as_of_date",
+            "acquisition_date",
+        ):
             fields[key] = fields[key].isoformat() if fields[key] else None
         values = self._execute(
             "SELECT role,source,currency,missing_reason FROM app.staged_values WHERE "
@@ -285,7 +294,7 @@ class ImportTransaction:
                 "INSERT INTO app.import_batches (owner_id,id,observation_id,revision,"
                 "previous_revision,normalizer,normalizer_version,normalized_digest,row_count,"
                 "contract_version) VALUES (:owner,:id,:observation,:revision,:previous,"
-                ":normalizer,:version,:digest,:count,2)",
+                ":normalizer,:version,:digest,:count,3)",
                 id=batch_id,
                 observation=observation_id,
                 revision=expected + 1,
@@ -300,10 +309,11 @@ class ImportTransaction:
                 self._execute(
                     "INSERT INTO app.staged_rows (owner_id,id,batch_id,occurrence,kind,"
                     "instrument_identifier_id,trade_date,settlement_date,booking_date,"
-                    "value_date,as_of_date,blocked_reason,value_count,posting_state) VALUES "
-                    "(:owner,:id,:batch,:occurrence,:kind,:instrument_identifier_id,"
-                    ":trade_date,:settlement_date,:booking_date,:value_date,:as_of_date,"
-                    ":blocked_reason,:count,:posting_state)",
+                    "value_date,as_of_date,blocked_reason,value_count,posting_state,"
+                    "acquisition_date) VALUES (:owner,:id,:batch,:occurrence,:kind,"
+                    ":instrument_identifier_id,:trade_date,:settlement_date,:booking_date,"
+                    ":value_date,:as_of_date,:blocked_reason,:count,:posting_state,"
+                    ":acquisition_date)",
                     id=row_id,
                     batch=batch_id,
                     count=len(candidate.values),
@@ -476,6 +486,36 @@ class ImportTransaction:
             limit=limit,
         ).mappings()
         return tuple(self._row(row) for row in rows)
+
+    def reviewed(self, row_id: UUID, expected_revision: int) -> tuple[StagedRow, dict[str, Any]]:
+        """Read current included evidence while the caller holds the shared write lock."""
+        expected = revision(expected_revision)
+        raw = (
+            self._execute(
+                "SELECT * FROM app.staged_rows WHERE owner_id=:owner AND id=:id",
+                id=identifier(row_id),
+            )
+            .mappings()
+            .one_or_none()
+        )
+        if raw is None:
+            raise ImportUnavailable()
+        source = self._row(raw)
+        if self._execute(
+            "SELECT EXISTS(SELECT 1 FROM app.financial_events WHERE owner_id=:owner AND "
+            "source_row_id=:id) OR EXISTS(SELECT 1 FROM app.lot_observations WHERE "
+            "owner_id=:owner AND source_row_id=:id)",
+            id=row_id,
+        ).scalar_one():
+            raise ImportUnavailable()
+        if (
+            source.status != "included"
+            or source.decision is None
+            or source.decision.revision != expected
+        ):
+            raise ImportUnavailable()
+        self.get_batch(source.batch_id)
+        return source, self._context(raw)
 
     def decide(
         self,

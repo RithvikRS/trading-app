@@ -40,6 +40,7 @@ from trading_db.instruments import (
     SchemeDefinition,
 )
 from trading_db.local import ROOT, disposable, private_directory
+from trading_db.lots import LotTransaction
 from trading_db.sessions import SessionDatabase
 from trading_db.workspace import PreferenceUpdate, WorkspaceDatabase
 
@@ -74,6 +75,148 @@ def signature(engine):
             "ORDER BY c.relname,k.conname",
         ),
     }
+
+
+def add_correction_history(unit, staging, source, reference, position, event_batch, event_records):
+    original = event_batch.definition.rows[0]
+    revised_values = tuple(
+        value.model_copy(update={"source": "-15.00"})
+        if value.role == "net_cash"
+        else value.model_copy(update={"source": "0.223456789012"})
+        if value.role == "quantity"
+        else value
+        for value in original.values
+    )
+    cancellation = CandidateDefinition(occurrence=2, kind="cancellation", booking_date="2026-10-24")
+    acquisition = CandidateDefinition(
+        occurrence=3,
+        kind="lot_acquisition",
+        instrument_identifier_id=reference.id,
+        as_of_date="2026-10-24",
+        acquisition_date="2026-09-01",
+        values=(
+            StagedValue(role="quantity", source="10.000000000001"),
+            StagedValue(role="acquisition_cost", source="100.00000000", currency="INR"),
+            StagedValue(role="discount_amount", source="10.00000000", currency="INR"),
+            StagedValue(
+                role="reported_tax_basis",
+                source=None,
+                currency="INR",
+                missing_reason="not_supplied",
+            ),
+        ),
+    )
+    remaining = acquisition.model_copy(
+        update={
+            "occurrence": 4,
+            "kind": "lot_remaining",
+            "acquisition_date": None,
+            "values": (
+                StagedValue(role="quantity", source="2.000000000001"),
+                StagedValue(role="acquisition_cost", source="20.00", currency="INR"),
+                StagedValue(
+                    role="discount_amount",
+                    source=None,
+                    currency="INR",
+                    missing_reason="not_supplied",
+                ),
+                StagedValue(role="reported_tax_basis", source="30.00", currency="INR"),
+            ),
+        }
+    )
+    corrected = remaining.model_copy(
+        update={
+            "occurrence": 5,
+            "values": tuple(
+                value.model_copy(update={"source": "1.000000000001"})
+                if value.role == "quantity"
+                else value.model_copy(update={"source": "19.00"})
+                if value.role == "acquisition_cost"
+                else value.model_copy(
+                    update={"source": None, "missing_reason": "incomplete_history"}
+                )
+                if value.role == "reported_tax_basis"
+                else value
+                for value in remaining.values
+            ),
+        }
+    )
+    observation = staging.observation(
+        source.id,
+        ObservationDefinition(
+            digest="c" * 64,
+            coverage="partial_activity",
+            period_start="2026-10-24",
+            period_end="2026-10-24",
+        ),
+    )
+    batch = staging.stage(
+        observation.id,
+        BatchDefinition(
+            normalizer="synthetic",
+            normalizer_version="1",
+            rows=(
+                original.model_copy(update={"values": revised_values}),
+                cancellation,
+                acquisition,
+                remaining,
+                corrected,
+                cancellation.model_copy(update={"occurrence": 6}),
+                acquisition.model_copy(update={"occurrence": 7}),
+                original.model_copy(update={"occurrence": 8}),
+            ),
+        ),
+        expected_revision=0,
+    )
+    rows = staging.rows(batch.id)
+    for row in rows:
+        staging.decide(row.id, "include", expected_revision=0)
+    events = EventTransaction(unit._unit)
+    events.correct(
+        event_records[0].id,
+        rows[0].id,
+        expected_revision=1,
+        expected_review_revision=1,
+        reason="source_correction",
+    )
+    events.correct(
+        event_records[1].id,
+        rows[1].id,
+        expected_revision=1,
+        expected_review_revision=1,
+        reason="cancellation",
+    )
+    events.correct(
+        event_records[1].id,
+        rows[7].id,
+        expected_revision=2,
+        expected_review_revision=1,
+        reason="reinstatement",
+    )
+    lots = LotTransaction(unit._unit)
+    bought = lots.record(rows[2].id, position.id, expected_review_revision=1)
+    left = lots.record(rows[3].id, position.id, expected_review_revision=1, lot_id=bought.lot_id)
+    lots.correct(
+        left.id,
+        rows[4].id,
+        expected_revision=1,
+        expected_review_revision=1,
+        reason="source_correction",
+    )
+    lots.correct(
+        bought.id,
+        rows[5].id,
+        expected_revision=1,
+        expected_review_revision=1,
+        reason="cancellation",
+    )
+    lots.correct(
+        bought.id,
+        rows[6].id,
+        expected_revision=2,
+        expected_review_revision=1,
+        reason="reinstatement",
+    )
 
 
 def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(environment, database):
@@ -218,11 +361,17 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                     ),
                     expected_revision=0,
                 )
+                event_records = []
                 for event_row in staging.rows(event_batch.id):
                     staging.decide(event_row.id, "include", expected_revision=0)
-                    EventTransaction(unit._unit).record(
-                        event_row.id, expected_review_revision=1, position_id=position.id
+                    event_records.append(
+                        EventTransaction(unit._unit).record(
+                            event_row.id, expected_review_revision=1, position_id=position.id
+                        )
                     )
+                add_correction_history(
+                    unit, staging, source, reference, position, event_batch, event_records
+                )
                 brokerage = unit.create(
                     AccountDefinition(
                         kind="brokerage",
@@ -339,16 +488,14 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             )
             assert counts["fund_schemes"] == counts["instrument_listings"] == 2
             assert counts["instrument_identifiers"] == 4
-            assert counts["source_observations"] == 4
-            assert counts["import_batches"] == 6 and counts["staged_rows"] == 8
-            assert counts["staged_values"] == 24 and counts["review_decisions"] == 12
-            assert (
-                counts["financial_events"]
-                == counts["cash_movements"]
-                == counts["quantity_movements"]
-                == 4
-            )
-            assert counts["event_components"] == 12
+            assert counts["source_observations"] == 6
+            assert counts["import_batches"] == 8 and counts["staged_rows"] == 24
+            assert counts["staged_values"] == 68 and counts["review_decisions"] == 28
+            assert counts["financial_events"] == 10
+            assert counts["cash_movements"] == counts["quantity_movements"] == 8
+            assert counts["event_components"] == 24
+            assert counts["lots"] == 2 and counts["lot_observations"] == 10
+            assert counts["lot_components"] == 32
             assert signature(restored_admin) == baseline
             restored_data = recovery.decode_snapshot(
                 recovery.export_snapshot(
@@ -394,8 +541,10 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                         assert [r.revision for r in securities.history(reference.id)] == [2, 1]
                         staging = ImportTransaction(unit._unit)
                         observations = staging.observations(source.id)
-                        assert len(observations) == 2
-                        original = next(item for item in observations if item.previous_id is None)
+                        assert len(observations) == 3
+                        original = next(
+                            item for item in observations if item.definition.digest == "a" * 64
+                        )
                         latest = staging.latest_batch(original.id)
                         assert latest.revision == 2
                         row = staging.rows(latest.id)[0]
@@ -406,6 +555,42 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                             "reported_tax_basis": None,
                         }
                         assert staging.history(row.id)[0].action == "include"
+                        account_id = unit.mapping(source.id).account_id
+                        events = EventTransaction(unit._unit)
+                        assert sorted(item.revision for item in events.list(account_id)) == [2, 3]
+                        assert (
+                            events.movements(account_id, kind="cash", posting_state="pending") == ()
+                        )
+                        assert sorted(
+                            str(item.amount)
+                            for item in events.movements(
+                                account_id, kind="cash", posting_state="posted"
+                            )
+                        ) == ["-12.30", "-15.00"]
+                        position = securities.positions(account_id)[0]
+                        lots = LotTransaction(unit._unit)
+                        lot = lots.list(position.id)[0]
+                        current = {item.scope: item for item in lots.observations(lot.id)}
+                        assert len(current) == 2
+                        assert current["lot_acquisition"].revision == 3
+                        assert len(lots.history(current["lot_acquisition"].id)) == 3
+                        assert current["lot_remaining"].revision == 2
+                        basis = next(
+                            v
+                            for v in current["lot_remaining"].components
+                            if v.role == "reported_tax_basis"
+                        )
+                        assert basis.source is None and basis.missing_reason == "incomplete_history"
+                        previous = lots.history(current["lot_remaining"].id)[1]
+                        assert (
+                            next(
+                                v.source
+                                for v in previous.components
+                                if v.role == "reported_tax_basis"
+                            )
+                            == "30.00"
+                        )
+
             finally:
                 restored_accounts.close()
             restored_workspace = WorkspaceDatabase(target.url("runtime"), target.project)
