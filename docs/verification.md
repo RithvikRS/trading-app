@@ -90,3 +90,5 @@ Record local results separately from the actual GitHub run. A local pass does no
 [Step 5A](amfi-nav-contracts.md) uses fabricated report rows to test exact dates/decimals, ambiguous mappings, both ISIN roles, unsupported identity/variant evidence, stale/future observations and strict size/encoding/structure bounds. A one-off bounded public-report check is recorded separately from deterministic CI; CI never depends on provider availability or customer files.
 
 [Step 5E.0](workspace-context.md) verifies context derivation, renewal/restart stability, changed sign-ins, duplicate/missing/malformed markers, rejection before financial SQL, healthy retry without revocation, two-owner replacement, and frontend bootstrap/save/recheck races. Use matching frontend/API builds; older private clients fail closed.
+
+[Step 5B.1](parser-transport.md) adds fabricated stream and socket-pair tests for metadata/length rejection before body reads, strict JSON, private representations, Unicode passwords, partial/surplus frames, mismatched replies and whole-operation deadlines. These tests neither execute a native PDF parser nor establish document compatibility or deployed isolation.
