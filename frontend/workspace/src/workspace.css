@@ -146,3 +146,8 @@
   .ws-preference-fields { grid-template-columns: 1fr; gap: 4px; }
   .ws-footnote { align-items: flex-start; text-align: center; } .ws-primary, .ws-secondary { font-size: 13px; }
 }
+.ws-connection { margin-block: 24px; }
+.ws-connection-status { display: flex; align-items: flex-start; gap: 10px; color: var(--text); }
+.ws-connection-status svg { flex: 0 0 auto; margin-top: 3px; }
+.ws-connection-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.ws-connection-actions .ws-primary { width: auto; margin-top: 0; }

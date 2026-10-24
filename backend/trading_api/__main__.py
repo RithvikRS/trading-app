@@ -24,6 +24,11 @@ def main() -> int:
     from trading_api.application import create_app
 
     try:
+        certificate = key = None
+        if settings.https_enabled:
+            from trading_connectors.local import tls_files
+
+            certificate, key = tls_files()
         application = create_app(settings)
     except Exception:
         logger.error("configuration_invalid")
@@ -47,6 +52,8 @@ def main() -> int:
         timeout_keep_alive=5,
         timeout_graceful_shutdown=5,
         h11_max_incomplete_event_size=16384,
+        ssl_certfile=certificate,
+        ssl_keyfile=key,
     )
     return 0
 

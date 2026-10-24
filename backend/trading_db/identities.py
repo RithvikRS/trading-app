@@ -11,6 +11,8 @@ from trading_db.connections import DatabaseFailure, engine_for, verify_server
 
 
 class IdentityDatabase:
+    expected_errors: tuple[type[Exception], ...] = (AuthenticationDenied, AuthenticationUnavailable)
+
     def __init__(self, url: URL, project: str) -> None:
         if url.username != "trading_auth":
             raise DatabaseFailure("Identity lookup requires its dedicated restricted identity.")
@@ -41,7 +43,7 @@ class IdentityDatabase:
                 if not valid:
                     raise AuthenticationUnavailable()
                 yield connection
-        except AuthenticationDenied, AuthenticationUnavailable:
+        except self.expected_errors:
             raise
         except Exception:
             raise AuthenticationUnavailable() from None

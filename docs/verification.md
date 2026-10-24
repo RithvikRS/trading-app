@@ -1,5 +1,7 @@
 # Repeatable verification
 
+[Step 6B](indmoney-authorization.md) adds synthetic OAuth/callback/encryption tests, real PostgreSQL authorization and revocation races, minimal grants, key rotation, migration guards and recovery without live connector state. Protected UI tests verify exact authorization destinations, CSRF/session binding, late-response disposal, explicit completion and uncertain revocation feedback. Browser evidence covers both themes at desktop/mobile widths. CI uses no live provider credentials; real account access and token behavior remain separate acceptance items.
+
 The repository now has one check entry point and a GitHub Actions workflow using the same commands. All checks use synthetic data. [Step 3C](database-foundation.md) adds a disposable local PostgreSQL service for database checks. Hosted identity, production credentials, deployment jobs, and cloud permissions remain absent.
 
 ## Local commands

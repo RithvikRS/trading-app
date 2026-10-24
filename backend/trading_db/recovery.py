@@ -15,11 +15,12 @@ from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 from trading_db.provider_keys import ProviderKeys
 
-HEAD = "0017_reconciled_completion"
-FORMAT = 13
+HEAD = "0018_indmoney_authorization"
+FORMAT = 14
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
+    "indmoney_events": ("id", "owner_id", "occurred_at", "event", "outcome", "request_id"),
     "owners": ("id", "is_active", "created_at"),
     "owner_identities": ("issuer", "subject", "owner_id", "created_at", "mfa_enrolled"),
     "workspace_preferences": (
@@ -457,7 +458,7 @@ COLUMNS.update(
         ),
     }
 )
-OMITTED = ("auth_sessions", "auth_admissions")
+OMITTED = ("auth_sessions", "auth_admissions", "indmoney_connections", "indmoney_attempts")
 
 
 def source_digest() -> str:

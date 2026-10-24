@@ -68,6 +68,8 @@ Reference: [Supabase network restrictions](https://supabase.com/docs/guides/plat
 
 ## Secrets and encryption
 
+[Step 6B](indmoney-authorization.md) adds a separate INDmoney credential key ring, forced owner policies and a single-use callback boundary. Normal session/CSRF cookies remain Strict; a short-lived Lax correlation cookie serves only the callback. Token publication revalidates the bound session and connection revision after provider I/O. Disconnect removes local credentials before upstream cleanup, and recovery never restores live connection tokens or pending codes. Synthetic tests do not establish real provider scope enforcement, token rotation, identity or history coverage.
+
 Prefer official OAuth or scoped provider authorization. Login and consent should occur at the provider where supported. Bank passwords and broad mailbox access are not default import mechanisms. Document scopes, renewal, expiry, and revocation for every integration. A connector requiring credentials that also permit trading needs a separate documented decision before it is enabled.
 
 Keep integration secrets server-side and encrypt persisted tokens with authenticated encryption from a maintained library. Manage keys outside the database and its backups, using a secret manager or KMS with narrowly scoped workload identity. OCI Vault is a candidate; the exact key custody and recovery design remains to be selected. Record key versions and test rotation and revocation.

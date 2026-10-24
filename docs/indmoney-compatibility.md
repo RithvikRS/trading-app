@@ -16,7 +16,7 @@ See the [integration sequence](indmoney-integration-plan.md) and the [sanitized 
 | Unauthenticated protocol initialization | A credential-free `initialize` request returned HTTP 401 with an authentication challenge | Protocol negotiation and tool schemas were not available through this unauthenticated request. No financial tool was invoked. |
 | Unissued refresh-token rejection | One request to the fixed token endpoint returned HTTP 401 with no access/refresh token fields | The negative request produced no tokens. It does not prove successful client authentication, refresh-token validation, rotation or renewal. |
 
-Registration used the descriptive name `Portfolio local development` and the exact callback `https://127.0.0.1:8443/api/v1/connections/indmoney/callback`. This address is consistent with the local HTTPS rehearsal origin, but the callback route is not implemented and the temporary rehearsal certificate is not a persistent browser-trusted identity. Registration does not make that callback operational. A hosted application needs its own verified callback and client configuration.
+Registration used the descriptive name `Portfolio local development` and the exact callback `https://127.0.0.1:8443/api/v1/connections/indmoney/callback`. At the time of this probe, the callback was not implemented. [Step 6B](indmoney-authorization.md) now implements it behind explicit local HTTPS/authentication configuration. The temporary rehearsal certificate is not a persistent browser-trusted identity, and the research registration has not been loaded into the application. A hosted application needs its own verified callback and client configuration.
 
 The registration response did not supply `client_secret_expires_at` or a client-management URI. Secret lifetime and application-registration removal/rotation therefore remain unresolved. Do not interpret an omitted lifetime as an unlimited lifetime, or token revocation as client-registration deletion. [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591) distinguishes registered client metadata from user authorization and defines the secret-expiry response field.
 
@@ -28,7 +28,7 @@ The complete registration response was encrypted with Windows DPAPI for the curr
 
 Retain this single registration for controlled local follow-up. The registration probe records that a request was sent and refuses to create another when the earlier outcome or credential file exists. Do not repeat registration during tests or CI. An unknown response must be investigated before any replacement registration. There is no verified client-management deletion endpoint to invoke automatically.
 
-DPAPI custody is local research custody, not the deployed credential design: access depends on the Windows user profile, and no recovery or rotation process for this client secret has been verified. Step 6B must establish encrypted application custody, ownership, callback protections and recovery before loading these credentials into an enabled connector. Do not print, paste into a conversation, or commit the encrypted or decrypted response. Reuse or retire the registration deliberately when its verified management path is available.
+DPAPI custody is local research custody: access depends on the Windows user profile, and no provider recovery or rotation process for this client secret has been verified. [Step 6B](indmoney-authorization.md) implements separate encrypted application custody, ownership, callback protections and recovery with synthetic tests. The research registration remains outside the application pending a controlled local transfer and provider verification. Do not print, paste into a conversation, or commit the encrypted or decrypted response. Reuse or retire the registration deliberately when its verified management path is available.
 
 ## Transaction-history assessment
 
@@ -51,7 +51,7 @@ INDstocks uses a separate mechanism. Its [authentication documentation](https://
 
 ## Remaining acceptance and next implementation
 
-The public and unauthenticated portion of 6A.2 is complete. The authenticated portion depends on Step 6B's secured callback and credential custody, followed by owner-side sign-in. Keep those acceptance items open; fictional responses cannot close them. No account credentials or statements are needed in development conversations.
+The public and unauthenticated portion of 6A.2 is complete. The authenticated portion requires configuration of Step 6B's secured callback and credential custody, followed by owner-side sign-in. Keep those acceptance items open; fictional responses cannot close them. No account credentials or statements are needed in development conversations.
 
 | Remaining check | Required evidence |
 | --- | --- |
@@ -63,4 +63,4 @@ The public and unauthenticated portion of 6A.2 is complete. The authenticated po
 | Renewal races and disconnect | Serialize refresh, test stale-result rejection, controlled reuse/expiry and provider revocation without retry loops. Keep local access disabled even if provider revocation is unavailable. |
 | History and reconciliation | Verify complete supported date ranges, pagination and stable source IDs, or explicitly retain snapshot-only coverage and statement fallback. |
 
-Step 6B can implement the protected authorization boundary with synthetic tests while these provider checks remain open. Live financial import and scheduling stay disabled until their own acceptance is complete. This documentation change adds no runtime endpoint, database state or trading capability; the local research registration is the only new provider-side application record.
+[Step 6B](indmoney-authorization.md) implements the protected authorization boundary and tests renewal/revocation races with synthetic responses. These provider checks remain open. Live financial import and scheduling stay disabled until their own acceptance is complete. The 6A.2 investigation created only the local research registration; it did not authorize a financial account.

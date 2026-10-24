@@ -300,10 +300,20 @@ class BrowserAuth:
 
     @contextmanager
     def workspace_access(
-        self, cookie: str, csrf: str, request: str, *, expected_context: str
+        self,
+        cookie: str,
+        csrf: str,
+        request: str,
+        *,
+        expected_context: str,
+        fresh: bool = False,
     ) -> Iterator[tuple[UUID, Callable[[], None]]]:
         with self._lease(cookie, ("active",), request, csrf, "renewal") as (row, state):
+            if fresh:
+                self._fresh(state)
             state = self._refresh(state)
+            if fresh:
+                self._fresh(state)
             self.store.finish(
                 row, row.verifier, self.vault.seal(state, row.verifier), "active", request
             )

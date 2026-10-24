@@ -43,7 +43,7 @@ def engine_for(url: URL, *, migration: bool = False) -> Engine:
             "pool_recycle": 300,
         }
     )
-    runtime = url.username == "trading_runtime"
+    runtime = url.username in {"trading_runtime", "trading_auth"}
     engine = create_engine(
         url,
         **options,

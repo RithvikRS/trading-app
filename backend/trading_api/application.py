@@ -22,6 +22,12 @@ from trading_auth.models import (
     AuthenticationUnavailable,
     WorkspaceContextChanged,
 )
+from trading_connectors.indmoney_models import (
+    ConnectorBusy,
+    ConnectorRejected,
+    ConnectorUnavailable,
+)
+from trading_connectors.indmoney_service import IndmoneyService
 from trading_db.financial_reads import FinancialReadUnavailable
 from trading_db.workspace import WorkspaceDatabase
 
@@ -120,11 +126,14 @@ def create_app(
     browser: BrowserAuth | None = None,
     workspace: WorkspaceDatabase | None = None,
     rehearsal: bool = False,
+    indmoney: IndmoneyService | None = None,
 ) -> HTTPBoundary:
     config = load_settings() if settings is None else settings
     # Revalidate injected settings as well as process configuration at startup.
     Settings.model_validate(config.model_dump())
-    if rehearsal and (config.auth_enabled or not config.frontend_enabled):
+    if rehearsal and (
+        config.auth_enabled or config.indmoney_enabled or not config.frontend_enabled
+    ):
         raise ValueError("The local package requires the locked frontend configuration.")
     if config.auth_enabled and browser is None:
         from trading_auth.local import local_browser
@@ -137,9 +146,19 @@ def create_app(
         workspace = WorkspaceDatabase(local.url("runtime"), local.project)
     if workspace is not None and browser is None:
         raise ValueError("Workspace routes require authentication.")
+    if config.indmoney_enabled and indmoney is None:
+        from trading_connectors.local import local_service
+
+        if browser is None:
+            raise ValueError("Connector requires authentication.")
+        indmoney = local_service(browser)
+    if indmoney is not None and (
+        not config.https_enabled or browser is None or indmoney.browser is not browser
+    ):
+        raise ValueError("Connector requires its authenticated HTTPS boundary.")
     policy = (
         CookiePolicy("https://127.0.0.1:8443", secure=True)
-        if rehearsal
+        if rehearsal or config.https_enabled
         else CookiePolicy(f"http://127.0.0.1:{config.port}")
     )
 
@@ -148,6 +167,8 @@ def create_app(
         try:
             yield
         finally:
+            if indmoney is not None:
+                indmoney.close()
             if browser is not None:
                 browser.close()
             if workspace is not None:
@@ -169,6 +190,10 @@ def create_app(
 
             api.include_router(preference_routes(browser, workspace, policy))
             api.include_router(financial_routes(browser, workspace, policy))
+    if indmoney is not None:
+        from trading_api.indmoney import routes as indmoney_routes
+
+        api.include_router(indmoney_routes(indmoney, policy))
     if config.frontend_enabled:
         from trading_api.frontend import routes as frontend_routes
 
@@ -209,6 +234,30 @@ def create_app(
     async def liveness() -> dict[str, str]:
         return {"status": "ok"}
 
+    @api.exception_handler(ConnectorRejected)
+    @api.exception_handler(ConnectorBusy)
+    @api.exception_handler(ConnectorUnavailable)
+    async def connector_error(request: Request, exc: Exception) -> JSONResponse:
+        status = (
+            429
+            if isinstance(exc, ConnectorBusy)
+            else 409
+            if isinstance(exc, ConnectorRejected)
+            else 503
+        )
+        response = JSONResponse(
+            {
+                "error": "connection_unavailable"
+                if status == 503
+                else "connection_request_rejected",
+                "request_id": request.state.request_id,
+            },
+            status_code=status,
+        )
+        if status == 429:
+            response.headers["Retry-After"] = "5"
+        return response
+
     @api.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException) -> JSONResponse:
         response = error_response(exc.status_code, request.state.request_id)
@@ -226,12 +275,12 @@ def create_app(
 
     app: ASGIApp = api
     if browser is not None:
-        app = BrowserBoundary(app, policy, browser.vault.csrf_secret)
+        app = BrowserBoundary(app, policy, browser.vault.csrf_secret, indmoney=indmoney is not None)
     return HTTPBoundary(
         TrustedHostMiddleware(
             app,
             allowed_hosts=["127.0.0.1", "localhost"],
             www_redirect=False,
         ),
-        require_https=rehearsal,
+        require_https=rehearsal or config.https_enabled,
     )

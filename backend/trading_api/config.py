@@ -4,11 +4,18 @@ import os
 from collections.abc import Mapping
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 PREFIX = "TRADING_API_"
 ALLOWED_KEYS = frozenset(
-    {f"{PREFIX}ENVIRONMENT", f"{PREFIX}PORT", f"{PREFIX}AUTH_ENABLED", f"{PREFIX}FRONTEND_ENABLED"}
+    {
+        f"{PREFIX}ENVIRONMENT",
+        f"{PREFIX}PORT",
+        f"{PREFIX}AUTH_ENABLED",
+        f"{PREFIX}FRONTEND_ENABLED",
+        f"{PREFIX}HTTPS_ENABLED",
+        f"{PREFIX}INDMONEY_ENABLED",
+    }
 )
 
 
@@ -24,6 +31,16 @@ class Settings(BaseModel):
     port: int = Field(default=8000, ge=1024, le=65535)
     auth_enabled: bool = False
     frontend_enabled: bool = False
+    https_enabled: bool = False
+    indmoney_enabled: bool = False
+
+    @model_validator(mode="after")
+    def connector_transport(self) -> Settings:
+        if self.https_enabled and self.port != 8443:
+            raise ValueError("Local HTTPS requires the registered origin.")
+        if self.indmoney_enabled and not (self.auth_enabled and self.https_enabled):
+            raise ValueError("INDmoney requires authenticated HTTPS.")
+        return self
 
 
 def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
@@ -41,7 +58,9 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
     try:
         auth = source.get(f"{PREFIX}AUTH_ENABLED", "false")
         frontend = source.get(f"{PREFIX}FRONTEND_ENABLED", "false")
-        if auth not in {"true", "false"} or frontend not in {"true", "false"}:
+        https = source.get(f"{PREFIX}HTTPS_ENABLED", "false")
+        indmoney = source.get(f"{PREFIX}INDMONEY_ENABLED", "false")
+        if any(value not in {"true", "false"} for value in (auth, frontend, https, indmoney)):
             raise ConfigurationError("Invalid API configuration; see docs/development.md.")
         return Settings.model_validate(
             {
@@ -49,6 +68,8 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
                 "port": int(port),
                 "auth_enabled": auth == "true",
                 "frontend_enabled": frontend == "true",
+                "https_enabled": https == "true",
+                "indmoney_enabled": indmoney == "true",
             }
         )
     except ValidationError:
