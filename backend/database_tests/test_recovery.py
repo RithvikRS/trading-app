@@ -159,6 +159,7 @@ def add_correction_history(unit, staging, source, reference, position, event_bat
         BatchDefinition(
             normalizer="synthetic",
             normalizer_version="1",
+            cash_date_basis="settlement",
             rows=(
                 original.model_copy(update={"values": revised_values}),
                 cancellation,
@@ -342,6 +343,7 @@ def add_snapshot_history(store, owner):
             kind="cash_snapshot",
             as_of_date="2026-10-24",
             snapshot_scope="native_cash",
+            reconciliation_boundary="before_period",
             values=(StagedValue(role="net_cash", source="100.00", currency="INR"),),
         )
         changed = original.model_copy(
@@ -361,6 +363,7 @@ def add_snapshot_history(store, owner):
             update={
                 "occurrence": 5,
                 "as_of_date": "2026-10-25",
+                "reconciliation_boundary": "after_period",
                 "values": (StagedValue(role="net_cash", source="125.00", currency="INR"),),
             }
         )
@@ -631,6 +634,11 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
         source_url("bootstrap"), source_project, key, identifier_keys=identifier_keys
     )
     data = recovery.decode_snapshot(encrypted, key)
+    assert sum(row["cash_date_basis"] == "settlement" for row in data["import_batches"]) == 2
+    assert (
+        sum(row["reconciliation_boundary"] == "before_period" for row in data["staged_rows"]) == 2
+    )
+    assert sum(row["reconciliation_boundary"] == "after_period" for row in data["staged_rows"]) == 2
     assert "auth_sessions" not in data and "auth_admissions" not in data
     assert str(own).encode() not in encrypted
     old_started = datetime.now(UTC)

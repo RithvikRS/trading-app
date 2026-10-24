@@ -67,10 +67,12 @@ class StagedRow:
     decision: ReviewDecision | None
 
 
-def canonical(definition: BatchDefinition, contract_version: int = 4) -> str:
-    if type(contract_version) is not int or contract_version not in (1, 2, 3, 4):
+def canonical(definition: BatchDefinition, contract_version: int = 5) -> str:
+    if type(contract_version) is not int or contract_version not in (1, 2, 3, 4, 5):
         raise ImportUnavailable()
     value = definition.model_dump(mode="json")
+    if contract_version < 5:
+        value.pop("cash_date_basis")
     for row in value["rows"]:
         if contract_version == 1:
             row.pop("posting_state")
@@ -79,6 +81,8 @@ def canonical(definition: BatchDefinition, contract_version: int = 4) -> str:
         if contract_version < 4:
             row.pop("as_of_instant")
             row.pop("snapshot_scope")
+        if contract_version < 5:
+            row.pop("reconciliation_boundary")
         row["values"].sort(key=lambda item: item["role"])
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
@@ -237,6 +241,7 @@ class ImportTransaction:
         definition = BatchDefinition(
             normalizer=row["normalizer"],
             normalizer_version=row["normalizer_version"],
+            cash_date_basis=row["cash_date_basis"],
             rows=tuple(self._candidate(candidate) for candidate in candidates),
         )
         if (
@@ -263,10 +268,25 @@ class ImportTransaction:
         valid = BatchDefinition.model_validate(definition.model_dump(warnings=False))
         content = canonical(valid)
         with self._write():
-            if self.get_observation(observation_id) is None or not self._current_observation(
-                observation_id
+            observed = self.get_observation(observation_id)
+            if observed is None or not self._current_observation(observation_id):
+                raise ImportUnavailable()
+            period = observed.definition
+            if valid.cash_date_basis is not None and (
+                period.coverage not in {"complete_activity", "partial_activity"}
+                or period.period_start is None
+                or period.period_end is None
             ):
                 raise ImportUnavailable()
+            for candidate in valid.rows:
+                boundary = candidate.reconciliation_boundary
+                if boundary is not None and (
+                    period.period_start is None
+                    or period.period_end is None
+                    or candidate.as_of_date
+                    != (period.period_start if boundary == "before_period" else period.period_end)
+                ):
+                    raise ImportUnavailable()
             current = self.latest_batch(observation_id)
             if (
                 current
@@ -296,8 +316,9 @@ class ImportTransaction:
             self._execute(
                 "INSERT INTO app.import_batches (owner_id,id,observation_id,revision,"
                 "previous_revision,normalizer,normalizer_version,normalized_digest,row_count,"
-                "contract_version) VALUES (:owner,:id,:observation,:revision,:previous,"
-                ":normalizer,:version,:digest,:count,4)",
+                "contract_version,cash_date_basis) VALUES "
+                "(:owner,:id,:observation,:revision,:previous,"
+                ":normalizer,:version,:digest,:count,5,:cash_basis)",
                 id=batch_id,
                 observation=observation_id,
                 revision=expected + 1,
@@ -306,6 +327,7 @@ class ImportTransaction:
                 version=valid.normalizer_version,
                 digest=hashlib.sha256(content.encode()).hexdigest(),
                 count=len(valid.rows),
+                cash_basis=valid.cash_date_basis,
             )
             for candidate in valid.rows:
                 row_id = uuid4()
@@ -313,11 +335,11 @@ class ImportTransaction:
                     "INSERT INTO app.staged_rows (owner_id,id,batch_id,occurrence,kind,"
                     "instrument_identifier_id,trade_date,settlement_date,booking_date,"
                     "value_date,as_of_date,blocked_reason,value_count,posting_state,"
-                    "acquisition_date,as_of_instant,snapshot_scope) VALUES "
+                    "acquisition_date,as_of_instant,snapshot_scope,reconciliation_boundary) VALUES "
                     "(:owner,:id,:batch,:occurrence,:kind,"
                     ":instrument_identifier_id,:trade_date,:settlement_date,:booking_date,"
                     ":value_date,:as_of_date,:blocked_reason,:count,:posting_state,"
-                    ":acquisition_date,:as_of_instant,:snapshot_scope)",
+                    ":acquisition_date,:as_of_instant,:snapshot_scope,:reconciliation_boundary)",
                     id=row_id,
                     batch=batch_id,
                     count=len(candidate.values),

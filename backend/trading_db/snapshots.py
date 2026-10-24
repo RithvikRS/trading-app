@@ -40,6 +40,8 @@ class Snapshot:
     as_of_date: date | None
     as_of_instant: str | None
     snapshot_scope: str | None
+    reconciliation_boundary: str | None
+    cash_date_basis: str | None
     booking_date: date | None
     observation_id: UUID
     source_id: UUID
@@ -97,7 +99,8 @@ class SnapshotTransaction:
 
     def _records(self, where: str, **parameters: Any) -> tuple[Snapshot, ...]:
         rows = self._execute(
-            "SELECT e.*,b.observation_id,o.source_id,o.coverage,o.period_start,o.period_end "
+            "SELECT e.*,b.observation_id,o.source_id,o.coverage,o.period_start,o.period_end,"
+            "r.reconciliation_boundary,b.cash_date_basis "
             "FROM app.snapshot_records e JOIN app.staged_rows r ON r.owner_id=e.owner_id AND "
             "r.id=e.source_row_id JOIN app.import_batches b ON b.owner_id=r.owner_id AND "
             "b.id=r.batch_id JOIN app.source_observations o ON o.owner_id=b.owner_id AND "

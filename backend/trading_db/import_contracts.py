@@ -150,11 +150,18 @@ class CandidateDefinition(Definition):
     acquisition_date: str | None = Field(default=None, repr=False)
     as_of_instant: str | None = Field(default=None, repr=False)
     snapshot_scope: Literal["selected_position", "native_cash", "full_account"] | None = None
+    reconciliation_boundary: Literal["before_period", "after_period"] | None = None
     blocked_reason: Literal["not_supplied", "unsupported", "conflicting_evidence"] | None = None
     values: tuple[StagedValue, ...] = Field(default=(), max_length=8, repr=False)
 
     @model_validator(mode="after")
     def structure(self) -> CandidateDefinition:
+        if self.reconciliation_boundary is not None and (
+            self.as_of_date is None
+            or (self.kind, self.snapshot_scope)
+            not in {("cash_snapshot", "native_cash"), ("position_snapshot", "selected_position")}
+        ):
+            raise ValueError("A statement boundary requires a dated native checkpoint.")
         if self.instrument_identifier_id == UUID(int=0):
             raise ValueError("Invalid security reference.")
         if self.kind in SNAPSHOT_KINDS | {"cancellation"} and self.posting_state is not None:
@@ -247,6 +254,7 @@ class CandidateDefinition(Definition):
 
 
 class BatchDefinition(Definition):
+    cash_date_basis: Literal["booking", "value", "settlement"] | None = None
     normalizer: str = Field(min_length=1, max_length=48, pattern=r"^[a-z][a-z0-9_/-]*$")
     normalizer_version: str = Field(
         min_length=1, max_length=32, pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$"
