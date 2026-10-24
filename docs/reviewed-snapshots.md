@@ -45,6 +45,8 @@ INR/USD preferences remain visible, but these views explicitly retain native sou
 
 Amounts are masked across holdings, details, source inspection and correction evidence. Locking, sign-out, inactivity, context replacement or leaving the protected shell unmounts the financial views; late responses cannot repopulate the previous workspace. A failed refresh removes displayed prior amounts while preserving the database evidence. Identifiers and values do not enter URLs, local/session storage, analytics or console output.
 
+[Step 6E.1](source-history.md) adds source-history coverage inspection from a selected snapshot. It preserves reported periods and replacement lineage without promoting source claims to verified transaction history.
+
 ## Verification and images
 
 Tests exercise encrypted preview tampering/expiry/session binding, bounded manifests, strict browser boundaries, dry-run rollback, exact completion replay, exclusions, session/owner loss after writes, overlap correction and owned reads. Frontend tests cover exact values, native currencies, masking, incomplete choices, explicit row/position review, receipts, error privacy and late-response rejection. Browser verification uses fictional responses, checks keyboard operation, reflow and WCAG contrast/accessibility, and verifies empty browser storage and sign-out clearing.
