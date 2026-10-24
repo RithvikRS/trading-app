@@ -30,7 +30,7 @@ The internal service bounds each new table to 1,000 records per owner, enforced 
 
 ## Recovery and remaining work
 
-Recovery format **12** covers **38 application tables**: 36 durable and two intentionally omitted session/admission tables. The separate-cluster encrypted drill restores protected provider identities, custody revisions, primary/corroborating links and original event revisions for two owners alongside all existing history. It compares durable rows, grants, constraints and policies, validates recovered keys and keeps old sessions revoked. Earlier objects require their matching release/schema before forward migration. Populated provider-evidence tables cannot be downgraded.
+Recovery format **13** covers **40 application tables**: 38 durable and two intentionally omitted session/admission tables. The separate-cluster encrypted drill restores protected provider identities, custody revisions, primary/corroborating links and original event revisions for two owners alongside all existing history. It compares durable rows, grants, constraints and policies, validates recovered keys and keeps old sessions revoked. Earlier objects require their matching release/schema before forward migration. Populated provider-evidence tables cannot be downgraded.
 
 [Contract tests](../backend/tests/test_provider_keys.py) exercise key/scope substitution, tampering, unavailable keys and domain separation. [Database tests](../backend/database_tests/test_event_evidence.py) cover exact reuse, legitimate repetition, changed economics, correction/retry history, owner isolation, direct SQL, concurrency, rotation, rollback and migration safety. The [recovery drill](../backend/database_tests/test_recovery.py) includes both tables. All fixtures are fabricated.
 

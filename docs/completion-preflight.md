@@ -1,12 +1,12 @@
 # Completion requests and stale-state protection
 
-Step **4F.3.2a** defines the internal request boundary and database state token needed before atomic import completion. It adds no completion endpoint, receipt or financial write operation. [Step 4F.3.2b](completion-receipts.md) subsequently adds atomic limited-coverage receipt persistence. Full reconciliation follows in **4F.3.2c**.
+Step **4F.3.2a** defines the internal request boundary and database state token needed before atomic import completion. It adds no completion endpoint, receipt or financial write operation. [Step 4F.3.2b](completion-receipts.md) subsequently adds atomic limited-coverage receipt persistence. [Step 4F.3.2c](reconciled-completion.md) binds full source-period reconciliation to immutable comparison inputs.
 
 ## Request contract
 
 The strict, immutable [completion contracts](../backend/trading_db/completion_contracts.py) accept a batch identity/revision, an opaque idempotency key, a baseline token, and up to 100 distinct reviewed row choices. Each choice requests recording, correction or exclusion. Corrections require the exact target family, identity, revision and a finite reason. Exclusions cannot request financial effects. Snapshot selections reference included rows explicitly. A remaining-lot row may reference a new acquisition row in the batch; cycles, chains and ambiguous existing/new lot targets are rejected.
 
-Ownership, amounts, source coverage, reconciliation results and a caller-supplied claim of verified state are forbidden. The later completion service must independently resolve current reviews, mappings, positions and source economics from the authenticated owner's database transaction. These contracts alone do not establish ownership, a valid acquisition, source order or a balanced ledger.
+Ownership, amounts, source coverage, reconciliation results and a caller-supplied claim of verified state are forbidden. The completion service independently resolves current reviews, mappings, positions and source economics from the authenticated owner's database transaction. These contracts alone do not establish ownership, a valid acquisition, source order or a balanced ledger.
 
 The canonical public manifest contains only opaque identifiers, revisions, finite choices and a boolean indicating whether a private provider reference was supplied. It omits the actual reference and any unkeyed digest of that reference. Two requests with different private references therefore intentionally produce the same public manifest; the completion service must also compare the decrypted protected identity before accepting a retry. A public digest alone is insufficient.
 
@@ -22,7 +22,7 @@ Each table read is limited to 1,001 records, and any count above 1,000 fails ins
 
 The database function is explicitly `VOLATILE`: after waiting for another writer, its queries observe that writer's committed change. Repeatable-read and serializable contexts are rejected here because they can retain an earlier transaction snapshot. The [internal guard](../backend/trading_db/completion_baseline.py) compares the expected token under the same lock and savepoint as dependent work. Failure rolls back that work; the surrounding transaction may still continue safely. The lock lasts until the outer transaction ends, so callers must keep it short and perform no provider or network I/O inside it.
 
-A baseline is an anti-staleness token, not proof of complete history or a substitute for reconciliation evidence. [Step 4F.3.2b](completion-receipts.md) enforces the token in PostgreSQL and adds receipt identities to the versioned baseline. Full reconciled completion must also retain immutable compared inputs. Exact completed retries must resolve the original receipt before comparing live state.
+A baseline is an anti-staleness token, not proof of complete history or a substitute for reconciliation evidence. [Step 4F.3.2b](completion-receipts.md) enforces the token in PostgreSQL and adds receipt identities to the versioned baseline. [Full reconciled completion](reconciled-completion.md) also retains immutable compared inputs. Exact completed retries resolve the original receipt before comparing live state.
 
 ## Migration and recovery
 

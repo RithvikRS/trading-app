@@ -15,8 +15,8 @@ from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 from trading_db.provider_keys import ProviderKeys
 
-HEAD = "0016_completion_receipts"
-FORMAT = 12
+HEAD = "0017_reconciled_completion"
+FORMAT = 13
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -413,6 +413,47 @@ COLUMNS.update(
             "provider_identity_id",
             "selection_id",
             "selection_revision",
+        ),
+    }
+)
+COLUMNS.update(
+    {
+        "completion_scopes": (
+            "owner_id",
+            "id",
+            "receipt_id",
+            "kind",
+            "account_id",
+            "position_id",
+            "currency",
+            "period_start",
+            "period_end",
+            "date_basis",
+            "rule_version",
+            "opening_amount",
+            "closing_amount",
+            "source_total",
+            "combined_total",
+            "source_posted_count",
+            "source_pending_count",
+            "combined_posted_count",
+            "combined_pending_count",
+            "input_count",
+        ),
+        "completion_inputs": (
+            "owner_id",
+            "scope_id",
+            "side",
+            "part",
+            "reference_id",
+            "reference_revision",
+            "source_row_id",
+            "event_id",
+            "snapshot_id",
+            "source",
+            "amount",
+            "evidence_date",
+            "posting_state",
         ),
     }
 )

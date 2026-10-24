@@ -34,6 +34,7 @@ from trading_db.connections import engine_for
 from trading_db.events import EventTransaction
 from trading_db.import_contracts import StagedValue
 from trading_db.imports import ImportTransaction
+from trading_db.recovery import HEAD
 from trading_db.workspace import WorkspaceTransaction
 
 
@@ -770,6 +771,6 @@ def test_populated_receipts_prevent_downgrade_and_failed_upgrade_is_atomic(
         receipt = unit.complete(request)
     with pytest.raises(DBAPIError):
         migrate.apply(url(), project, direction="downgrade", target="0015_completion_baseline")
-    assert migrate.revision(url(), project) == "0016_completion_receipts"
+    assert migrate.revision(url(), project) == HEAD
     with store.transaction(OWNER_A) as unit:
         assert unit.get(receipt.id) == receipt

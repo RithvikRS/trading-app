@@ -2,7 +2,7 @@
 
 Step **4F.3.2b** adds internal completion for reviewed **partial activity, unknown coverage, and snapshots**. Events, lot observations, snapshot selections and the immutable receipt commit in one database transaction. A failed row, stale review, changed mapping or conflicting target rolls the operation back.
 
-Complete-activity statements and `reconciled` requests are rejected. Full source/combined-ledger reconciliation and persisted comparison inputs follow in **4F.3.2c**. A limited receipt records the evidence used and the decisions made; it makes no claim that balances or history are complete. It contains no invented zero totals or calculated returns.
+Complete-activity statements require the [reconciled completion path in 4F.3.2c](reconciled-completion.md). They cannot use limited mode. A limited receipt records the evidence used and the decisions made; it makes no claim that balances or history are complete. It contains no invented zero totals or calculated returns.
 
 ## Request and transaction boundary
 
@@ -52,8 +52,8 @@ Receipts and dispositions retain the existing 1,000-record owner/table bound. No
 
 ## Recovery and verification
 
-Recovery format **12** covers **38 application tables**: 36 durable tables and two intentionally omitted session/admission tables. The encrypted two-owner drill restores completed exclusions, protected provider identities, original receipts, later event/snapshot corrections and selection history. It compares all durable rows and database permissions, verifies baseline equality across rotation/restore, and replays original requests using separately recovered keys. Previous sessions remain revoked.
+Recovery format **13** covers **40 application tables**: 38 durable tables and two intentionally omitted session/admission tables. The encrypted two-owner drill restores completed exclusions, protected provider identities, original receipts, later event/snapshot corrections and selection history. It compares all durable rows and database permissions, verifies baseline equality across rotation/restore, and replays original requests using separately recovered keys. Previous sessions remain revoked.
 
 Populated receipts prevent downgrade. Disposable tests verify empty downgrade/re-upgrade and complete rollback of an interrupted migration. Development uses forward migrations; older recovery objects require their matching source revision before a tested forward migration.
 
-Tests cover concurrency, exact and conflicting retries, source overlap, legitimate repeated payments, explicit corrections, selection/lot dependencies, late failure rollback, direct SQL tampering, stale context after root insertion, inactive/foreign owners, role denial and immutable grants. Hosted Supabase behavior remains unverified. Full reconciliation receipts, uploads/parsers, browser review mutations and connected screens remain separate increments.
+Tests cover concurrency, exact and conflicting retries, source overlap, legitimate repeated payments, explicit corrections, selection/lot dependencies, late failure rollback, direct SQL tampering, stale context after root insertion, inactive/foreign owners, role denial and immutable grants. Hosted Supabase behavior remains unverified. [Full reconciliation receipts](reconciled-completion.md) extend this boundary. Uploads/parsers, browser review mutations and connected screens remain separate increments.

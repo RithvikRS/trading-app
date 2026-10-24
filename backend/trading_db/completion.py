@@ -1,4 +1,4 @@
-"""Atomic completion of reviewed partial/snapshot evidence; no full-ledger claim."""
+"""Atomic reviewed completion with limited or exact source-period reconciliation."""
 
 import hashlib
 from collections.abc import Iterator
@@ -22,6 +22,7 @@ from trading_db.completion_contracts import (
     canonical_request,
     parse_manifest,
 )
+from trading_db.completion_reconciliation import CompletedScope, CompletionReconciliation
 from trading_db.event_evidence import (
     EventEvidenceTransaction,
     EventEvidenceUnavailable,
@@ -60,6 +61,7 @@ class CompletionReceipt:
     coverage: str
     created_at: datetime
     rows: tuple[CompletedRow, ...]
+    scopes: tuple[CompletedScope, ...] = ()
 
 
 class CompletionTransaction:
@@ -71,6 +73,7 @@ class CompletionTransaction:
         self._lots = LotTransaction(unit)
         self._snapshots = SnapshotTransaction(unit)
         self._baseline = CompletionBaseline(unit)
+        self._reconciliation = CompletionReconciliation(unit)
 
     def _execute(self, sql: str, **parameters: Any) -> Any:
         return self._accounts._execute(sql, **parameters)
@@ -95,6 +98,7 @@ class CompletionTransaction:
             root["coverage"],
             root["created_at"],
             saved,
+            self._reconciliation.list(root["id"]),
         )
 
     def get(self, receipt_id: UUID) -> CompletionReceipt | None:
@@ -333,10 +337,8 @@ class CompletionTransaction:
         ):
             raise CompletionUnavailable()
         observation = self._imports.get_observation(batch.observation_id)
-        if (
-            observation is None
-            or request.mode != "limited"
-            or observation.definition.coverage == "complete_activity"
+        if observation is None or (request.mode == "reconciled") != (
+            observation.definition.coverage == "complete_activity"
         ):
             raise CompletionUnavailable()
         rows = self._imports.rows(batch.id, limit=100)
@@ -352,12 +354,17 @@ class CompletionTransaction:
                 or (row.status != ("excluded" if choice.operation == "exclude" else "included"))
             ):
                 raise CompletionUnavailable()
+            if request.mode == "reconciled" and (
+                choice.operation == "exclude"
+                or row.definition.kind in {"unsupported", "cancellation"}
+            ):
+                raise CompletionUnavailable()
         receipt_id = uuid4()
         self._execute(
             "INSERT INTO app.completion_receipts (owner_id,id,idempotency_key,batch_id,"
             "batch_revision,baseline_digest,request_canonical,request_digest,mode,coverage,"
             "row_count,selection_count) VALUES (:owner,:id,:key,:batch,:version,:baseline,"
-            ":canonical,:digest,'limited',:coverage,:rows,:selections)",
+            ":canonical,:digest,:mode,:coverage,:rows,:selections)",
             id=receipt_id,
             key=request.idempotency_key,
             batch=batch.id,
@@ -365,6 +372,7 @@ class CompletionTransaction:
             baseline=request.baseline,
             canonical=canonical,
             digest=hashlib.sha256(canonical.encode()).hexdigest(),
+            mode=request.mode,
             coverage=observation.definition.coverage,
             rows=len(rows),
             selections=len(request.selections),
@@ -422,6 +430,8 @@ class CompletionTransaction:
                 selection=choice_selection.id if choice_selection else None,
                 selection_revision=choice_selection.revision if choice_selection else None,
             )
+        if request.mode == "reconciled":
+            self._reconciliation.persist(receipt_id)
         result = self.get(receipt_id)
         if result is None:
             raise CompletionUnavailable()
