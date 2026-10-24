@@ -532,7 +532,9 @@ class ImportTransaction:
             "source_row_id=:id) OR EXISTS(SELECT 1 FROM app.lot_observations WHERE "
             "owner_id=:owner AND source_row_id=:id) OR EXISTS(SELECT 1 FROM "
             "app.snapshot_records WHERE owner_id=:owner AND source_row_id=:id) OR EXISTS "
-            "(SELECT 1 FROM app.event_evidence_links WHERE owner_id=:owner AND source_row_id=:id)",
+            "(SELECT 1 FROM app.event_evidence_links WHERE owner_id=:owner AND source_row_id=:id) "
+            "OR EXISTS (SELECT 1 FROM app.completion_rows WHERE owner_id=:owner "
+            "AND source_row_id=:id)",
             id=row_id,
         ).scalar_one():
             raise ImportUnavailable()

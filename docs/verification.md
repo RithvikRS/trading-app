@@ -72,3 +72,5 @@ Record local results separately from the actual GitHub run. A local pass does no
 [Step 4F.3.1](statement-boundaries.md) adds source-period and boundary validation, exact normalization replay, changed-interpretation history, one-day checkpoint conflict cases, direct-SQL bypass checks, transactional migration/legacy hash checks and encrypted recovery of the new metadata. No hosted source or parser verification is introduced.
 
 [Step 4F.3.2a](completion-preflight.md) adds strict public manifest parsing, private reference omission, owner/role denial, stale state and rollback checks, bounded database reads, concurrent lock/snapshot tests, migration round trips and recovered baseline equality. Financial completion remains a separate increment.
+
+[Step 4F.3.2b](completion-receipts.md) adds atomic completion/retry, raw-source overlap, provider identity comparison, selection/lot linkage, direct SQL tampering, concurrent INSERT snapshot freshness, immutable grants and historical receipt recovery checks. Full statement reconciliation remains a separate increment.
