@@ -95,3 +95,5 @@ Self-hosted PostgreSQL remains an alternative if managed-service constraints bec
 [Step 4F.3.2c](reconciled-completion.md) adds exact source-period comparisons to atomic import completion. Immutable scope/input tables preserve both source and effective-ledger evidence. Conditional Python arithmetic and independent PostgreSQL membership/economic checks must both pass; the API and protected frontend remain unchanged.
 
 [Step 4G.3a](import-review-reads.md) adds read-only source observations, normalized batches/rows and review histories. Row inspection validates the original normalized checksum and shares current mapping/status rules with persistence; completion remains a separate operation.
+
+[Step 4G.3b](completion-receipt-reads.md) completes the persistence/read boundary with immutable receipt effects and frozen source/combined comparisons. Reads reconstruct one bounded historical comparison at a time under owner isolation; current portfolio calculations remain a separate data flow.

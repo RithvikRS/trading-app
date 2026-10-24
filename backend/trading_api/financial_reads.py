@@ -37,6 +37,16 @@ from trading_api.read_contracts import (
     SourceView,
     WireModel,
 )
+from trading_api.receipt_read_contracts import (
+    ComparisonInputView,
+    CompletedRowView,
+    InputQuery,
+    ReceiptChildrenQuery,
+    ReceiptQuery,
+    ReceiptView,
+    ScopeInspection,
+    ScopeView,
+)
 from trading_api.valuation_read_contracts import (
     InspectQuery,
     ListingQuery,
@@ -54,7 +64,7 @@ from trading_auth.browser import BrowserAuth
 from trading_auth.models import AuthenticationDenied
 from trading_db.connections import DatabaseFailure
 from trading_db.financial_reads import FinancialReadUnavailable
-from trading_db.import_reads import ImportReadTransaction
+from trading_db.receipt_reads import ReceiptReadTransaction
 from trading_db.workspace import OwnerAccessDenied, WorkspaceDatabase
 
 MAX_RESPONSE_BYTES = 262144
@@ -65,7 +75,7 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
 
     def execute[T: WireModel](
         request: Request,
-        operation: Callable[[ImportReadTransaction], T | None],
+        operation: Callable[[ReceiptReadTransaction], T | None],
     ) -> Response:
         unavailable = False
         content = None
@@ -76,7 +86,7 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
         ) as (owner, validate):
             try:
                 with database.transaction(owner, read_only=True) as unit:
-                    reads = ImportReadTransaction(unit)
+                    reads = ReceiptReadTransaction(unit)
                     with reads.consistent():
                         result = operation(reads)
                         content = None if result is None else result.model_dump_json().encode()
@@ -194,5 +204,29 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
     @router.post("/imports/reviews/history", response_model=HistoryPage[ReviewView])
     def review_history(body: HistoryQuery, request: Request) -> Response:
         return execute(request, lambda reads: reads.review_history(body))
+
+    @router.post("/receipts/query", response_model=FinancialPage[ReceiptView])
+    def receipts(body: ReceiptQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.receipts(body))
+
+    @router.post("/receipts/inspect", response_model=ReceiptView)
+    def receipt(body: InspectQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.receipt(body))
+
+    @router.post("/receipts/rows/query", response_model=FinancialPage[CompletedRowView])
+    def receipt_effects(body: ReceiptChildrenQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.receipt_effects(body))
+
+    @router.post("/receipts/scopes/query", response_model=FinancialPage[ScopeView])
+    def receipt_scopes(body: ReceiptChildrenQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.receipt_scopes(body))
+
+    @router.post("/receipts/scopes/inspect", response_model=ScopeInspection)
+    def scope_inspection(body: InspectQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.scope_inspection(body))
+
+    @router.post("/receipts/inputs/query", response_model=FinancialPage[ComparisonInputView])
+    def comparison_inputs(body: InputQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.comparison_inputs(body))
 
     return router

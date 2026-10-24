@@ -40,4 +40,4 @@ Row inspection validates the normalized batch checksum once, then reuses the per
 
 Tests use fabricated records and disposable PostgreSQL. Coverage includes exact and missing values, sparse occurrence pagination, replaced evidence, account/instrument remapping, uniform owner denial, browser protections, bounded maximum pages, unavailable responses and comparison with existing domain status. The separate-cluster encrypted recovery drill compares restored import and review responses after fresh sign-in. No migration, privilege, dependency or recovery-format change is required.
 
-Completion receipts and frozen reconciliation comparisons follow in Step 4G.3b. File parsing, financial mutation routes and connected interfaces remain the later complete data flow in Stage 5.
+[Step 4G.3b](completion-receipt-reads.md) adds completion receipts and frozen reconciliation comparisons. File parsing, financial mutation routes and connected interfaces remain the later complete data flow in Stage 5.

@@ -160,6 +160,28 @@ def financial_pages(client, headers):
                     pages["review_history"][row["id"]] = query(
                         "imports/reviews/history", id=row["id"]
                     )
+    pages["receipts"] = query("receipts/query")
+    pages["receipt_inspection"] = {}
+    pages["receipt_rows"] = {}
+    pages["receipt_scopes"] = {}
+    pages["scope_inspection"] = {}
+    pages["comparison_inputs"] = {}
+    for receipt in pages["receipts"]["items"]:
+        pages["receipt_inspection"][receipt["id"]] = query("receipts/inspect", id=receipt["id"])
+        pages["receipt_rows"][receipt["id"]] = query(
+            "receipts/rows/query", receipt_id=receipt["id"]
+        )
+        scopes = query("receipts/scopes/query", receipt_id=receipt["id"])
+        pages["receipt_scopes"][receipt["id"]] = scopes
+        for scope in scopes["items"]:
+            pages["scope_inspection"][scope["id"]] = query(
+                "receipts/scopes/inspect", id=scope["id"]
+            )
+            for side in ("source", "combined"):
+                for part in ("opening", "activity", "closing"):
+                    pages["comparison_inputs"][(scope["id"], side, part)] = query(
+                        "receipts/inputs/query", scope_id=scope["id"], side=side, part=part
+                    )
     return pages
 
 
@@ -923,6 +945,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
     assert original_pages["event_history"] and original_pages["lot_history"]
     assert original_pages["snapshot_history"] and original_pages["market_resolution"]
     assert original_pages["row_inspection"] and original_pages["review_history"]
+    assert original_pages["scope_inspection"] and original_pages["comparison_inputs"]
     key = Fernet.generate_key()
     started = time.monotonic()
     with pytest.raises(DatabaseFailure):
