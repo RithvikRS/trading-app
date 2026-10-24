@@ -161,6 +161,19 @@ def test_ciphertext_context_tampering_rotation_and_missing_keys():
     assert "synthetic-secret" not in repr(keys)
 
 
+def test_revocation_attempts_each_known_token_even_when_the_first_request_fails():
+    stub = IndmoneyStub()
+    provider = stub.provider()
+    tokens = asyncio.run(provider.exchange(SecretStr(CODE), SecretStr("a" * 43)))
+    stub.fail_revoke = True
+    with pytest.raises(ConnectorUnavailable):
+        asyncio.run(provider.revoke(tokens))
+    assert stub.revocations == 2
+    assert [
+        parse_qs(request.content.decode())["token_type_hint"] for request in stub.requests[1:]
+    ] == [["refresh_token"], ["access_token"]]
+
+
 def callback(query=None, extra=None):
     return Request(
         dict(

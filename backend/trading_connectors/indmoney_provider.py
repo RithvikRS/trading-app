@@ -158,13 +158,19 @@ class IndmoneyProvider:
 
     async def revoke(self, tokens: TokenSecrets) -> None:
         # Revoke both known credentials; a partial result is not confirmed cleanup.
+        failed = False
         for hint, token in (
             ("refresh_token", tokens.refresh_token),
             ("access_token", tokens.access_token),
         ):
             if token is not None:
-                await self._request(
-                    "revoke",
-                    dict(token=token.get_secret_value(), token_type_hint=hint),
-                    revoke=True,
-                )
+                try:
+                    await self._request(
+                        "revoke",
+                        dict(token=token.get_secret_value(), token_type_hint=hint),
+                        revoke=True,
+                    )
+                except ConnectorUnavailable:
+                    failed = True
+        if failed:
+            raise ConnectorUnavailable()
