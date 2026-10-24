@@ -49,3 +49,5 @@ Synthetic contract/browser tests cover canonical JSON UUIDs, strict pagination, 
 The existing separate-cluster encrypted recovery drill checks restored identity pages through a fresh authenticated session and denies pre-restore sessions. No migration, schema, privilege grant, recovery-format or dependency change is required for this read increment: the database stays at `0017_reconciled_completion`, recovery format 13, with 40 application tables and 38 durable tables.
 
 Run the [shared verification groups](verification.md) and record their actual results in the increment's PR. Local synthetic reads do not verify hosted Supabase configuration, real source formats, Oracle capacity or financial-volume backup performance. No Supabase project or live source account is used.
+
+[Step 4G.3a](import-review-reads.md) adds source observations, normalized batch/row inspection and immutable review history, retaining exact evidence and current mapping validity. Completion receipt/comparison reads follow in 4G.3b.

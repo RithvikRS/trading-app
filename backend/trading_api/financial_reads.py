@@ -17,6 +17,16 @@ from trading_api.evidence_read_contracts import (
     LotQuery,
     LotView,
 )
+from trading_api.import_read_contracts import (
+    BatchQuery,
+    BatchView,
+    ImportRowView,
+    ObservationQuery,
+    ReviewView,
+    RowPage,
+    RowQuery,
+    SourceObservationView,
+)
 from trading_api.read_contracts import (
     AccountView,
     FinancialPage,
@@ -44,7 +54,7 @@ from trading_auth.browser import BrowserAuth
 from trading_auth.models import AuthenticationDenied
 from trading_db.connections import DatabaseFailure
 from trading_db.financial_reads import FinancialReadUnavailable
-from trading_db.valuation_reads import ValuationReadTransaction
+from trading_db.import_reads import ImportReadTransaction
 from trading_db.workspace import OwnerAccessDenied, WorkspaceDatabase
 
 MAX_RESPONSE_BYTES = 262144
@@ -55,7 +65,7 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
 
     def execute[T: WireModel](
         request: Request,
-        operation: Callable[[ValuationReadTransaction], T | None],
+        operation: Callable[[ImportReadTransaction], T | None],
     ) -> Response:
         unavailable = False
         content = None
@@ -66,7 +76,7 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
         ) as (owner, validate):
             try:
                 with database.transaction(owner, read_only=True) as unit:
-                    reads = ValuationReadTransaction(unit)
+                    reads = ImportReadTransaction(unit)
                     with reads.consistent():
                         result = operation(reads)
                         content = None if result is None else result.model_dump_json().encode()
@@ -164,5 +174,25 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
     @router.post("/markets/selections/resolve", response_model=MarketResolution)
     def market_resolution(body: InspectQuery, request: Request) -> Response:
         return execute(request, lambda reads: reads.market_resolution(body))
+
+    @router.post("/imports/observations/query", response_model=FinancialPage[SourceObservationView])
+    def source_observations(body: ObservationQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.source_observations(body))
+
+    @router.post("/imports/batches/query", response_model=HistoryPage[BatchView])
+    def import_batches(body: BatchQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.import_batches(body))
+
+    @router.post("/imports/rows/query", response_model=RowPage)
+    def import_rows(body: RowQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.import_rows(body))
+
+    @router.post("/imports/rows/inspect", response_model=ImportRowView)
+    def import_row(body: InspectQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.import_row(body))
+
+    @router.post("/imports/reviews/history", response_model=HistoryPage[ReviewView])
+    def review_history(body: HistoryQuery, request: Request) -> Response:
+        return execute(request, lambda reads: reads.review_history(body))
 
     return router
