@@ -15,8 +15,8 @@ from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 from trading_db.provider_keys import ProviderKeys
 
-HEAD = "0013_event_evidence"
-FORMAT = 9
+HEAD = "0014_statement_boundaries"
+FORMAT = 10
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -143,6 +143,7 @@ COLUMNS.update(
             "normalized_digest",
             "row_count",
             "contract_version",
+            "cash_date_basis",
             "created_at",
         ),
         "staged_rows": (
@@ -161,6 +162,7 @@ COLUMNS.update(
             "blocked_reason",
             "as_of_instant",
             "snapshot_scope",
+            "reconciliation_boundary",
             "posting_state",
             "value_count",
             "created_at",

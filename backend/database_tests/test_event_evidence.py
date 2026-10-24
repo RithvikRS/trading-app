@@ -1,5 +1,6 @@
 """Provider identity reuse is exact, owned, recoverable and independent of row similarity."""
 
+import hashlib
 from concurrent.futures import ThreadPoolExecutor
 from uuid import uuid4
 
@@ -8,15 +9,16 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 
 from database_tests.test_accounts import accounts as accounts
+from database_tests.test_accounts import seed as seed_account
 from database_tests.test_events import seed
-from database_tests.test_imports import batch, observation
+from database_tests.test_imports import batch, candidate, observation
 from database_tests.test_ownership import DISABLED, OWNER_A, OWNER_B, UNKNOWN, set_owner
 from trading_db import migrate, recovery
 from trading_db.account_keys import ReferenceKeys
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.event_evidence import EventEvidenceDatabase, EventEvidenceUnavailable
 from trading_db.events import EventDatabase, EventUnavailable
-from trading_db.imports import ImportDatabase, ImportTransaction, ImportUnavailable
+from trading_db.imports import ImportDatabase, ImportTransaction, ImportUnavailable, canonical
 from trading_db.provider_keys import ProviderKeys
 from trading_db.workspace import OwnerAccessDenied
 
@@ -524,9 +526,59 @@ def test_upgrade_failure_empty_roundtrip_and_existing_event_preservation(
     evidence, database, monkeypatch
 ):
     store, accounts, admin = evidence
-    _, _, _, rows = seed(accounts, kind="cash_movement")
+    _, source = seed_account(accounts)
+    observation_id, batch_id, row_id = uuid4(), uuid4(), uuid4()
+    legacy = batch(candidate())
+    # This migration exercise needs an actual legacy batch. A current contract-5
+    # batch must not be downgraded because that would discard its hash contract.
+    with admin.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO app.source_observations (owner_id,id,source_id,digest,"
+                "digest_algorithm,coverage,period_start,period_end) VALUES "
+                "(:owner,:id,:source,:digest,'sha256_v1',"
+                "'partial_activity','2026-10-01','2026-10-24')"
+            ),
+            dict(owner=OWNER_A, id=observation_id, source=source.id, digest="a" * 64),
+        )
+        connection.execute(
+            text(
+                "INSERT INTO app.import_batches (owner_id,id,observation_id,revision,normalizer,"
+                "normalizer_version,normalized_digest,row_count,contract_version) VALUES "
+                "(:owner,:id,:observation,1,'synthetic','1',:digest,1,4)"
+            ),
+            dict(
+                owner=OWNER_A,
+                id=batch_id,
+                observation=observation_id,
+                digest=hashlib.sha256(canonical(legacy, 4).encode()).hexdigest(),
+            ),
+        )
+        connection.execute(
+            text(
+                "INSERT INTO app.staged_rows (owner_id,id,batch_id,occurrence,kind,posting_state,"
+                "booking_date,value_count) VALUES "
+                "(:owner,:id,:batch,1,'cash_movement','posted','2026-10-24',1)"
+            ),
+            dict(owner=OWNER_A, id=row_id, batch=batch_id),
+        )
+        connection.execute(
+            text(
+                "INSERT INTO app.staged_values (owner_id,row_id,role,source,amount,currency) "
+                "VALUES (:owner,:row,'net_cash','-12.30',-12.30,'INR')"
+            ),
+            dict(owner=OWNER_A, row=row_id),
+        )
+        connection.execute(
+            text(
+                "INSERT INTO app.review_decisions (owner_id,row_id,revision,action,reason,"
+                "source_id,account_mapping_revision) VALUES "
+                "(:owner,:row,1,'include','reviewed',:source,1)"
+            ),
+            dict(owner=OWNER_A, row=row_id, source=source.id),
+        )
     with store.transaction(OWNER_A) as unit:
-        saved = unit.record(rows[0].id, expected_review_revision=1)
+        saved = unit.record(row_id, expected_review_revision=1)
     url, project = database
     migrate.apply(url(), project, direction="downgrade", target="0012_market_evidence")
     from alembic.operations import Operations
@@ -554,7 +606,7 @@ def test_upgrade_failure_empty_roundtrip_and_existing_event_preservation(
     migrate.apply(url(), project)
     migrate.apply(url(), project)
     with store.transaction(OWNER_A) as unit:
-        assert unit.record(rows[0].id, expected_review_revision=1) == saved
+        assert unit.record(row_id, expected_review_revision=1) == saved
 
 
 def test_late_link_failure_rolls_back_new_event_identity_and_movements(evidence, monkeypatch):
