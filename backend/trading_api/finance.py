@@ -75,7 +75,7 @@ def _currency(value: object) -> None:
         raise FinancialValueError("Unsupported currency.")
 
 
-def _parse_number(source: str, kind: ValueKind) -> Decimal:
+def _parse_number(source: str, kind: ValueKind, *, reported_market: bool = False) -> Decimal:
     if type(source) is not str or len(source) > MAX_SOURCE_LENGTH or not _NUMBER.fullmatch(source):
         raise FinancialValueError("Expected a bounded plain decimal string.")
     fractional = source.partition(".")[2]
@@ -84,7 +84,7 @@ def _parse_number(source: str, kind: ValueKind) -> Decimal:
     value = Decimal(source)  # Exact construction; independent of the ambient context.
     if value.copy_abs() >= _LIMIT:
         raise FinancialValueError("Value exceeds the permitted magnitude.")
-    if kind in {"unit_price", "fx_rate"} and value <= 0:
+    if kind in {"unit_price", "fx_rate"} and value <= 0 and not reported_market:
         raise FinancialValueError("A usable price or rate must be positive.")
     if kind in {"position_quantity", "lot_quantity"} and value < 0:
         raise FinancialValueError("A long position or lot quantity cannot be negative.")
@@ -149,6 +149,57 @@ class FinancialValue:
             "quote_currency": self.quote_currency,
             "missing_reason": self.missing_reason,
         }
+
+
+@dataclass(frozen=True, slots=True)
+class ReportedMarketValue:
+    """Source evidence may be unusable; calculations still require FinancialValue."""
+
+    kind: Literal["unit_price", "fx_rate"]
+    source: str | None = field(repr=False)
+    currency: Currency | None = None
+    base_currency: Currency | None = None
+    quote_currency: Currency | None = None
+    missing_reason: MissingReason | None = None
+    value: Decimal | None = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        if type(self.kind) is not str or self.kind not in {"unit_price", "fx_rate"}:
+            raise FinancialValueError("Unsupported market value kind.")
+        # Reuse the established identity and absence rules without relaxing the
+        # usable price/rate contract or coercing a reported price into a quantity.
+        FinancialValue(
+            self.kind,
+            None,
+            currency=self.currency,
+            base_currency=self.base_currency,
+            quote_currency=self.quote_currency,
+            missing_reason="not_supplied",
+        )
+        if self.source is None:
+            if type(self.missing_reason) is not str or self.missing_reason not in _REASONS:
+                raise FinancialValueError("An absent value requires a supported missing reason.")
+            amount = None
+        else:
+            if self.missing_reason is not None:
+                raise FinancialValueError("A supplied value cannot have a missing reason.")
+            amount = _parse_number(self.source, self.kind, reported_market=True)
+        object.__setattr__(self, "value", amount)
+
+    @property
+    def usable(self) -> bool:
+        return self.value is not None and self.value > 0
+
+    def financial(self) -> FinancialValue:
+        if not self.usable:
+            raise FinancialValueError("Reported market evidence is unavailable for calculation.")
+        return FinancialValue(
+            self.kind,
+            self.source,
+            currency=self.currency,
+            base_currency=self.base_currency,
+            quote_currency=self.quote_currency,
+        )
 
 
 def _exact_context() -> Context:

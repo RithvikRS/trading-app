@@ -41,6 +41,8 @@ from trading_db.instruments import (
 )
 from trading_db.local import ROOT, disposable, private_directory
 from trading_db.lots import LotTransaction
+from trading_db.market_contracts import MarketDefinition
+from trading_db.markets import MarketTransaction
 from trading_db.sessions import SessionDatabase
 from trading_db.snapshots import SnapshotTransaction
 from trading_db.workspace import PreferenceUpdate, WorkspaceDatabase
@@ -218,6 +220,84 @@ def add_correction_history(unit, staging, source, reference, position, event_bat
         expected_review_revision=1,
         reason="reinstatement",
     )
+
+
+def add_market_history(store, owner):
+    with store.transaction(owner) as unit:
+        identities = InstrumentTransaction(unit._unit)
+        equity = identities.by_isin("ZZ0000000032")
+        listing = identities.listings(equity.id)[0]
+        direct = identities.by_isin("ZZ0000000016")
+        regular = identities.by_isin("ZZ0000000024")
+        base = dict(
+            namespace="manual_evidence",
+            digest="d" * 64,
+            normalizer="synthetic",
+            normalizer_version=1,
+            observed_on="2026-10-24",
+            observed_at="2026-10-24T00:30:00.120+05:30",
+            source="83.123456789012",
+        )
+        prices = MarketTransaction(unit._unit)
+        quote = MarketDefinition(
+            **base,
+            occurrence=1,
+            kind="quote",
+            instrument_id=equity.id,
+            listing_id=listing.id,
+            currency="USD",
+            basis="close",
+            adjustment="unadjusted",
+        )
+        original = prices.record(quote)
+        choice = prices.select(original.id, expected_revision=0)
+        nav = MarketDefinition(
+            **base, occurrence=2, kind="nav", instrument_id=direct.id, currency="INR", basis="nav"
+        )
+        fund = prices.record(nav)
+        nav_choice = prices.select(fund.id, expected_revision=0)
+        prices.record(
+            nav.model_copy(
+                update={
+                    "occurrence": 3,
+                    "instrument_id": regular.id,
+                    "source": None,
+                    "missing_reason": "not_supplied",
+                }
+            )
+        )
+        fx = prices.record(
+            MarketDefinition(
+                **base,
+                occurrence=4,
+                kind="fx",
+                base_currency="USD",
+                quote_currency="INR",
+                basis="reference",
+            )
+        )
+        prices.select(fx.id, expected_revision=0)
+        prices.record(
+            fx.definition.model_copy(
+                update={
+                    "occurrence": 5,
+                    "base_currency": "INR",
+                    "quote_currency": "USD",
+                    "source": "0.00",
+                }
+            )
+        )
+        prices.record(quote.model_copy(update={"occurrence": 6, "adjustment": "split_adjusted"}))
+    with store.transaction(owner) as unit:
+        prices = MarketTransaction(unit._unit)
+        corrected = prices.record(
+            quote.model_copy(
+                update={"occurrence": 7, "previous_id": original.id, "source": "84.000000000001"}
+            )
+        )
+        assert prices.resolve(choice.id).state == "stale"
+        prices.select(corrected.id, expected_revision=1, reason="correction")
+        prices.clear(nav_choice.id, expected_revision=1)
 
 
 def add_snapshot_history(store, owner):
@@ -522,6 +602,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 securities.position(brokerage.id, equity.id, "custody")
                 unit.archive(first.id, expected_revision=1)
             add_snapshot_history(account_store, owner)
+            add_market_history(account_store, owner)
     finally:
         account_store.close()
     identifier_keys = ReferenceKeys(identifier_material, 2)
@@ -626,6 +707,8 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             assert counts["snapshot_records"] == 12
             assert counts["snapshot_components"] == 22
             assert counts["snapshot_selections"] == 10
+            assert counts["market_observations"] == 14
+            assert counts["market_selections"] == 10
             assert signature(restored_admin) == baseline
             restored_data = recovery.decode_snapshot(
                 recovery.export_snapshot(
@@ -711,6 +794,27 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                                     == "0.223456789012"
                                 )
                         events = EventTransaction(unit._unit)
+                        market = MarketTransaction(unit._unit)
+                        choices = market.selections()
+                        assert len(choices) == 3
+                        for choice in choices:
+                            result = market.resolve(choice.id)
+                            if choice.target.kind == "nav":
+                                assert result.state == "unselected" and result.observation is None
+                                assert len(market.selection_history(choice.id)) == 2
+                            else:
+                                assert result.state == "selected"
+                                evidence = result.observation.definition
+                                assert evidence.observed_at == "2026-10-24T00:30:00.120+05:30"
+                                assert evidence.reported().usable
+                                if evidence.kind == "quote":
+                                    assert evidence.source == "84.000000000001"
+                                    assert len(market.selection_history(choice.id)) == 2
+                                    assert len(market.list(evidence.target())) == 3
+                                else:
+                                    assert evidence.base_currency == "USD"
+                                    assert evidence.quote_currency == "INR"
+                                    assert evidence.source == "83.123456789012"
                         assert sorted(item.revision for item in events.list(account_id)) == [2, 3]
                         assert (
                             events.movements(account_id, kind="cash", posting_state="pending") == ()

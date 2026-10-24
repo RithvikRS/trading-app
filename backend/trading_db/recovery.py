@@ -14,8 +14,8 @@ from trading_db import migrate
 from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 
-HEAD = "0011_snapshots"
-FORMAT = 7
+HEAD = "0012_market_evidence"
+FORMAT = 8
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -300,6 +300,52 @@ COLUMNS.update(
             "currency",
             "snapshot_id",
             "snapshot_revision",
+            "reason",
+            "created_at",
+        ),
+    }
+)
+COLUMNS.update(
+    {
+        "market_observations": (
+            "owner_id",
+            "id",
+            "previous_id",
+            "kind",
+            "instrument_id",
+            "listing_id",
+            "currency",
+            "base_currency",
+            "quote_currency",
+            "basis",
+            "adjustment",
+            "namespace",
+            "digest_algorithm",
+            "digest",
+            "occurrence",
+            "normalizer",
+            "normalizer_version",
+            "contract_version",
+            "observed_on",
+            "observed_at",
+            "source",
+            "amount",
+            "missing_reason",
+            "created_at",
+        ),
+        "market_selections": (
+            "owner_id",
+            "id",
+            "revision",
+            "previous_revision",
+            "kind",
+            "instrument_id",
+            "listing_id",
+            "currency",
+            "base_currency",
+            "quote_currency",
+            "basis",
+            "observation_id",
             "reason",
             "created_at",
         ),
