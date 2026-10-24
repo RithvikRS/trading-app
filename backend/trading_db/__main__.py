@@ -24,7 +24,7 @@ def main() -> int:
                     [sys.executable, "-m", "pytest", "database_tests", "--tb=short", "--maxfail=1"],
                     env=environment,
                     check=False,
-                    timeout=600,
+                    timeout=900,
                 )
                 if result.returncode:
                     return 1
@@ -42,6 +42,9 @@ def main() -> int:
             else:
                 current = migrate.revision(service.url("migrator"), service.project)
                 print(f"Local schema revision: {current}")
+    except subprocess.TimeoutExpired:
+        print("Database verification exceeded its 15-minute limit.", file=sys.stderr)
+        return 1
     except DatabaseFailure as error:
         # This exception type contains only fixed, reviewed diagnostic messages.
         print(f"Database operation failed: {error}", file=sys.stderr)

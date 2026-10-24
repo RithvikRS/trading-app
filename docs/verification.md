@@ -51,6 +51,8 @@ On 23 October 2026, GitHub reported `main` as unprotected. The repository's defa
 
 Database verification stops at its first failed test and returns a failure. This preserves the original diagnostic before a broken disposable database can cause repeated setup errors or consume the overall timeout. Successful runs still execute the complete database suite.
 
+The database suite has a 15-minute subprocess limit within the outer 20-minute check/job limit. This accommodates full reconciliation input-boundary fixtures on local Docker while leaving time for isolated-cluster cleanup. A timeout remains a failed check with a fixed diagnostic; no tests are skipped or thresholds reduced.
+
 The guarded disposable fixture vacuums dropped-schema catalog entries and checkpoints between tests. Checkpoints alone recycle WAL but cannot reclaim dead system-catalog rows; fast repeated migrations can otherwise fill the 256 MiB tmpfs before automatic vacuum catches up. A schema-churn regression checks bounded database-file growth. Storage, memory, durability and owner-policy limits remain in force; development data is not part of this cleanup.
 
 Update versions deliberately: refresh lockfiles or published archive/binary hashes, update matching action pins and policy expectations, then run affected checks. Do not auto-fix advisories or add broad exclusions to obtain a green result. Advisory results reflect the current databases and may change without a code change; checks report known vulnerabilities, not proof of absence of vulnerabilities. Python and npm audits include development dependencies. [pip-audit](https://github.com/pypa/pip-audit), [Gitleaks](https://github.com/gitleaks/gitleaks), [actionlint](https://github.com/rhysd/actionlint).
