@@ -11,6 +11,26 @@ from trading_db.connections import DatabaseFailure, engine_for, require_disposab
 from trading_db.local import CACHE
 
 
+def reset_database(engine, project):
+    """Reclaim schema-churn metadata inside the guarded disposable database."""
+    require_disposable(engine.url, project)
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
+        verify_server(connection, "trading_test", project)
+        connection.execute(text("CHECKPOINT"))
+    with engine.begin() as connection:
+        verify_server(connection, "trading_test", project)
+        connection.execute(text("DROP SCHEMA IF EXISTS app CASCADE"))
+        connection.execute(text("DROP SCHEMA IF EXISTS app_meta CASCADE"))
+        connection.execute(text("CREATE SCHEMA app_meta AUTHORIZATION trading_migrator"))
+    # Checkpoints recycle WAL but cannot reclaim dead pg_class/pg_attribute
+    # entries. Fast schema churn can outpace autovacuum and fill the 256 MiB
+    # test tmpfs. Vacuum outside a transaction makes those catalog pages reusable.
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
+        verify_server(connection, "trading_test", project)
+        connection.execute(text("VACUUM (ANALYZE)"))
+        connection.execute(text("CHECKPOINT"))
+
+
 @pytest.fixture
 def database():
     context_path = Path(os.environ["TRADING_TEST_CONTEXT"])
@@ -33,17 +53,7 @@ def database():
     require_disposable(url(), context["project"])
     engine = engine_for(url("bootstrap"), migration=True)
     try:
-        # Hundreds of fresh-schema tests produce more WAL than the bounded tmpfs
-        # can retain until the default timed checkpoint. Recycle completed test
-        # history without disabling fsync/full_page_writes or increasing limits.
-        with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
-            verify_server(connection, "trading_test", context["project"])
-            connection.execute(text("CHECKPOINT"))
-        with engine.begin() as connection:
-            verify_server(connection, "trading_test", context["project"])
-            connection.execute(text("DROP SCHEMA IF EXISTS app CASCADE"))
-            connection.execute(text("DROP SCHEMA IF EXISTS app_meta CASCADE"))
-            connection.execute(text("CREATE SCHEMA app_meta AUTHORIZATION trading_migrator"))
+        reset_database(engine, context["project"])
     finally:
         engine.dispose()
     return url, context["project"]
