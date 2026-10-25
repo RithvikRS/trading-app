@@ -23,7 +23,7 @@ export function page<T extends { id: string }>(value: unknown, parse: (value: un
 }
 export type Component = { role: string; source: string | null; currency: 'INR' | 'USD' | null; missing_reason: string | null }
 const roles = ['quantity', 'unit_price', 'acquisition_cost', 'net_cash', 'gross_cash', 'fee', 'withholding', 'discount_amount', 'reported_tax_basis'] as const
-function component(value: unknown): Component {
+export function component(value: unknown): Component {
   const raw = object(value), source = nullable(raw.source, value => typeof value === 'string' && value.length <= 32 && /^-?(?:0|[1-9]\d{0,17})(?:\.\d{1,12})?$/.test(value) ? value : fail())
   const missing = nullable(raw.missing_reason, value => member(value, ['not_supplied', 'unsupported', 'incomplete_history', 'conflicting_evidence'] as const))
   if ((source === null) !== (missing !== null)) fail()
@@ -96,4 +96,4 @@ export function sourceObservation(value: unknown): SourceObservation {
   return { id: identity, source_id: id(raw.source_id), previous_id: previous, is_current: bool(raw.is_current), coverage: claim, period_start: start, period_end: end }
 }
 export const coverageLabels = { snapshot: 'Holdings snapshot only', partial_activity: 'Partial activity reported', complete_activity: 'Source claims complete activity', unknown: 'Coverage unknown' } as const
-export type FinancePath = '/investments/query' | '/snapshot-review/query' | '/snapshot-review/inspect' | '/snapshot-review/decide' | '/snapshot-review/account-mapping' | '/snapshot-review/instrument-mapping' | '/snapshot-review/position' | '/snapshot-review/preview' | '/snapshot-review/complete' | '/instruments/query' | '/positions/query' | '/snapshots/query' | '/snapshots/selections/query' | '/listings/query' | '/imports/observations/query'
+export type FinancePath = '/investments/query' | '/snapshot-review/query' | '/snapshot-review/inspect' | '/snapshot-review/decide' | '/snapshot-review/account-mapping' | '/snapshot-review/instrument-mapping' | '/snapshot-review/position' | '/snapshot-review/preview' | '/snapshot-review/complete' | '/instruments/query' | '/positions/query' | '/snapshots/query' | '/snapshots/selections/query' | '/listings/query' | '/imports/observations/query' | '/lots/query' | '/lots/observations/query' | '/lots/observations/history'
