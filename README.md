@@ -26,6 +26,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 6E.2](docs/indmoney-capability-inspection.md) adds an internal bounded capability inspector for the [API-first history investigation](docs/indmoney-history-api.md). It collects private protocol and tool metadata without invoking financial tools or enabling imports. Synthetic tests verify the inspection boundary; authenticated INDmoney schemas, history availability, retention and successful renewal remain unverified. No application inspection route or production adapter is enabled.
 
+[Step 9A](docs/credit-cards-prototype.md) adds a synthetic Credit Cards screen with one fictional HDFC billing account, shared primary/add-on activity, statement history, searchable activity and source inspection. Statement dues and separately dated outstanding remain distinct; missing values and payment status stay unknown. Both themes, INR/USD display and amount masking are supported. Financial records and selections are not persisted, and no real HDFC export format, upload or protected card screen is supported.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
@@ -36,7 +38,7 @@ npm ci
 npm run dev
 ```
 
-Open [the local prototype](http://127.0.0.1:5173), [Investments](http://127.0.0.1:5173/#/investments), [Banking](http://127.0.0.1:5173/#/banking), [Budgets](http://127.0.0.1:5173/#/budgets), [Connections](http://127.0.0.1:5173/#/connections), a [bank sample preview](http://127.0.0.1:5173/#/connections/imports/i01), an [investment sample](http://127.0.0.1:5173/#/connections/imports/i10), or a [sample transaction](http://127.0.0.1:5173/#/banking/t08). The server binds to loopback only. Use **Explore the demo** at the bottom to switch fixture states. Theme, currency, and amount masking are saved locally; financial records and search/filter state are not stored in browser storage. Masking also hides units, quotes, purchase amounts, fees, bank activity values, and raw narration/reference in transaction inspection. Import masking also removes source descriptions, all original source fields, matching financial evidence, and search text.
+Open [the local prototype](http://127.0.0.1:5173), [Investments](http://127.0.0.1:5173/#/investments), [Banking](http://127.0.0.1:5173/#/banking), [Budgets](http://127.0.0.1:5173/#/budgets), [Credit Cards](http://127.0.0.1:5173/#/credit-cards), [Connections](http://127.0.0.1:5173/#/connections), a [bank sample preview](http://127.0.0.1:5173/#/connections/imports/i01), an [investment sample](http://127.0.0.1:5173/#/connections/imports/i10), or a [sample transaction](http://127.0.0.1:5173/#/banking/t08). The server binds to loopback only. Use **Explore the demo** at the bottom to switch fixture states. Theme, currency, and amount masking are saved locally; financial records and search/filter state are not stored in browser storage. Masking also hides units, quotes, purchase amounts, fees, bank activity values, and raw narration/reference in transaction inspection. Import masking also removes source descriptions, all original source fields, matching financial evidence, and search text.
 
 ```sh
 npm run check       # tests, TypeScript checks, and production build
@@ -54,7 +56,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 - Indian and US stocks, ETFs, and direct/regular mutual funds.
 - UBS Accenture ESPP lots, dividends, and cash movements.
 - HDFC/SBI transactions, categories, transfers, cash flow, and budgets.
-- [HDFC credit cards in Step 9](docs/credit-cards-plan.md): a dedicated section, statement imports, dues, activity and payment matching; planned separately from Step 4.
+- [HDFC credit cards in Step 9](docs/credit-cards-plan.md): a synthetic section is implemented; statement imports, durable dues/activity and payment matching remain planned.
 - Supported automatic imports, statement fallbacks, and separate holdings/price freshness.
 - Python API with local PostgreSQL for development and Supabase PostgreSQL for deployment.
 - Likely Oracle Cloud AMD hosting; resource, swap protection, and recovery checks precede hosted use.
@@ -89,6 +91,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Accounts and source mappings](docs/accounts-source-mappings.md) | Implemented Step 4B account identity, reference key custody, mapping history and recovery |
 | [Exact financial values](docs/financial-values.md) | Implemented Step 4A decimal, currency, missing-value, arithmetic and date contracts |
 | [Credit cards plan](docs/credit-cards-plan.md) | Step 9 HDFC scope, statement imports, liabilities/dues, payment matching, spending and security |
+| [Credit-card prototype](docs/credit-cards-prototype.md) | Synthetic statement/activity walkthrough, masking, financial distinctions and verification |
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |

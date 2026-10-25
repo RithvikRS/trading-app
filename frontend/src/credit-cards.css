@@ -1,0 +1,83 @@
+@layer components {
+  .cc-workspace { min-width: 0; }
+  .cc-workspace h2 { font-size: 15px; letter-spacing: -.3px; font-weight: 600; }
+  .cc-workspace .quiet-badge { display: inline-flex; align-items: center; gap: 8px; }
+  .cc-notice { display: flex; gap: 9px; color: var(--muted); font-size: 11px; line-height: 1.8; margin: -6px 0 20px; }
+  .cc-notice svg { color: var(--accent); margin-top: 3px; }
+  .cc-warning { background: var(--warning-soft); border: 1px solid var(--warning-border); color: var(--warning); padding: 14px 17px; border-radius: 9px; font-size: 12px; line-height: 1.8; margin-bottom: 20px; }
+  .cc-overview { display: grid; grid-template-columns: minmax(260px, .85fr) minmax(0, 1.4fr); gap: 20px; }
+  .cc-account, .cc-current, .cc-history, .cc-statement-detail, .cc-inspection { padding: 24px; }
+  .cc-account { background: linear-gradient(130deg, var(--hero), var(--hero-end)); border-color: var(--accent-border); }
+  .cc-account .eyebrow { margin-top: 22px; }
+  .cc-account h2 { font-size: 23px; }
+  .cc-account > p { color: var(--muted); font-size: 11px; line-height: 1.8; margin-top: 12px; }
+  .cc-account-icon { color: var(--accent-strong); }
+  .cc-section-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .cc-section-title p { color: var(--muted); font-size: 11px; line-height: 1.7; margin-top: 7px; }
+  .cc-status { display: inline-block; border: 1px solid var(--accent-border); background: var(--accent-soft); border-radius: 6px; font-size: 10px; padding: 5px 8px; color: var(--accent-strong); }
+  .cc-status-warning { color: var(--warning); background: var(--warning-soft); border-color: var(--warning-border); }
+  .cc-account-due { margin: 24px 0 18px; }
+  .cc-account-due > span { display: block; font-size: 11px; color: var(--muted); }
+  .cc-account-due > strong { display: block; font-size: 29px; font-weight: 550; margin: 8px 0; }
+  .cc-account-due > small { font-size: 10px; color: var(--muted); }
+  .cc-values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; padding: 26px 0; }
+  .cc-values dt { color: var(--muted); font-size: 10px; margin-bottom: 8px; }
+  .cc-values dd { font-size: 15px; overflow-wrap: anywhere; }
+  .cc-values .reporting-amount { font-size: 20px; font-weight: 550; }
+  .cc-unknown { font-size: 12px; color: var(--muted); }
+  .cc-explanation { font-size: 11px; line-height: 1.8; color: var(--muted); }
+  .cc-current .cc-explanation { border-top: 1px solid var(--border); padding-top: 18px; }
+  .cc-history, .cc-activity, .cc-inspection { margin-top: 22px; }
+  .cc-statement-row { display: grid; grid-template-columns: 1fr .75fr 1fr auto; gap: 16px; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); font-size: 11px; }
+  .cc-statement-row p, .cc-statement-row div > span { color: var(--muted); }
+  .cc-statement-row strong { display: block; font-weight: 550; font-size: 16px; margin-top: 5px; }
+  .cc-statement-row .text-button { font-size: 12px; padding: 0; min-height: 36px; }
+  .cc-history > .cc-explanation { padding-top: 18px; }
+  .cc-statement-detail > .text-button { margin: -9px 0 16px; }
+  .cc-reconciliation { border-top: 1px solid var(--border); margin-top: 20px; padding-top: 14px; font-size: 11px; line-height: 1.8; }
+  .cc-reconciliation summary { cursor: pointer; min-height: 44px; padding-top: 12px; color: var(--accent-strong); }
+  .cc-reconciliation > p { color: var(--muted); }
+  .cc-activity > .cc-section-title { padding: 24px 24px 16px; }
+  .cc-filters { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; padding: 0 24px; }
+  .cc-filters .holdings-search { flex: 1; min-width: 170px; }
+  .cc-filters .holding-select { min-width: 140px; }
+  .cc-filters input { width: 100%; }
+  .cc-result { padding: 18px 24px; font-size: 10px; color: var(--muted); }
+  .cc-table td, .cc-table th { padding: 14px 24px; vertical-align: middle; text-align: left; font-size: 11px; }
+  .cc-table th { color: var(--muted); }
+  .cc-table tbody th { color: var(--text); width: 36%; }
+  .cc-table small { display: block; color: var(--muted); font-size: 10px; margin-top: 5px; }
+  .cc-table .reporting-amount { font-weight: 550; }
+  .cc-entry-link { display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; min-height: 44px; width: 100%; padding: 0; }
+  .cc-entry-link > svg { color: var(--accent-strong); }
+  .cc-activity > .cc-explanation { border-top: 1px solid var(--border); padding: 18px 24px; }
+  .cc-inspection .cc-values dd { font-size: 12px; line-height: 1.8; }
+  .cc-inspection > .cc-warning { margin: 0; }
+}
+@layer responsive {
+  @media (max-width: 1100px) {
+    .cc-statement-row { grid-template-columns: 1fr 1fr; }
+    .cc-statement-row > .cc-status { justify-self: start; }
+    .cc-overview { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 620px) {
+    .cc-account, .cc-current, .cc-history, .cc-statement-detail, .cc-inspection { padding: 20px; }
+    .cc-section-title { flex-wrap: wrap; }
+    .cc-values { gap: 23px 14px; }
+    .cc-values .reporting-amount { font-size: 18px; }
+    .cc-table, .cc-table tbody { display: block; }
+    .cc-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .cc-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 16px 20px; border-top: 1px solid var(--border); }
+    .cc-table td, .cc-table th, .cc-table tbody th { padding: 0; border: 0; width: auto; min-width: 0; overflow-wrap: anywhere; }
+    .cc-table tbody th { grid-row: 1; grid-column: 1 / -1; }
+    .cc-table td:nth-child(3) { text-align: right; grid-row: 2; grid-column: 2; }
+    .cc-table td:nth-child(4) { grid-column: 1 / -1; padding-top: 8px; color: var(--muted); }
+    .cc-activity > .cc-section-title, .cc-filters, .cc-result { padding-left: 20px; padding-right: 20px; }
+    .cc-filters .holdings-search { flex-basis: 100%; }
+    .cc-filters .holding-select { flex: 1; min-width: 120px; }
+    .cc-inspection .cc-values { grid-template-columns: minmax(0, 1fr); }
+    .cc-statement-detail .cc-values { grid-template-columns: minmax(0, 1fr); }
+    .cc-statement-row { gap: 12px; }
+    .cc-statement-row > .cc-status { grid-column: 1 / -1; }
+  }
+}

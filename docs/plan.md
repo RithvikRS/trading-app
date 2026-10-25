@@ -42,7 +42,7 @@ Use clear typography, consistent spacing, compact readable tables, and charts th
 | Overview | Tracked assets, cash, allocation, performance where available, and data freshness |
 | Investments | Searchable holdings with account, asset class, currency, fund plan, and transaction detail |
 | Banking | Account balances, searchable activity, transfer matching, and category corrections |
-| Credit Cards | HDFC card accounts, statement history, dues, activity, import review and bank-payment matching; planned Step 9 |
+| Credit Cards | Synthetic HDFC account, statements and activity implemented in 9A; protected imports, payment matching and spending integration remain planned |
 | Budgets | Monthly category budgets, actual spending, recurring commitments, and cash-flow trends |
 | Activity | Transactions, import batches, reconciliations, and corrections |
 | Connections | Provider permissions, last successful sync, failures, renewal needs, and disconnect controls |
@@ -65,7 +65,7 @@ Deliver each stage through small features with concrete acceptance criteria. The
 | 6 | [INDmoney integration](indmoney-integration-plan.md) | Discovery, authorization/custody, the [6C reader engine](indmoney-reader.md), [6D saved snapshot review/connected investments](reviewed-snapshots.md) and [6E.1 source-history inspection](source-history.md) implemented. [6E.2 public history-API assessment](indmoney-history-api.md) and the internal [capability-inspection engine](indmoney-capability-inspection.md) are implemented; authenticated capability/history verification remains open. Statements are reserved for verified gaps. Live schema/adapter and account/renewal acceptance remain open |
 | 7 | [UBS integration](ubs-integration-plan.md) | 7A public feasibility complete. Verify API/OFX eligibility before selecting statement formats; synthetic lot/activity inspection can proceed independently. Acquisition, reviewed ESPP evidence and share/cash reconciliation require verified source contracts |
 | 8 | Banking and budgets | HDFC import, SBI import, transfer matching, categorization, recurring items, and budgets as separate features |
-| 9 | [Credit cards](credit-cards-plan.md) | HDFC first: dedicated prototype, liability/statement persistence, one verified import format, reviewed completion, bank-payment matching and spending integration |
+| 9 | [Credit cards](credit-cards-plan.md) | [9A synthetic prototype](credit-cards-prototype.md) implemented. Owned liability/statement persistence, one verified HDFC import format, reviewed completion, bank-payment matching and spending integration remain planned |
 | 10 | Automation and analytics | Durable schedules, retries, renewal handling, valuation history, and tested return calculations; card acquisition only where supported access is verified |
 | 11 | Hosted deployment | Supabase hardening, Oracle configuration, access protection, resource checks, backup restoration, and security acceptance |
 
