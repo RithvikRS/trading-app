@@ -24,6 +24,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 6E.1](docs/source-history.md) adds source-history coverage inspection from investment details. Reported periods, partial/snapshot-only coverage and superseded evidence are visible without implying completed imports, lifetime history or tax basis. A verified activity contract or detailed statement layout is still required for historical ingestion.
 
+[Step 6E.2](docs/indmoney-capability-inspection.md) adds an internal bounded capability inspector for the [API-first history investigation](docs/indmoney-history-api.md). It collects private protocol and tool metadata without invoking financial tools or enabling imports. Synthetic tests verify the inspection boundary; authenticated INDmoney schemas, history availability, retention and successful renewal remain unverified. No application inspection route or production adapter is enabled.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
@@ -94,6 +96,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [INDmoney integration](docs/indmoney-integration-plan.md) | Read-only portfolio route, public discovery evidence, authorization design, coverage and statement fallbacks |
 | [INDmoney compatibility](docs/indmoney-compatibility.md) | Observed custom-client registration/handoff, history limitations, renewal findings and remaining account tests |
 | [INDmoney history APIs](docs/indmoney-history-api.md) | API-first historical acquisition assessment, current-day trade limits and remaining authenticated capability checks |
+| [INDmoney capability inspection](docs/indmoney-capability-inspection.md) | Bounded private catalog inspection without financial calls; authenticated history verification remains open |
 | [UBS integration plan](docs/ubs-integration-plan.md) | Step 7A public API/OFX and document candidates, ESPP evidence boundaries and incremental delivery |
 | [INDmoney reader](docs/indmoney-reader.md) | Bounded read-only engine, exact evidence, incomplete coverage and the live schema compatibility gate |
 | [Operations](docs/operations.md) | Hosting, backups, recovery, incident handling |

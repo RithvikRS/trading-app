@@ -138,6 +138,8 @@ class _Connection:
         expires_at: datetime,
         validate_access: Callable[[], None],
         gate: ReadGate,
+        *,
+        allow_tool_calls: bool = False,
     ) -> None:
         self.client, self.tokens, self.expires_at = client, tokens, expires_at
         self.validate_access, self.gate = validate_access, gate
@@ -146,6 +148,7 @@ class _Connection:
         self.request_id = 0
         self.contract_revision = ""
         self.schema_digest = ""
+        self.allow_tool_calls = allow_tool_calls
 
     def check(self) -> None:
         self.gate.check()
@@ -159,6 +162,10 @@ class _Connection:
     async def request(self, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         self.check()
         if method not in {"initialize", "notifications/initialized", "tools/list", "tools/call"}:
+            raise PortfolioReadError("compatibility")
+        if method == "tools/call" and (
+            not self.allow_tool_calls or params is None or params.get("name") != HOLDINGS_TOOL
+        ):
             raise PortfolioReadError("compatibility")
         notification = method == "notifications/initialized"
         self.request_id += 1
@@ -257,7 +264,7 @@ class _Connection:
             raise PortfolioReadError("compatibility")
         return document["result"]
 
-    async def initialize(self) -> None:
+    async def initialize(self) -> dict[str, Any]:
         result = await self.request(
             "initialize",
             dict(
@@ -279,20 +286,16 @@ class _Connection:
             raise PortfolioReadError("compatibility")
         # Instructions, server URLs and other capabilities are inert, untrusted metadata.
         await self.request("notifications/initialized")
+        return result
 
-    async def verify_catalog(self, contract: HoldingsContract) -> None:
-        expected_input = exact_document(contract.input_schema)
-        expected_output = exact_document(contract.output_schema)
-        if expected_input.get("type") != "object" or expected_output.get("type") != "object":
-            raise PortfolioReadError("compatibility")
-        self.contract_revision = identifier(contract.revision)
-        self.schema_digest = hashlib.sha256(
-            contract.input_schema + b"\0" + contract.output_schema
-        ).hexdigest()
+    async def catalog(
+        self, validate_tool: Callable[[dict[str, Any]], None] | None = None
+    ) -> tuple[dict[str, Any], ...]:
+        """Collect bounded metadata only; discovering a name never authorizes invocation."""
         cursor = None
         cursors: set[str] = set()
         names: set[str] = set()
-        found = False
+        tools: list[dict[str, Any]] = []
         for _ in range(MAX_CATALOG_PAGES):
             result = await self.request("tools/list", {} if cursor is None else {"cursor": cursor})
             if (
@@ -310,28 +313,47 @@ class _Connection:
                 ):
                     raise PortfolioReadError("compatibility")
                 names.add(tool["name"])
-                if tool["name"] != HOLDINGS_TOOL:
-                    continue
-                if (
-                    tool.keys()
-                    - {"name", "title", "description", "inputSchema", "outputSchema", "annotations"}
-                    or tool.get("inputSchema") != expected_input
-                    or tool.get("outputSchema") != expected_output
-                    or type(tool.get("annotations")) is not dict
-                    or tool["annotations"].get("readOnlyHint") is not True
-                    or tool["annotations"].get("destructiveHint", False) is not False
-                ):
-                    raise PortfolioReadError("compatibility")
-                found = True
+                if validate_tool is not None:
+                    validate_tool(tool)
+                tools.append(tool)
             cursor = cursor_value(result.get("nextCursor"))
             if cursor is None:
-                if not found:
-                    raise PortfolioReadError("compatibility")
-                return
+                return tuple(tools)
             if cursor in cursors:
                 raise PortfolioReadError("compatibility")
             cursors.add(cursor)
         raise PortfolioReadError("limits")
+
+    async def verify_catalog(self, contract: HoldingsContract) -> None:
+        expected_input = exact_document(contract.input_schema)
+        expected_output = exact_document(contract.output_schema)
+        if expected_input.get("type") != "object" or expected_output.get("type") != "object":
+            raise PortfolioReadError("compatibility")
+        self.contract_revision = identifier(contract.revision)
+        self.schema_digest = hashlib.sha256(
+            contract.input_schema + b"\0" + contract.output_schema
+        ).hexdigest()
+        found = False
+
+        def validate_tool(tool: dict[str, Any]) -> None:
+            nonlocal found
+            if tool["name"] != HOLDINGS_TOOL:
+                return
+            if (
+                tool.keys()
+                - {"name", "title", "description", "inputSchema", "outputSchema", "annotations"}
+                or tool.get("inputSchema") != expected_input
+                or tool.get("outputSchema") != expected_output
+                or type(tool.get("annotations")) is not dict
+                or tool["annotations"].get("readOnlyHint") is not True
+                or tool["annotations"].get("destructiveHint", False) is not False
+            ):
+                raise PortfolioReadError("compatibility")
+            found = True
+
+        await self.catalog(validate_tool)
+        if not found:
+            raise PortfolioReadError("compatibility")
 
     async def holdings(self, contract: HoldingsContract) -> PortfolioRead:
         pages: list[HoldingsPage] = []
@@ -426,7 +448,7 @@ class IndmoneyPortfolioReader:
             raise PortfolioReadError("compatibility")
         self._gate.acquire()
         try:
-            tokens = TokenSecrets.model_validate(tokens.model_dump())
+            tokens = TokenSecrets.model_validate(tokens.model_dump(warnings=False))
             if type(expires_at) is not datetime or expires_at.utcoffset() is None:
                 raise PortfolioReadError("authorization")
             async with asyncio.timeout(READ_SECONDS):
@@ -438,7 +460,12 @@ class IndmoneyPortfolioReader:
                     limits=httpx.Limits(max_connections=1, max_keepalive_connections=0),
                 ) as client:
                     connection = _Connection(
-                        client, tokens, expires_at, validate_access, self._gate
+                        client,
+                        tokens,
+                        expires_at,
+                        validate_access,
+                        self._gate,
+                        allow_tool_calls=True,
                     )
                     await connection.initialize()
                     await connection.verify_catalog(contract)
