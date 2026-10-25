@@ -48,6 +48,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 9B.5](docs/credit-current-evidence.md) adds separately dated, immutable current credit reports with independent outstanding, unbilled, credit-limit and available-credit values. Exact INR spelling, missing reasons and original source-local instants are retained through corrections and explicit retries. Typed reciprocal links preserve statement/current separation under the shared observation namespace and quota, including encrypted restore. These unselected source reports do not establish freshness, chosen liability, payment status or available cash. No entries, acquisition, public route or screen is added.
 
+[Step 9B.6.1](docs/credit-entry-evidence.md) adds immutable credit entry interpretations with explicit roles/treatment, independent transaction/posting dates, billed INR and optional original INR/USD evidence. Absent original cash, explicitly missing cash and zero remain distinct. Corrections, explicit retries and encrypted restore preserve exact values and source/mapping/account history under the shared three-kind namespace and quota. Unsupported corrections remain retained and listable. No statement allocation, financial movement, withdrawal, payment inference, import or connected screen is added.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
@@ -122,6 +124,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Credit source mappings](docs/credit-source-mappings.md) | Opaque owned source handles, immutable mapping history, active resolution and recovery |
 | [Credit statement evidence](docs/credit-statement-evidence.md) | Immutable unselected INR checkpoints, frozen mapping provenance, explicit retries and recovery |
 | [Current credit evidence](docs/credit-current-evidence.md) | Independently dated unselected INR reports, original source-local instants, typed history and recovery |
+| [Credit entry evidence](docs/credit-entry-evidence.md) | Immutable roles/treatment, billed and original native values, independent dates and retained correction history |
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |
