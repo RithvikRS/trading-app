@@ -1,0 +1,31 @@
+# Saved batch completion inspection
+
+Event revisions and lot observations can open **Inspect batch completion** from their source details. The protected screen reads existing saved receipts and their historical row effects. It introduces no acquisition, financial write, parser, endpoint, migration or provider compatibility claim.
+
+## Historical scope
+
+The selected evidence revision supplies the exact source batch and source coverage. A receipt must agree with both; partial activity cannot be relabeled as complete activity or reconciled by its receipt. Receipt metadata shows the original batch revision, completion instant, coverage, limited/reconciled mode, and retained row, selection and comparison-scope counts. Pages use ascending opaque identity order, not completion time. An absent receipt does not establish zero activity, invalid financial evidence or complete import history.
+
+Row inspection is batch-wide, including other positions, account-level cash, snapshots, lots and exclusions. It distinguishes records, links to existing evidence, corrections and exclusions. A linked source occurrence is not another movement; an exclusion has no financial target. The originating row is labeled only when source row, review revision, target identity and saved record revision agree. Rows missing from one bounded page are not treated as excluded or uncompleted. A full traversal must include the originating row and exactly match the saved row and selection counts; early termination, extra rows, missing lineage or inconsistent selections fail closed.
+
+Receipts retain the effects of the completed historical operation. Later corrections, mappings or selections do not rewrite them. A historical reconciled mode applies only to the saved native comparison scopes; this screen does not inspect their equations or input records. Current balances, tax basis, lifetime history and return calculations are not inferred. Comparison inspection remains a separate increment over the existing [receipt read contracts](completion-receipt-reads.md).
+
+## Security and implementation
+
+Only fixed authenticated POST reads are used: `/receipts/query` bound to the selected batch and `/receipts/rows/query` bound to the selected receipt. Both use 25-row pages. Existing MFA, session-context, origin/CSRF, ownership, no-store and response-size controls apply. No private provider reference, idempotency key, baseline token, hash, raw statement or credential is exposed.
+
+The dedicated [receipt projection](../frontend/workspace/src/receipt-evidence.ts) checks exact fields, bounded integer revisions/counts, timestamp grammar, coverage/mode consistency, parent identity, row operation/outcome semantics, exclusive target identity, selection/provider links and originating lineage. Page envelopes and cursors are strict. Across row pages, only bounded cumulative counts and an origin-seen flag are retained. Earlier row payloads are discarded. Refresh reuses the metadata preceding the current page; restarting or reloading begins a new traversal, so page retries do not double count. The existing snapshot-mutation receipt validator retains its limited/snapshot-only restriction.
+
+[ReceiptInspection](../frontend/workspace/src/ReceiptInspection.tsx) replaces its previous page on loading, clears details on failure, and guards against unmounted or superseded responses. Entry clears the preceding activity/lot values; receipt data contains no financial amounts or quantities. INR/USD and amount-privacy preferences cannot convert or recover old values. Navigation, lock, sign-out and context replacement discard private state. No URL or browser-storage persistence, financial aggregation or automatic retry is introduced.
+
+## Verification
+
+[Synthetic regressions](../frontend/src/test/workspace-receipts.test.tsx) cover both entry points and historical batch changes; limited/reconciled mode; batch-wide record/link/correction/exclusion effects; exact parent/lineage binding; paging, refresh/retry counts, missing originating rows, final row/selection count contradictions and source-coverage mismatches; absent receipts; failed reads; strict protocol blocking; keyboard focus; the retained lot-history revision guard after returning from receipt inspection; display preferences, masking and stale-response disposal. The existing lot, activity and investment tests remain relevant prerequisites. Production build, responsive theme screenshots and integrated [verification groups](verification.md) supply separate evidence for the final tree.
+### Local evidence
+
+The focused receipt, activity, lot and investment suite passes **233 tests**, including **89 receipt regressions**. TypeScript and both production builds pass; the demo retains its existing bundle-size warning. Previously recorded synthetic Chromium checks pass at 1440 px and 390 px in light and dark modes for receipt metadata and batch-wide effects, both event/lot entry points, exact originating lineage, keyboard/focus, amount-privacy and currency changes, accessibility/contrast, horizontal reflow, empty browser storage and sign-out clearing. A separate browser probe verifies refresh/restart cursor accounting, cross-page originating-row inclusion, early-page termination and coverage mismatch blocking; invalid reads clear private details. The local fixture server was stopped afterward. No private statement or live provider session was used.
+
+| View | Desktop light | Desktop dark | Mobile light | Mobile dark |
+| --- | --- | --- | --- | --- |
+| Receipt metadata | [Light](images/saved-receipt-inspection/receipts-1440-light.png) | [Dark](images/saved-receipt-inspection/receipts-1440-dark.png) | [Light](images/saved-receipt-inspection/receipts-390-light.png) | [Dark](images/saved-receipt-inspection/receipts-390-dark.png) |
+| Historical effects | [Light](images/saved-receipt-inspection/effects-1440-light.png) | [Dark](images/saved-receipt-inspection/effects-1440-dark.png) | [Light](images/saved-receipt-inspection/effects-390-light.png) | [Dark](images/saved-receipt-inspection/effects-390-dark.png) |
