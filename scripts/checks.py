@@ -118,10 +118,16 @@ def frontend() -> None:
 def database() -> None:
     uv = uv_command()
     sync_backend(uv)
+    timeout = (
+        3000
+        if os.name == "nt" and "CI" not in os.environ and "GITHUB_ACTIONS" not in os.environ
+        else 1200
+    )
     run(
         "isolated PostgreSQL migrations and permissions",
         [uv, "run", "--locked", "--no-sync", "python", "-m", "trading_db", "check"],
         ROOT / "backend",
+        timeout=timeout,
     )
 
 
