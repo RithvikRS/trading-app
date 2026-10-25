@@ -30,6 +30,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 9A](docs/credit-cards-prototype.md) adds a synthetic Credit Cards screen with one fictional HDFC billing account, shared primary/add-on activity, statement history, searchable activity and source inspection. Statement dues and separately dated outstanding remain distinct; missing values and payment status stay unknown. Both themes, INR/USD display and amount masking are supported. Financial records and selections are not persisted, and no real HDFC export format, upload or protected card screen is supported.
 
+[Step 9B.1](docs/credit-card-values.md) adds pure Python contracts for INR statements, separately dated current evidence, explicit entry roles and exact liability reconciliation. Missing values remain distinct from zero, and matching arithmetic does not prove coverage or payment. This increment introduces no database schema, API, UI, import support or persistence.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
@@ -95,6 +97,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Exact financial values](docs/financial-values.md) | Implemented Step 4A decimal, currency, missing-value, arithmetic and date contracts |
 | [Credit cards plan](docs/credit-cards-plan.md) | Step 9 HDFC scope, statement imports, liabilities/dues, payment matching, spending and security |
 | [Credit-card prototype](docs/credit-cards-prototype.md) | Synthetic statement/activity walkthrough, masking, financial distinctions and verification |
+| [Credit-card value contracts](docs/credit-card-values.md) | Exact statement/current values, explicit liability roles and bounded reconciliation |
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |
