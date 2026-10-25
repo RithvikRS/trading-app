@@ -51,7 +51,7 @@ The internal `read` method takes a private token bundle, absolute expiry and syn
 
 Live enablement requires locally configured owner sign-in, verified protocol/schemas, native precision and timestamps, account/folio/variant semantics, complete pagination and permitted application use/retention. Implement a versioned adapter from that evidence, with tests for supported and rejected variants. Reuse the existing local registration; do not register clients during tests or expose credentials or personal payloads in conversations, CI or logs.
 
-There is no migration or dependency change. Database head remains `0018_indmoney_authorization`, recovery format remains 14, and recovery continues to omit connector credentials. No live request, account authorization, registration, credential transfer or financial import was performed for Step 6C. Provider contract acceptance precedes reviewed snapshot integration; this engine does not remove that dependency.
+Step 6C introduced no migration or dependency change: its schema head was `0018_indmoney_authorization` and its recovery format was 14, with connector credentials omitted. Later schema/format changes are recorded in the [current recovery runbook](local-packaging.md#encrypted-foundation-recovery). No live request, account authorization, registration, credential transfer or financial import was performed for Step 6C. Provider contract acceptance precedes reviewed snapshot integration; this engine does not remove that dependency.
 
 ## Verification
 

@@ -15,8 +15,8 @@ from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 from trading_db.provider_keys import ProviderKeys
 
-HEAD = "0018_indmoney_authorization"
-FORMAT = 14
+HEAD = "0019_credit_billing_accounts"
+FORMAT = 15
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -53,6 +53,17 @@ COLUMNS = {
         "revision",
         "created_at",
         "updated_at",
+    ),
+    "credit_billing_accounts": (
+        "owner_id",
+        "id",
+        "issuer",
+        "billing_currency",
+        "label",
+        "revision",
+        "created_at",
+        "updated_at",
+        "archived_at",
     ),
     "account_currencies": ("owner_id", "account_id", "currency"),
     "source_accounts": (

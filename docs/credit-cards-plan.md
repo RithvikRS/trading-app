@@ -1,6 +1,6 @@
 # Step 9: HDFC credit cards
 
-Status: [Step 9A](credit-cards-prototype.md) implements the synthetic walkthrough; [Step 9B.1](credit-card-values.md) implements pure value and reconciliation contracts. Owned persistence and verified HDFC ingestion remain planned. Neither increment determines paid/overdue status or remaining payment. Automation and hosted rollout remain Steps 10 and 11.
+Status: [Step 9A](credit-cards-prototype.md) implements the synthetic walkthrough; [Step 9B.1](credit-card-values.md) implements pure value and reconciliation contracts; [Step 9B.2](credit-account-identity.md) implements owned HDFC/INR billing-account identities and archival. Statement/liability persistence, physical-card/source mappings and verified HDFC ingestion remain planned. These increments determine neither paid/overdue status nor remaining payment. Automation and hosted rollout remain Steps 10 and 11.
 
 ## Scope and interface
 
@@ -26,7 +26,7 @@ Each increment has focused tests, updated documentation, a conventional commit o
 | --- | --- | --- |
 | 9A | [Implemented synthetic Credit Cards walkthrough](credit-cards-prototype.md) | Both themes, desktop/mobile, keyboard access, masking, missing-data states, statement arithmetic and source inspection; no financial persistence, uploads or verified HDFC format |
 | 9B.1 | [Implemented pure credit-card value contracts](credit-card-values.md) | Exact INR liabilities, independent dates/current evidence, explicit roles and bounded reconciliation; no identity, schema, API, UI or import changes |
-| 9B.2 | Owned HDFC/INR billing-account registry | Internal identity, safe nickname, owner isolation and archival only; no financial values, physical-card mappings or source mappings |
+| 9B.2 | [Implemented owned HDFC/INR billing-account registry](credit-account-identity.md) | Server-scoped identity, safe no-digit nickname, forced owner isolation, bounded admission/keyset reads, revision-checked archival and encrypted recovery; no financial values, physical-card/source mappings, issuer references, routes or screens |
 | 9B remaining | Physical-card/source mappings and durable statement/liability evidence | Separate scopes, immutable history, owner constraints, migrations and encrypted restore coverage |
 | 9C.1 | One verified HDFC export format, safe ingestion, preview and row inspection | Format selected from sanitized representative evidence; bounded isolated parser, correct dates/signs/identifiers, no financial writes from preview, malformed/encrypted/unsupported input handled safely |
 | 9C.2 | Reviewed import completion and connected statement views | Atomic writes, replay/overlap protection, source and combined reconciliation, immutable corrections, receipts, protected reads and durable UI state after reload |

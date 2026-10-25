@@ -36,6 +36,7 @@ from trading_db import migrate, recovery
 from trading_db.connections import engine_for
 from trading_db.enrollment import provision_owner
 from trading_db.indmoney import IndmoneyDatabase
+from trading_db.recovery import HEAD
 
 
 @pytest.fixture
@@ -479,4 +480,4 @@ def test_migration_preserves_earlier_records_and_refuses_destructive_downgrade(c
     assert sql(admin, "SELECT count(*) FROM app.indmoney_attempts")[0][0] == 1
     with pytest.raises(DBAPIError):
         migrate.apply(url(), project, direction="downgrade", target="0017_reconciled_completion")
-    assert migrate.revision(url(), project) == "0018_indmoney_authorization"
+    assert migrate.revision(url(), project) == HEAD

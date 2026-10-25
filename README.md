@@ -34,6 +34,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 9B.1](docs/credit-card-values.md) adds pure Python contracts for INR statements, separately dated current evidence, explicit entry roles and exact liability reconciliation. Missing values remain distinct from zero, and matching arithmetic does not prove coverage or payment. This increment introduces no database schema, API, UI, import support or persistence.
 
+[Step 9B.2](docs/credit-account-identity.md) adds a separate owned HDFC/INR billing-account registry with internal identities, safe nicknames and revision-checked archival. Forced owner isolation, bounded reads/writes and encrypted recovery cover the registry. It stores no financial values, card digits, issuer references or source mappings and exposes no API or screen. Archival does not establish issuer closure or payment.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
@@ -101,6 +103,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Credit cards plan](docs/credit-cards-plan.md) | Step 9 HDFC scope, statement imports, liabilities/dues, payment matching, spending and security |
 | [Credit-card prototype](docs/credit-cards-prototype.md) | Synthetic statement/activity walkthrough, masking, financial distinctions and verification |
 | [Credit-card value contracts](docs/credit-card-values.md) | Exact statement/current values, explicit liability roles and bounded reconciliation |
+| [Credit billing-account identity](docs/credit-account-identity.md) | Owned HDFC/INR identities, safe nicknames, archival, isolation and recovery |
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |
