@@ -38,7 +38,7 @@ def uuid_value(value: Any) -> UUID:
 
 class SupabaseProvider:
     def __init__(self, settings: AuthSettings, *, transport: httpx.BaseTransport | None = None):
-        self.settings = AuthSettings.model_validate(settings.model_dump())
+        self.settings = AuthSettings.model_validate(settings.model_dump(warnings=False))
         # The transport seam is for deterministic tests, never selectable by environment.
         self._http = httpx.Client(
             timeout=httpx.Timeout(5, connect=3, pool=2),

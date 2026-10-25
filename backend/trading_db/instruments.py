@@ -171,7 +171,7 @@ class InstrumentTransaction:
             raise InstrumentUnavailable()
 
     def scheme(self, definition: SchemeDefinition) -> Scheme:
-        valid = SchemeDefinition.model_validate(definition.model_dump())
+        valid = SchemeDefinition.model_validate(definition.model_dump(warnings=False))
         with self._write():
             self._budget("fund_schemes")
             scheme_id = uuid4()
@@ -247,7 +247,7 @@ class InstrumentTransaction:
         return tuple(self._instrument(row) for row in rows)
 
     def create(self, definition: InstrumentDefinition) -> Instrument:
-        valid = InstrumentDefinition.model_validate(definition.model_dump())
+        valid = InstrumentDefinition.model_validate(definition.model_dump(warnings=False))
         with self._write():
             existing = self.by_isin(valid.isin)
             if existing:
@@ -268,7 +268,7 @@ class InstrumentTransaction:
             return Instrument(instrument_id, valid)
 
     def listing(self, instrument_id: UUID, definition: ListingDefinition) -> Listing:
-        valid = ListingDefinition.model_validate(definition.model_dump())
+        valid = ListingDefinition.model_validate(definition.model_dump(warnings=False))
         identifier(instrument_id)
         with self._write():
             row = self._execute(
@@ -317,7 +317,7 @@ class InstrumentTransaction:
         )
 
     def identifier(self, definition: IdentifierDefinition) -> ProviderIdentifier:
-        valid = IdentifierDefinition.model_validate(definition.model_dump())
+        valid = IdentifierDefinition.model_validate(definition.model_dump(warnings=False))
         with self._write():
             row = self._execute(
                 "SELECT id FROM app.instrument_identifiers WHERE owner_id=:owner "

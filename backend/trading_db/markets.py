@@ -98,7 +98,7 @@ class MarketTransaction:
     def list(
         self, target: MarketTarget, *, limit: int = 25, after: UUID | None = None
     ) -> tuple[MarketObservation, ...]:
-        valid = MarketTarget.model_validate(target.model_dump())
+        valid = MarketTarget.model_validate(target.model_dump(warnings=False))
         page(limit, after)
         rows = self._execute(
             "SELECT * FROM app.market_observations WHERE owner_id=:owner AND "
@@ -112,7 +112,7 @@ class MarketTransaction:
         return tuple(self._observation(row) for row in rows)
 
     def record(self, definition: MarketDefinition) -> MarketObservation:
-        valid = MarketDefinition.model_validate(definition.model_dump())
+        valid = MarketDefinition.model_validate(definition.model_dump(warnings=False))
         with self._write():
             row = (
                 self._execute(
