@@ -40,6 +40,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 9B.3](docs/credit-source-mappings.md) adds owned application source handles and append-only billing-account mapping history. Explicit links, corrections and unlinks retain their revisions; current resolution requires an active target. Forced owner isolation, bounded runtime writes and encrypted recovery cover both tables. Handles contain no issuer reference or card digits and do not establish HDFC identity, import compatibility, deduplication or payment status. No API, screen or financial evidence is added.
 
+[Step 9B.4](docs/credit-statement-evidence.md) adds internal, immutable statement checkpoint observations bound to an owned credit source, exact mapping revision and billing account. Exact INR opening/closing liability, total due, minimum due and independent dates retain missing values and original decimal spelling. Corrections and explicitly identified retries preserve history; complete parent/child pairs and encrypted recovery retain the evidence. These unselected reported checkpoints establish neither provider authenticity nor current liability, transaction coverage or payment status. No acquisition, liability movement, public route or screen is added.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
@@ -110,6 +112,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Credit-card value contracts](docs/credit-card-values.md) | Exact statement/current values, explicit liability roles and bounded reconciliation |
 | [Credit billing-account identity](docs/credit-account-identity.md) | Owned HDFC/INR identities, safe nicknames, archival, isolation and recovery |
 | [Credit source mappings](docs/credit-source-mappings.md) | Opaque owned source handles, immutable mapping history, active resolution and recovery |
+| [Credit statement evidence](docs/credit-statement-evidence.md) | Immutable unselected INR checkpoints, frozen mapping provenance, explicit retries and recovery |
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |

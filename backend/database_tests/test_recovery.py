@@ -15,7 +15,9 @@ from database_tests.test_preferences import environment as environment
 from database_tests.test_preferences import login, sql
 from tests.auth_support import ISSUER, SUBJECT
 from tests.browser_support import BrowserProviderStub
+from tests.test_credit_statements import statement_values
 from trading_api.application import create_app
+from trading_api.finance import FinancialDate
 from trading_auth.browser import BrowserAuth
 from trading_auth.models import AuthenticationDenied
 from trading_auth.session_models import verifier
@@ -28,6 +30,7 @@ from trading_db.completion_contracts import CompletionRequest, CompletionRow, Co
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.credit_accounts import CreditAccountDefinition, CreditAccountTransaction
 from trading_db.credit_sources import CreditSourceTransaction
+from trading_db.credit_statements import CreditStatementTransaction, new_statement_id
 from trading_db.enrollment import provision_owner
 from trading_db.event_evidence import EventEvidenceTransaction
 from trading_db.events import EventTransaction
@@ -765,6 +768,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
     completed_imports = {}
     credit_baselines = {}
     credit_source_baselines = {}
+    credit_statement_baselines = {}
     try:
         for owner in (own, other):
             with account_store.transaction(owner) as unit:
@@ -784,6 +788,17 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 ]
                 sources.map(linked.id, active_credit.id, expected_revision=0)
                 sources.map(changed.id, archived_credit.id, expected_revision=0)
+                statements = CreditStatementTransaction(unit._unit)
+                active_root, historical_root = new_statement_id(), new_statement_id()
+                statements.record(active_root, linked.id, 1, statement_values())
+                statements.record(
+                    active_root,
+                    linked.id,
+                    1,
+                    statement_values(due_date=FinancialDate("2026-11-01")),
+                    expected_revision=1,
+                )
+                statements.record(historical_root, changed.id, 1, statement_values())
                 sources.map(changed.id, active_credit.id, expected_revision=1)
                 sources.map(removed.id, active_credit.id, expected_revision=0)
                 sources.map(removed.id, None, expected_revision=1)
@@ -797,6 +812,9 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                     },
                 )
                 credit_baselines[owner] = credit.list()
+                credit_statement_baselines[owner] = {
+                    root: statements.history(root) for root in (active_root, historical_root)
+                }
                 first, second = unit.create(definition), unit.create(definition)
                 source = unit.source("cas", "FAKE-FOLIO")
                 unit.map(source.id, first.id, expected_revision=0)
@@ -1036,6 +1054,17 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                     identifier_keys=recovered_identifiers,
                 )
             assert sql(restored_admin, "SELECT count(*) FROM app.owners")[0][0] == 0
+            orphaned = json.loads(Fernet(recovered_key).decrypt(recovered_object))
+            orphaned["rows"]["credit_statement_values"].pop()
+            with pytest.raises(DatabaseFailure, match="rolled back"):
+                recovery.restore_snapshot(
+                    target_url,
+                    target.project,
+                    Fernet(recovered_key).encrypt(json.dumps(orphaned).encode()),
+                    recovered_key,
+                    identifier_keys=recovered_identifiers,
+                )
+            assert sql(restored_admin, "SELECT count(*) FROM app.owners")[0][0] == 0
             counts = recovery.restore_snapshot(
                 target_url,
                 target.project,
@@ -1053,6 +1082,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             assert counts["credit_billing_accounts"] == 4
             assert counts["credit_source_handles"] == 10
             assert counts["credit_source_account_mappings"] == 12
+            assert counts["credit_evidence_observations"] == counts["credit_statement_values"] == 6
             assert counts["financial_accounts"] == counts["account_currencies"] == 6
             assert counts["source_accounts"] == 6 and counts["source_account_mappings"] == 8
             assert (
@@ -1125,6 +1155,16 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                             assert sources.resolve(foreign_source.id) is None
                         for foreign_credit in credit_baselines[other if owner == own else own]:
                             assert credit.get(foreign_credit.id) is None
+                        statements = CreditStatementTransaction(unit._unit)
+                        for root, history in credit_statement_baselines[owner].items():
+                            assert statements.history(root) == history
+                            for saved in history:
+                                assert statements.get(root, at_revision=saved.revision) == saved
+                            assert history[0] in statements.list(history[0].account_id)
+                        other_statement_owner = other if owner == own else own
+                        for root in credit_statement_baselines[other_statement_owner]:
+                            assert statements.history(root) == ()
+                            assert statements.get(root, at_revision=1) is None
                         completed = CompletionTransaction(unit._unit, recovered_identifiers)
                         assert len(completed.list()) == 4
                         for request, receipt in completed_imports[owner]:

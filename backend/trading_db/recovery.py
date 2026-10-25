@@ -15,8 +15,8 @@ from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 from trading_db.provider_keys import ProviderKeys
 
-HEAD = "0020_credit_source_mappings"
-FORMAT = 16
+HEAD = "0021_credit_statement_evidence"
+FORMAT = 17
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -476,6 +476,44 @@ COLUMNS.update(
             "amount",
             "evidence_date",
             "posting_state",
+        ),
+    }
+)
+COLUMNS.update(
+    {
+        "credit_evidence_observations": (
+            "owner_id",
+            "id",
+            "revision",
+            "previous_revision",
+            "source_id",
+            "mapping_revision",
+            "account_id",
+            "kind",
+            "contract_version",
+            "reason",
+            "created_at",
+        ),
+        "credit_statement_values": (
+            "owner_id",
+            "observation_id",
+            "revision",
+            "period_start",
+            "period_end",
+            "statement_date",
+            "due_date",
+            "opening_liability_source",
+            "opening_liability_amount",
+            "opening_liability_missing",
+            "closing_liability_source",
+            "closing_liability_amount",
+            "closing_liability_missing",
+            "total_due_source",
+            "total_due_amount",
+            "total_due_missing",
+            "minimum_due_source",
+            "minimum_due_amount",
+            "minimum_due_missing",
         ),
     }
 )
