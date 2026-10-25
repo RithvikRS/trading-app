@@ -1,6 +1,6 @@
 # Step 9: HDFC credit cards
 
-Status: planned as a separate stage after banking and budgets (Step 8). The first issuer is HDFC. No card screen, schema, parser, connection, or personal data is introduced by this planning change. Step 4 continues with its existing scope; automation and hosted rollout follow as Steps 10 and 11.
+Status: [Step 9A](credit-cards-prototype.md) implements the synthetic Credit Cards walkthrough. Owned accounts, durable financial evidence, supported HDFC ingestion and payment matching remain planned. The examples establish neither issuer-format compatibility nor payment status. Automation and hosted rollout remain Steps 10 and 11.
 
 ## Scope and interface
 
@@ -24,7 +24,7 @@ Each increment has focused tests, updated documentation, a conventional commit o
 
 | Increment | Deliverable | Acceptance boundary |
 | --- | --- | --- |
-| 9A | Credit Cards prototype and statement/detail walkthrough | Fabricated HDFC-shaped examples only; both themes, desktop/mobile, keyboard access, masking, missing-data states and source inspection; no files or credentials |
+| 9A | [Implemented synthetic Credit Cards walkthrough](credit-cards-prototype.md) | Both themes, desktop/mobile, keyboard access, masking, missing-data states, statement arithmetic and source inspection; no financial persistence, uploads or verified HDFC format |
 | 9B | Owned credit accounts, billing statements, liability movements and source mappings | Exact values, separate statement/current snapshots, primary/add-on/replacement card identity, owner isolation, constraints, migrations and encrypted restore coverage |
 | 9C.1 | One verified HDFC export format, safe ingestion, preview and row inspection | Format selected from sanitized representative evidence; bounded isolated parser, correct dates/signs/identifiers, no financial writes from preview, malformed/encrypted/unsupported input handled safely |
 | 9C.2 | Reviewed import completion and connected statement views | Atomic writes, replay/overlap protection, source and combined reconciliation, immutable corrections, receipts, protected reads and durable UI state after reload |

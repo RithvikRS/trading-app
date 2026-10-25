@@ -4,7 +4,7 @@ import {
   ArrowDownLeft, ArrowDownUp, ArrowRight, ArrowUpRight, BarChart3, Check, ChevronDown, ChevronRight,
   CircleHelp, Clock3, Eye, EyeOff, FlaskConical, Globe2, LayoutDashboard, Link2,
   Menu, Moon, PieChart, Plus, RefreshCw, ShieldCheck, SlidersHorizontal, Sun, Wallet, X,
-  AlertTriangle, Landmark, Activity as ActivityIcon,
+  AlertTriangle, CreditCard, Landmark, Activity as ActivityIcon,
 } from 'lucide-react'
 import {
   accounts, getActivity, assetClasses, AS_OF, axisLabel, FX_DATE, formatMoney, getAccountValue,
@@ -16,6 +16,7 @@ import { Amount, DisplayContext, ReportingAmount } from './display'
 import Investments from './Investments'
 import HoldingDetail from './HoldingDetail'
 import Banking from './Banking'
+import CreditCards from './CreditCards'
 import Budgets from './Budgets'
 import Connections from './Connections'
 import ImportPreview, { ImportCatalog } from './ImportPreview'
@@ -40,6 +41,7 @@ import type { Screen } from './routes'
 const navigation = [
   { label: 'Overview', icon: LayoutDashboard }, { label: 'Investments', icon: BarChart3 },
   { label: 'Banking', icon: Landmark }, { label: 'Budgets', icon: PieChart },
+  { label: 'Credit Cards', icon: CreditCard },
   { label: 'Activity', icon: ActivityIcon }, { label: 'Connections', icon: Link2 },
 ]
 
@@ -52,9 +54,9 @@ function Navigation({ screen, navigate, onNavigate }: { screen: Screen; navigate
   return <nav aria-label="Main navigation" className="navigation">
     <p className="nav-label">Workspace</p>
     {navigation.map(({ label, icon: Icon }, index) => <div key={label}>
-      {index === 4 && <p className="nav-label second-label">Manage</p>}
-      {index < 4 || label === 'Connections'
-        ? <a href={`#/${label.toLowerCase()}`} aria-current={screen === label.toLowerCase() ? 'page' : undefined} className={`nav-item ${screen === label.toLowerCase() ? 'active' : ''}`} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); navigate(label === 'Overview' ? 'overview' : label === 'Investments' ? 'investments' : label === 'Banking' ? 'banking' : label === 'Connections' ? 'connections' : 'budgets'); onNavigate?.() }}><Icon size={19} aria-hidden="true" />{label}{screen === label.toLowerCase() && <span className="active-dot" />}</a>
+      {index === 5 && <p className="nav-label second-label">Manage</p>}
+      {index < 5 || label === 'Connections'
+        ? <a href={`#/${label.toLowerCase().replaceAll(' ', '-')}`} aria-current={screen === label.toLowerCase().replaceAll(' ', '-') ? 'page' : undefined} className={`nav-item ${screen === label.toLowerCase().replaceAll(' ', '-') ? 'active' : ''}`} onClick={event => { if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return; event.preventDefault(); navigate(label === 'Overview' ? 'overview' : label === 'Investments' ? 'investments' : label === 'Banking' ? 'banking' : label === 'Connections' ? 'connections' : label === 'Credit Cards' ? 'credit-cards' : 'budgets'); onNavigate?.() }}><Icon size={19} aria-hidden="true" />{label}{screen === label.toLowerCase().replaceAll(' ', '-') && <span className="active-dot" />}</a>
         : <span className="nav-item planned" aria-label={`${label}, planned`}><Icon size={19} aria-hidden="true" />{label}<span className="soon">Soon</span></span>}
     </div>)}
   </nav>
@@ -200,7 +202,7 @@ function LoadingState() {
 export default function App() {
   const { screen, route, transactionOrigin, navigate, openHolding, openTransaction, openImport } = useScreen()
   const navScreen = screen === 'import' ? 'connections' : screen === 'holding' ? 'investments' : screen === 'transaction' ? transactionOrigin : screen
-  const screenLabel = screen === 'import' ? 'Import preview' : screen === 'holding' ? 'Holding details' : screen === 'transaction' ? 'Transaction details' : screen === 'banking' ? 'Banking' : screen === 'connections' ? 'Connections' : screen === 'budgets' ? 'Budgets' : screen === 'investments' ? 'Investments' : screen === 'overview' ? 'Overview' : 'Unavailable'
+  const screenLabel = screen === 'import' ? 'Import preview' : screen === 'holding' ? 'Holding details' : screen === 'transaction' ? 'Transaction details' : screen === 'credit-cards' ? 'Credit Cards' : screen === 'banking' ? 'Banking' : screen === 'connections' ? 'Connections' : screen === 'budgets' ? 'Budgets' : screen === 'investments' ? 'Investments' : screen === 'overview' ? 'Overview' : 'Unavailable'
   const [connectionTab, setConnectionTab] = useState<'sources' | 'imports'>(() => screen === 'import' ? 'imports' : 'sources')
   const [importReviewState, setImportReviewState] = useState(createImportReviewState)
   const [importControls, setImportControls] = useState(createImportControls)
@@ -297,9 +299,10 @@ export default function App() {
         <main id="main-content" tabIndex={-1}>
           {screen === 'overview' && <div className="page-heading"><div><span className="eyebrow">Your overview <span className="mobile-demo">· Sample data</span></span><h1 id="page-title" tabIndex={-1}>Everything, in perspective<span>.</span></h1><p>A clear view of your investments and everyday cash.</p></div><div className="snapshot-label"><Clock3 size={14} aria-hidden="true" /><span>Snapshot as of<strong>{AS_OF}</strong></span></div></div>}
           {demoState === 'error' && <div role="alert" className="notice error-notice"><AlertTriangle size={19} aria-hidden="true" /><div><strong>The latest snapshot couldn’t load.</strong><p>{lastGoodState === 'empty' ? 'The last demo view had no accounts.' : 'You’re still seeing the last available sample snapshot.'} This is a simulated error.</p></div><button className="outlined-button" onClick={retry} disabled={retrying}><RefreshCw size={14} className={retrying ? 'spinning' : ''} aria-hidden="true" />{retrying ? 'Retrying…' : 'Retry demo'}</button></div>}
-          {screen === 'unavailable' ? <section className="empty-state"><span className="eyebrow">Local prototype · Sample data</span><h1 id="page-title" tabIndex={-1}>This view is unavailable.</h1><p>Overview, Investments, Banking, Budgets, and Connections are the available screens.</p><a className="primary-button" href="#/investments">Go to investments</a><a className="text-button" href="#/banking">Go to banking</a></section>
+          {screen === 'unavailable' ? <section className="empty-state"><span className="eyebrow">Local prototype · Sample data</span><h1 id="page-title" tabIndex={-1}>This view is unavailable.</h1><p>Overview, Investments, Banking, Budgets, Credit Cards, and Connections are the available screens.</p><a className="primary-button" href="#/investments">Go to investments</a><a className="text-button" href="#/banking">Go to banking</a></section>
             : route.screen === 'import' && isImportId(route.importId) ? <ImportPreview state={importReviewState} onAction={proposal => { const batch = getImportBatches().find(batch => batch.id === proposal.batchId); if (batch) setImportReviewState(current => changeImportReview(current, batch, proposal, !preferences.hidden && view !== 'loading' && view !== 'empty')) }} onUndo={() => setImportReviewState(undoImportReview)} onReviewReset={() => setImportReviewState(resetImportReviews)} id={route.importId} view={view} controls={importControls} onChange={setImportControls} onReset={() => changeState('populated')} onBack={() => navigate('connections')} backLabel={connectionTab === 'sources' ? 'Back to sources' : 'Back to sample imports'} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />
             : route.screen === 'import' && isInvestmentImportId(route.importId) ? <InvestmentPreview id={route.importId} view={view} controls={importControls} state={importReviewState} onChange={setImportControls} onAction={proposal => { const batch = getInvestmentBatches().find(batch => batch.id === proposal.batchId); if (batch) setImportReviewState(current => changeInvestmentReview(current, batch, proposal, !preferences.hidden && view !== 'loading' && view !== 'empty')) }} onUndo={() => setImportReviewState(undoImportReview)} onReviewReset={() => setImportReviewState(resetImportReviews)} onReset={() => changeState('populated')} onBack={() => navigate('connections')} backLabel={connectionTab === 'sources' ? 'Back to sources' : 'Back to sample imports'} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />
+            : screen === 'credit-cards' ? <CreditCards view={view} onReset={() => changeState('populated')} />
             : screen === 'connections' ? <Connections tab={connectionTab} onTab={setConnectionTab} catalog={<ImportCatalog view={view} controls={importControls} onChange={setImportControls} onReset={() => changeState('populated')} onOpen={openImport} />} onOpenImport={openImport} view={view} state={connectionState} controls={connectionControls} onChange={setConnectionControls} onAction={action => { if (view !== 'loading' && view !== 'empty') setConnectionState(current => changeConnections(current, action)) }} onReset={() => changeState('populated')} />
             : screen === 'banking' || (route.screen === 'transaction' && transactionOrigin === 'banking') ? <Banking view={view} categoryControls={categoryControls} onCategoryControls={setCategoryControls} transferState={transferState} transferControls={transferControls} onTransferControls={next => { if (next.view !== transferControls.view) setCategoryControls(current => ({ ...current, ids: [], preview: null })); setTransferControls(next) }} onTransferAction={reviewTransfer} controls={bankingControls} onChange={setBankingControls} filtersOpen={bankingFiltersOpen} onToggleFilters={() => setBankingFiltersOpen(open => !open)} onReset={() => changeState('populated')} onOpen={openTransaction} transactionId={route.screen === 'transaction' ? route.transactionId : undefined} onClose={() => navigate('banking')} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />
             : screen === 'budgets' || (route.screen === 'transaction' && transactionOrigin === 'budgets') ? <Budgets recurringState={recurringState} recurringControls={recurringControls} onRecurringControls={setRecurringControls} onRecurringAction={action => { if (view !== 'loading' && view !== 'empty') setRecurringState(current => changeRecurring(current, action, getBankTransactions(partial, null), transferState)) }} tab={budgetTab} onTab={setBudgetTab} cashControls={cashControls} onCashControls={setCashControls} view={view} state={budgetState} review={transferState} expanded={budgetExpanded} onExpand={setBudgetExpanded} onAction={action => setBudgetState(current => changeBudgets(current, action))} onReviewAction={reviewTransfer} onReset={() => changeState('populated')} onReview={() => { setCategoryControls({ ...initialCategoryControls }); setTransferControls(current => ({ ...current, view: 'categories', selected: null })); navigate('banking') }} onOpen={openTransaction} transactionId={route.screen === 'transaction' ? route.transactionId : undefined} onClose={() => navigate('budgets')} onTogglePrivacy={() => setPreferences(current => ({ ...current, hidden: !current.hidden }))} />

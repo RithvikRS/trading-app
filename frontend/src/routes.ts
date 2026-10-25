@@ -4,12 +4,13 @@ import { isInvestmentImportId } from './data/investment-imports'
 import { isHoldingId } from './data/holdings'
 import { isBankTransactionId } from './data/banking'
 
-export type Route = { screen: 'overview' | 'investments' | 'banking' | 'budgets' | 'connections' | 'unavailable' } | { screen: 'import'; importId: string } | { screen: 'holding'; holdingId: string } | { screen: 'transaction'; transactionId: string }
+export type Route = { screen: 'overview' | 'investments' | 'banking' | 'budgets' | 'credit-cards' | 'connections' | 'unavailable' } | { screen: 'import'; importId: string } | { screen: 'holding'; holdingId: string } | { screen: 'transaction'; transactionId: string }
 export type Screen = Route['screen']
 export function readRoute(hash: string): Route {
   if (hash === '' || hash === '#overview' || hash === '#/overview') return { screen: 'overview' }
   if (hash === '#/investments') return { screen: 'investments' }
   if (hash === '#/banking') return { screen: 'banking' }
+  if (hash === '#/credit-cards') return { screen: 'credit-cards' }
   if (hash === '#/connections') return { screen: 'connections' }
   if (hash === '#/budgets') return { screen: 'budgets' }
   const batch = /^#\/connections\/imports\/(i\d{2})$/.exec(hash)
@@ -72,7 +73,7 @@ export function useScreen() {
   }, [route])
   return {
     screen: route.screen, route, transactionOrigin: transactionOrigin.current,
-    navigate: (screen: 'overview' | 'investments' | 'banking' | 'budgets' | 'connections') => transition({ screen }, true),
+    navigate: (screen: 'overview' | 'investments' | 'banking' | 'budgets' | 'credit-cards' | 'connections') => transition({ screen }, true),
     openImport: (importId: string) => { if (isImportId(importId) || isInvestmentImportId(importId)) transition({ screen: 'import', importId }, true) },
     openHolding: (holdingId: string) => { if (isHoldingId(holdingId)) transition({ screen: 'holding', holdingId }, true) },
     openTransaction: (transactionId: string) => { if (isBankTransactionId(transactionId)) transition({ screen: 'transaction', transactionId }, true) },
