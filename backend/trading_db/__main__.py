@@ -14,6 +14,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=["up", "migrate", "status", "down", "check"])
     args = parser.parse_args()
+    suite_timeout = (
+        2700
+        if os.name == "nt" and "CI" not in os.environ and "GITHUB_ACTIONS" not in os.environ
+        else 1080
+    )
     try:
         if args.action == "check":
             with disposable() as service:
@@ -24,7 +29,7 @@ def main() -> int:
                     [sys.executable, "-m", "pytest", "database_tests", "--tb=short", "--maxfail=1"],
                     env=environment,
                     check=False,
-                    timeout=1080,
+                    timeout=suite_timeout,
                 )
                 if result.returncode:
                     return 1
@@ -43,7 +48,10 @@ def main() -> int:
                 current = migrate.revision(service.url("migrator"), service.project)
                 print(f"Local schema revision: {current}")
     except subprocess.TimeoutExpired:
-        print("Database verification exceeded its 18-minute limit.", file=sys.stderr)
+        print(
+            f"Database verification exceeded its {suite_timeout // 60}-minute limit.",
+            file=sys.stderr,
+        )
         return 1
     except DatabaseFailure as error:
         # This exception type contains only fixed, reviewed diagnostic messages.

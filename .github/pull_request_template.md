@@ -17,6 +17,7 @@ Document checks actually performed; do not claim planned checks passed.
 ## Validation
 
 <!-- List checks run and results, including relevant edge cases. Identify checks not run and why. -->
+<!-- Record the locally checked commit/tree, commands and environment. Code/configuration changes require all five local groups; documentation-only changes may run repository checks with a rationale. GitHub Actions is manual and optional; distinguish actual runs from local evidence. -->
 <!-- For UI changes, attach desktop/mobile screenshots using synthetic data and note relevant interaction checks. -->
 
 ## Security and financial integrity
@@ -37,5 +38,6 @@ Document checks actually performed; do not claim planned checks passed.
 Before requesting review: inspect the final diff and run applicable checks.
 Commit completed changes on dev, push dev, and open or update its PR into main.
 Resolve actionable comments and repeat affected checks after changes.
+Require passing local verification of the final tree before merging. GitHub Actions is manual.
 Review the final revision before merging. Deployments follow the release process.
 -->

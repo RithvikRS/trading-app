@@ -1,17 +1,13 @@
 name: Verification
 
 on:
-  push:
-    branches: [dev, main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: verification-${{ github.event.pull_request.number || github.ref }}
+  group: verification-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

@@ -28,16 +28,13 @@ def validate_workflow(document: dict) -> None:
         "Unexpected workflow controls; review defaults and environment changes.",
     )
     require(
-        set(document["on"]) == {"push", "pull_request", "workflow_dispatch"},
-        "Unsafe/missing workflow trigger.",
+        document["on"] == {"workflow_dispatch": ""},
+        "Verification must use manual dispatch without inputs or automatic triggers.",
     )
     require(
-        document["on"]["push"] == {"branches": ["dev", "main"]},
-        "Push checks must cover both branches without path filters.",
-    )
-    require(
-        document["on"]["pull_request"] == {"branches": ["main"]},
-        "PR checks must not be filtered by paths or activity types.",
+        document["concurrency"]
+        == {"group": "verification-${{ github.ref }}", "cancel-in-progress": "true"},
+        "Manual verification must serialize runs for the selected ref.",
     )
     require(document["permissions"] == {"contents": "read"}, "Workflow token must be read-only.")
     require(

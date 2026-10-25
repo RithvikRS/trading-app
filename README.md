@@ -94,6 +94,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [INDmoney integration](docs/indmoney-integration-plan.md) | Read-only portfolio route, public discovery evidence, authorization design, coverage and statement fallbacks |
 | [INDmoney compatibility](docs/indmoney-compatibility.md) | Observed custom-client registration/handoff, history limitations, renewal findings and remaining account tests |
 | [INDmoney history APIs](docs/indmoney-history-api.md) | API-first historical acquisition assessment, current-day trade limits and remaining authenticated capability checks |
+| [UBS integration plan](docs/ubs-integration-plan.md) | Step 7A public API/OFX and document candidates, ESPP evidence boundaries and incremental delivery |
 | [INDmoney reader](docs/indmoney-reader.md) | Bounded read-only engine, exact evidence, incomplete coverage and the live schema compatibility gate |
 | [Operations](docs/operations.md) | Hosting, backups, recovery, incident handling |
 | [Development](docs/development.md) | Local commands, validation, conventional commits |

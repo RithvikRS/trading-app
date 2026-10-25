@@ -1,6 +1,6 @@
 # Integration plan
 
-Research baseline: 21 October 2026; INDmoney custom-client compatibility checked on 24 October 2026. Public documentation identifies possible interfaces; authenticated access, scopes, data coverage, and automation behavior still need verification against the owner's accounts. No provider connection has been established.
+Research baseline: 21 October 2026; INDmoney custom-client compatibility checked on 24 October 2026 and UBS public feasibility checked on 25 October 2026. Public documentation identifies possible interfaces; authenticated access, scopes, data coverage, and automation behavior still need verification against the owner's accounts. No provider connection has been established.
 
 The implemented [connection-status walkthroughs](ui-prototype.md#connections-and-source-coverage-step-2e1) illustrate coverage and recovery using bundled fictional evidence. [Bank and investment samples](import-samples.md) provide fictional evidence inspection, reversible review decisions, and session-only completion receipts. They do not verify a provider API/export format, establish a connection, or change the research baseline below. Simulated permissions and attempts must remain labeled separately from actual capabilities.
 
@@ -11,7 +11,7 @@ The implemented [connection-status walkthroughs](ui-prototype.md#connections-and
 | INDmoney Indian stocks and ETFs | Prioritize the official read-only portfolio interface; retain INDstocks REST as a separately assessed option | Custom-client eligibility, ETF coverage, source IDs, history depth, scopes, limits and renewal |
 | INDmoney US stocks and mutual funds | Evaluate the official read-only MCP connector; use statement imports where necessary | Custom-client access, unattended use, consent lifetime, holdings detail, historical transactions, and terms |
 | Advisor mutual funds | Verify linked portfolio coverage first; detailed CAS for missing or incomplete evidence | Actual folios, direct/regular variants, demat versus non-demat coverage, supported periods, and opening balances |
-| UBS Accenture ESPP | Statements and available transaction exports | Export formats, purchase dates, fractional units, discounts, basis, dividends, withholding, fees, and transfers |
+| UBS Accenture ESPP | Evaluate supported API/OFX access; statements for verified gaps | Account/client eligibility, read scopes, history, export formats, purchase dates, fractional units, discounts, basis, dividends, withholding, fees and transfers |
 | HDFC banking | Downloaded statements first; later evaluate automatic emailed statement ingestion | Representative format, account identifiers, transaction references, debit/credit signs, running balances, and delivery frequency |
 | SBI banking | Downloaded statements first; later evaluate automatic emailed statement ingestion | The same checks as HDFC, implemented as a separate parser |
 | HDFC credit cards | Separate [Step 9](credit-cards-plan.md), starting with one downloaded statement/export format | Card product/layout, billing account versus card identity, cycle/due fields, signs, references, refunds/EMIs, password behavior and actual history coverage; automatic access remains unverified |
@@ -38,7 +38,7 @@ NAV refreshes update valuation, not units owned. Units and cash flows change onl
 
 ## UBS and banking
 
-UBS identifies One Source as its corporate stock-plan portal and provides stock-plan statement support. Direct automatic access for this account is unverified, so statement/export import is the baseline. An ESPP purchase cost and any tax basis supplied by UBS must remain separately identified. See [UBS support](https://www.ubs.com/us/en/wealth-management/contact-us.html).
+The [Step 7A UBS plan](ubs-integration-plan.md) identifies the Accenture One Source portal and public API/OFX candidates. Account eligibility, narrowly scoped access, historical coverage and export layouts remain unverified. Check supported API/download access first and use statements for verified gaps. ESPP purchase cost, monetary discount and reported tax basis remain separate evidence. See [UBS support](https://www.ubs.com/us/en/wealth-management/contact-us.html).
 
 SBI documents account-statement downloads; HDFC provides email-statement enrollment. Select parsers from representative sanitized exports before promising a format. If email ingestion is later implemented, prefer a dedicated mailbox or narrow authorization and process only identified statement sources. A label or message filter alone does not reduce an OAuth token's mailbox permissions. Delivery may be monthly, so email ingestion cannot promise daily bank balances. See [SBI statements](https://sbi.bank.in/web/faq-s/retail-internet-banking) and [HDFC email statements](https://v.hdfcbank.com/content/dam/hdfc-aem-microsites/common-pdfs/pdf/email_statements.pdf).
 

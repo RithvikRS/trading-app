@@ -70,6 +70,34 @@ class RunnerTests(unittest.TestCase):
                 checks.documentation_links(root)
 
 
+class DatabaseInvocationTests(unittest.TestCase):
+    def test_database_command_has_platform_specific_bounded_deadline(self):
+        for platform, environment, timeout in [
+            ("nt", {}, 3000),
+            ("posix", {}, 1200),
+            ("nt", {"CI": "true"}, 1200),
+            ("nt", {"CI": ""}, 1200),
+            ("nt", {"GITHUB_ACTIONS": "true"}, 1200),
+            ("nt", {"GITHUB_ACTIONS": ""}, 1200),
+            ("posix", {"CI": "true", "GITHUB_ACTIONS": "true"}, 1200),
+        ]:
+            with (
+                self.subTest(platform=platform, environment=environment),
+                patch("scripts.checks.os", SimpleNamespace(name=platform, environ=environment)),
+                patch("scripts.checks.uv_command", return_value="uv"),
+                patch("scripts.checks.sync_backend") as sync,
+                patch("scripts.checks.run") as run,
+            ):
+                checks.database()
+                sync.assert_called_once_with("uv")
+                run.assert_called_once_with(
+                    "isolated PostgreSQL migrations and permissions",
+                    ["uv", "run", "--locked", "--no-sync", "python", "-m", "trading_db", "check"],
+                    ROOT / "backend",
+                    timeout=timeout,
+                )
+
+
 class FrontendInvocationTests(unittest.TestCase):
     def test_windows_install_uses_node_directly_with_bounded_timeout(self):
         with checks.scratch() as root:
@@ -186,7 +214,12 @@ class WorkflowPolicyTests(unittest.TestCase):
             lambda d: d.update({"defaults": {"run": {"shell": "bash -c 'exit 0'"}}}),
             lambda d: d["permissions"].update(contents="write"),
             lambda d: d["on"].update(pull_request_target={}),
-            lambda d: d["on"]["push"].update({"paths-ignore": ["docs/**"]}),
+            lambda d: d["on"].update(push={"branches": ["dev", "main"]}),
+            lambda d: d["on"].update(pull_request={"branches": ["main"]}),
+            lambda d: d["on"].update(schedule=[{"cron": "0 0 * * *"}]),
+            lambda d: d["on"].pop("workflow_dispatch"),
+            lambda d: d["on"].update(workflow_dispatch={"inputs": {"skip": {}}}),
+            lambda d: d["concurrency"].update({"cancel-in-progress": "false"}),
             lambda d: d["jobs"]["backend"].update({"if": "false"}),
             lambda d: d["jobs"]["frontend"].update({"continue-on-error": "true"}),
             lambda d: d["jobs"]["backend"]["steps"][0].update(uses="actions/checkout@main"),
