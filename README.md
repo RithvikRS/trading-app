@@ -36,6 +36,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 9B.2](docs/credit-account-identity.md) adds a separate owned HDFC/INR billing-account registry with internal identities, safe nicknames and revision-checked archival. Forced owner isolation, bounded reads/writes and encrypted recovery cover the registry. It stores no financial values, card digits, issuer references or source mappings and exposes no API or screen. Archival does not establish issuer closure or payment.
 
+[Step 9B.3](docs/credit-source-mappings.md) adds owned application source handles and append-only billing-account mapping history. Explicit links, corrections and unlinks retain their revisions; current resolution requires an active target. Forced owner isolation, bounded runtime writes and encrypted recovery cover both tables. Handles contain no issuer reference or card digits and do not establish HDFC identity, import compatibility, deduplication or payment status. No API, screen or financial evidence is added.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
@@ -104,6 +106,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Credit-card prototype](docs/credit-cards-prototype.md) | Synthetic statement/activity walkthrough, masking, financial distinctions and verification |
 | [Credit-card value contracts](docs/credit-card-values.md) | Exact statement/current values, explicit liability roles and bounded reconciliation |
 | [Credit billing-account identity](docs/credit-account-identity.md) | Owned HDFC/INR identities, safe nicknames, archival, isolation and recovery |
+| [Credit source mappings](docs/credit-source-mappings.md) | Opaque owned source handles, immutable mapping history, active resolution and recovery |
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |

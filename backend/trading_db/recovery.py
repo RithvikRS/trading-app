@@ -15,8 +15,8 @@ from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 from trading_db.provider_keys import ProviderKeys
 
-HEAD = "0019_credit_billing_accounts"
-FORMAT = 15
+HEAD = "0020_credit_source_mappings"
+FORMAT = 16
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -64,6 +64,16 @@ COLUMNS = {
         "created_at",
         "updated_at",
         "archived_at",
+    ),
+    "credit_source_handles": ("owner_id", "id", "family", "created_at"),
+    "credit_source_account_mappings": (
+        "owner_id",
+        "source_id",
+        "revision",
+        "previous_revision",
+        "account_id",
+        "reason",
+        "created_at",
     ),
     "account_currencies": ("owner_id", "account_id", "currency"),
     "source_accounts": (

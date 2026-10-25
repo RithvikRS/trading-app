@@ -27,6 +27,7 @@ from trading_db.completion_baseline import CompletionBaseline
 from trading_db.completion_contracts import CompletionRequest, CompletionRow, CompletionSelection
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.credit_accounts import CreditAccountDefinition, CreditAccountTransaction
+from trading_db.credit_sources import CreditSourceTransaction
 from trading_db.enrollment import provision_owner
 from trading_db.event_evidence import EventEvidenceTransaction
 from trading_db.events import EventTransaction
@@ -763,6 +764,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
     account_store = AccountDatabase(source_url("runtime"), source_project, identifier_keys)
     completed_imports = {}
     credit_baselines = {}
+    credit_source_baselines = {}
     try:
         for owner in (own, other):
             with account_store.transaction(owner) as unit:
@@ -774,9 +776,26 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                     currencies=("INR",),
                 )
                 credit = CreditAccountTransaction(unit._unit)
-                credit.create(CreditAccountDefinition(label="Synthetic billing"))
+                active_credit = credit.create(CreditAccountDefinition(label="Synthetic billing"))
                 archived_credit = credit.create(CreditAccountDefinition(label="Synthetic billing"))
+                sources = CreditSourceTransaction(unit._unit)
+                unmapped, linked, changed, removed, historical = [
+                    sources.create() for _ in range(5)
+                ]
+                sources.map(linked.id, active_credit.id, expected_revision=0)
+                sources.map(changed.id, archived_credit.id, expected_revision=0)
+                sources.map(changed.id, active_credit.id, expected_revision=1)
+                sources.map(removed.id, active_credit.id, expected_revision=0)
+                sources.map(removed.id, None, expected_revision=1)
+                sources.map(historical.id, archived_credit.id, expected_revision=0)
                 credit.archive(archived_credit.id, expected_revision=1)
+                credit_source_baselines[owner] = (
+                    sources.list(),
+                    {
+                        item.id: (sources.history(item.id), sources.resolve(item.id))
+                        for item in (unmapped, linked, changed, removed, historical)
+                    },
+                )
                 credit_baselines[owner] = credit.list()
                 first, second = unit.create(definition), unit.create(definition)
                 source = unit.source("cas", "FAKE-FOLIO")
@@ -1032,6 +1051,8 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             )
             assert counts["auth_sessions"] == counts["auth_admissions"] == 0
             assert counts["credit_billing_accounts"] == 4
+            assert counts["credit_source_handles"] == 10
+            assert counts["credit_source_account_mappings"] == 12
             assert counts["financial_accounts"] == counts["account_currencies"] == 6
             assert counts["source_accounts"] == 6 and counts["source_account_mappings"] == 8
             assert (
@@ -1091,6 +1112,17 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                         )
                         credit = CreditAccountTransaction(unit._unit)
                         assert credit.list() == credit_baselines[owner]
+                        sources = CreditSourceTransaction(unit._unit)
+                        expected_sources, expected_bindings = credit_source_baselines[owner]
+                        assert sources.list() == expected_sources
+                        for source_id, (history, resolved) in expected_bindings.items():
+                            assert sources.history(source_id) == history
+                            assert sources.resolve(source_id) == resolved
+                        foreign_sources = credit_source_baselines[other if owner == own else own][0]
+                        for foreign_source in foreign_sources:
+                            assert sources.get(foreign_source.id) is None
+                            assert sources.history(foreign_source.id) == ()
+                            assert sources.resolve(foreign_source.id) is None
                         for foreign_credit in credit_baselines[other if owner == own else own]:
                             assert credit.get(foreign_credit.id) is None
                         completed = CompletionTransaction(unit._unit, recovered_identifiers)
