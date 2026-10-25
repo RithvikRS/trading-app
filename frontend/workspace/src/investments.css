@@ -82,3 +82,11 @@
 .wi-equation strong { display: block; overflow-wrap: anywhere; font-size: 17px; font-variant-numeric: tabular-nums; line-height: 1.7; }
 .wi-equation-symbol { color: var(--accent-strong); font-size: 18px; line-height: 1; }
 @media (max-width: 900px) { .wi-equation-grid { grid-template-columns: 1fr; } }
+
+.wi-input-actions { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 12px; }
+.wi-inputs h4, .wi-inputs h5 { overflow-wrap: anywhere; }
+.wi-input-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin: 20px 0; }
+.wi-input-controls label { display: block; margin-bottom: 8px; }
+.wi-input-controls select { width: 100%; }
+.wi-input-value { font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .wi-input-controls { grid-template-columns: 1fr; } }

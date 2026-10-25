@@ -8,7 +8,7 @@ Select **Inspect native comparisons** on a reconciled receipt, then choose one c
 
 Each scope shows its native currency or units, original period and explicit date basis. Opaque receipt, account, position and comparison identities, the rule version and retained input count are in expandable source details. Select one scope to see the **Source report** and **Combined saved evidence** sides independently. Both retain opening, posted movement, closing, calculated closing, difference, posted count and pending count. Pending activity is excluded from the posted total. Different source/combined activity counts are valid.
 
-**Balanced at completion** describes the frozen comparison under its saved rule. Later corrections, source mappings, selections or quotes do not replace these inputs. No current balance, lifetime history, tax basis, return, FX conversion or cross-scope total is inferred. INR/USD preference changes do not convert native evidence. Frozen input rows remain a separate inspection increment.
+**Balanced at completion** describes the frozen comparison under its saved rule. Later corrections, source mappings, selections or quotes do not replace these inputs. No current balance, lifetime history, tax basis, return, FX conversion or cross-scope total is inferred. INR/USD preference changes do not convert native evidence. [Step 7B.4.2](frozen-input-inspection.md) now exposes the retained opening, activity and closing rows for either side. Each selection preserves exact native evidence and original lineage; returning to this view refetches the frozen equation.
 
 ## Exact validation and privacy
 
