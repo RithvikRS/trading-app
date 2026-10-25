@@ -1,6 +1,6 @@
 # Architecture
 
-Planning baseline: 21 October 2026. Development uses local PostgreSQL; deployment uses Supabase PostgreSQL. The frontend prototype has locked dependency versions and remains independent. [Step 3C](database-foundation.md) provisions local PostgreSQL 17 and migrations; hosted Supabase is not provisioned. The [Step 3 foundation plan](foundation-plan.md) defines implementation increments and security contracts. [Supabase Auth on Free with FastAPI](authentication-options.md) is selected. The [Step 3A API scaffold](api-foundation.md) is implemented locally; identity/session integration and the Step 4 financial persistence services are implemented locally. Hosted integration and connected financial views remain later work.
+Planning baseline: 21 October 2026. Development uses local PostgreSQL; deployment uses Supabase PostgreSQL. The frontend prototype has locked dependency versions and remains independent. [Step 3C](database-foundation.md) provisions local PostgreSQL 17 and migrations; hosted Supabase is not provisioned. The [Step 3 foundation plan](foundation-plan.md) defines implementation increments and security contracts. [Supabase Auth on Free with FastAPI](authentication-options.md) is selected. The [Step 3A API scaffold](api-foundation.md) is implemented locally; identity/session integration and the Step 4 financial persistence services are implemented locally. [Saved investment review and connected views](reviewed-snapshots.md) are implemented. Hosted integration, live portfolio acquisition and current portfolio valuation remain outstanding.
 
 ## Components
 
@@ -90,7 +90,7 @@ Self-hosted PostgreSQL remains an alternative if managed-service constraints bec
 
 ## Local packaging boundary
 
-[Step 3G](local-packaging.md) builds the protected static assets and Python runtime into a non-root image. A restricted loopback HTTPS gateway shares a network namespace with the loopback-only API. Authentication remains unavailable in this fixed rehearsal entry point; database and authenticated behavior are exercised separately. The encrypted recovery drill reconstructs a fresh disposable schema from migrations, restores current foundation records, and invalidates sessions. A distinct hosted configuration/role procedure and [Supabase evidence](supabase-readiness.md) remain prerequisites for deployment.
+[Step 3G](local-packaging.md) builds the protected static assets and Python runtime into a non-root image. A restricted loopback HTTPS gateway shares a network namespace with the loopback-only API. Authentication remains unavailable in this fixed rehearsal entry point; database and authenticated behavior are exercised separately. The encrypted recovery drill reconstructs a fresh disposable schema from migrations, restores the [current durable application-record manifest](local-packaging.md#encrypted-foundation-recovery), and invalidates sessions. A distinct hosted configuration/role procedure and [Supabase evidence](supabase-readiness.md) remain prerequisites for deployment.
 
 [Step 4F.3.2c](reconciled-completion.md) adds exact source-period comparisons to atomic import completion. Immutable scope/input tables preserve both source and effective-ledger evidence. Conditional Python arithmetic and independent PostgreSQL membership/economic checks must both pass; the API and protected frontend remain unchanged.
 

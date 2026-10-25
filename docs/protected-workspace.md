@@ -1,6 +1,6 @@
 # Step 3F.1: Protected frontend shell
 
-The protected application now has its own entry point, sign-in and authenticator screens, restricted password recovery, session controls, and an empty workspace. It uses the existing Indigo & Apricot light/dark design. [Step 5E.1](connected-accounts.md) subsequently adds saved account identities through the protected API. Account connections, imports, balances and investment values remain unavailable in the protected build. [Step 3F.2](display-preferences.md) adds authenticated account preferences to this shell; the captures and verification totals below record the original Step 3F.1 increment.
+Step 3F.1 introduced a separate entry point, sign-in and authenticator screens, restricted password recovery, session controls and an initially empty workspace using the Indigo & Apricot light/dark design. [Step 3F.2](display-preferences.md) adds authenticated account preferences; [Step 5E.1](connected-accounts.md) adds saved account identities; [Step 6D](reviewed-snapshots.md) adds saved snapshot review and protected investment views. [Subsequent evidence inspection](investment-flow-plan.md) remains separate from live provider acquisition, production statement imports and current portfolio valuation, which are still outstanding. The captures and verification totals below record the original Step 3F.1 increment.
 
 ## Separate builds and local entry
 

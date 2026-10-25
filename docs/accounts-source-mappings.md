@@ -1,6 +1,6 @@
 # Accounts and source mappings: Step 4B
 
-Implemented in [trading_db.accounts](../backend/trading_db/accounts.py), [identifier custody](../backend/trading_db/account_keys.py), and migration [0006_accounts_sources](../backend/migrations/versions/0006_accounts_sources.py). These are internal services using the existing trusted owner transaction boundary. No financial route, statement parser, provider connection, real-data seed, or frontend flow is introduced. The protected workspace remains empty until its complete data flow is implemented.
+Implemented in [trading_db.accounts](../backend/trading_db/accounts.py), [identifier custody](../backend/trading_db/account_keys.py), and migration [0006_accounts_sources](../backend/migrations/versions/0006_accounts_sources.py). These are internal services using the existing trusted owner transaction boundary. No financial route, statement parser, provider connection, real-data seed, or frontend flow is introduced. Subsequent [account-directory](connected-accounts.md) and [investment review/view](reviewed-snapshots.md) increments expose saved evidence through the protected workspace.
 
 ## Account identity
 
