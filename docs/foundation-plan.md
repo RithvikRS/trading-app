@@ -103,7 +103,7 @@ Real Supabase smoke tests require a dedicated non-production project, chosen reg
 | Database corruption or privilege drift | Fresh/upgrade migrations, constraints, atomic failures, restricted-role inspection, foreign-owner relationships, and backup restoration tested on PostgreSQL |
 | False deployment confidence | Local tests and hosted checks reported separately; actual target version, TLS, role grants, pooler behavior, restore limitations, and resource measurements recorded |
 
-CI uses read-only repository permissions, commit-pinned actions, no production secrets, and normal untrusted-PR execution without privileged checkout patterns. Authentication-provider integration tests requiring secrets run separately on trusted code; ordinary PR tests use synthetic doubles and PostgreSQL. Security checks must not disappear silently through path filters or fail-open scripts. Branch protection configuration is a separate verified repository setting; adding a workflow alone does not enforce it.
+Optional manually dispatched CI uses read-only repository permissions, commit-pinned actions and no production secrets. Review the selected revision before dispatch; no privileged PR execution is enabled. Authentication-provider integration tests requiring secrets run separately on trusted code; local and optional manual checks use synthetic doubles and PostgreSQL. Security checks must not disappear silently through path filters or fail-open scripts. Branch protection configuration is a separate verified repository setting; adding a workflow alone does not enforce it.
 
 ## Decisions before their dependent increment
 
