@@ -56,7 +56,7 @@ The migration is additive and the previous application can coexist with the new 
 
 Local PostgreSQL tests exercise defaults without insertion, restart persistence, two-owner isolation, strict payloads, browser boundary checks, pending/recovery/expired/disabled/removed/remapped identity denial, provider failure, stale and simultaneous writes, revocation ordering, rollback after SQL, pool cleanup, revision privileges/bounds, and upgrade/downgrade/failure atomicity. Synthetic provider responses pass through the real HTTP adapter; no hosted credentials are used.
 
-Frontend tests cover delayed loads, account precedence, draft/discard/save, explicit conflict reload and focus, response validation, unavailable reads, uncertain saves, timeout, expiry, and stale responses after locking. Existing authentication, prototype, and build-isolation checks remain active. Run the four [shared check groups](verification.md); record their actual results separately from hosted CI.
+Frontend tests cover delayed loads, account precedence, draft/discard/save, explicit conflict reload and focus, response validation, unavailable reads, uncertain saves, timeout, expiry, and stale responses after locking. Existing authentication, prototype, and build-isolation checks remain active. Run all five local [shared check groups](verification.md); record their actual results separately from any optional manual CI run.
 
 Browser captures use synthetic responses in an isolated Chromium context with the actual production assets and CSP. They are UI evidence, not proof of hosted Supabase behavior.
 

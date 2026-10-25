@@ -162,7 +162,7 @@ Required evidence across Step 4:
 - Exact/overlapping imports, legitimate repeats, changed identifiers/payloads, source precedence, unknown fees/basis, missing positions, pending activity, stale review, concurrent commit/correction, crash/retry and partial-write rollback.
 - Separate-cluster encrypted restore that compares financial rows, lineage, receipts, revisions, constraints, grants and RLS; validates key recovery and denies old sessions before reading restored data.
 - Bounded query/pagination behavior and synthetic memory/query timing once representative records exist. The Step 3 locked-shell measurements are not financial-workload capacity evidence.
-- Applicable local checks and all five CI groups on each final revision, with actual counts/results recorded in its PR. The protected frontend remains separate from financial fixture bundles. Personal financial data never enters logs, telemetry, Git history or CI artifacts; committed test fixtures are fabricated.
+- Run all five local verification groups for each final implementation revision, recording the checked commit/tree and actual counts/results in its PR under the [PR standard](pull-requests.md). GitHub Actions is optional and manually dispatched. The protected frontend remains separate from financial fixture bundles. Personal financial data never enters logs, telemetry, Git history or CI artifacts; committed test fixtures are fabricated.
 
 ## Choices to revisit with source evidence
 
