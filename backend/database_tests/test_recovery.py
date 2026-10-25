@@ -16,9 +16,10 @@ from database_tests.test_preferences import login, sql
 from tests.auth_support import ISSUER, SUBJECT
 from tests.browser_support import BrowserProviderStub
 from tests.test_credit_current import current_values
+from tests.test_credit_entries import entry_values
 from tests.test_credit_statements import statement_values
 from trading_api.application import create_app
-from trading_api.finance import FinancialDate
+from trading_api.finance import FinancialDate, FinancialValue
 from trading_auth.browser import BrowserAuth
 from trading_auth.models import AuthenticationDenied
 from trading_auth.session_models import verifier
@@ -31,6 +32,7 @@ from trading_db.completion_contracts import CompletionRequest, CompletionRow, Co
 from trading_db.connections import DatabaseFailure, engine_for
 from trading_db.credit_accounts import CreditAccountDefinition, CreditAccountTransaction
 from trading_db.credit_current import CreditCurrentTransaction, new_current_id
+from trading_db.credit_entries import CreditEntryTransaction, new_entry_id
 from trading_db.credit_sources import CreditSourceTransaction
 from trading_db.credit_statements import CreditStatementTransaction, new_statement_id
 from trading_db.enrollment import provision_owner
@@ -772,6 +774,7 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
     credit_source_baselines = {}
     credit_statement_baselines = {}
     credit_current_baselines = {}
+    credit_entry_baselines = {}
     try:
         for owner in (own, other):
             with account_store.transaction(owner) as unit:
@@ -815,6 +818,55 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                 currents.record(historical_current, changed.id, 1, current_values())
                 credit_current_baselines[owner] = {
                     root: currents.history(root) for root in (active_current, historical_current)
+                }
+                entries = CreditEntryTransaction(unit._unit)
+                active_entry, historical_entry, unresolved_entry = [
+                    new_entry_id() for _ in range(3)
+                ]
+                entries.record(active_entry, linked.id, 1, entry_values())
+                entries.record(
+                    active_entry,
+                    linked.id,
+                    1,
+                    entry_values(
+                        role="posted_credit",
+                        treatment="unsupported",
+                        transaction_date=None,
+                        posting_date=None,
+                        billing_amount=FinancialValue("cash", "-0.00", currency="INR"),
+                        original_amount=None,
+                    ),
+                    expected_revision=1,
+                )
+                entries.record(
+                    historical_entry,
+                    changed.id,
+                    1,
+                    entry_values(
+                        role="pending_debit",
+                        posting_date=None,
+                        original_amount=FinancialValue(
+                            "cash", None, currency="USD", missing_reason="not_supplied"
+                        ),
+                    ),
+                )
+                entries.record(
+                    unresolved_entry,
+                    linked.id,
+                    1,
+                    entry_values(
+                        role="unresolved",
+                        treatment="ambiguous",
+                        transaction_date=None,
+                        billing_amount=FinancialValue(
+                            "cash", None, currency="INR", missing_reason="not_supplied"
+                        ),
+                        original_amount=FinancialValue("cash", "0.00", currency="INR"),
+                    ),
+                )
+                credit_entry_baselines[owner] = {
+                    root: entries.history(root)
+                    for root in (active_entry, historical_entry, unresolved_entry)
                 }
                 sources.map(changed.id, active_credit.id, expected_revision=1)
                 sources.map(removed.id, active_credit.id, expected_revision=0)
@@ -1112,6 +1164,50 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                         identifier_keys=recovered_identifiers,
                     )
                 assert sql(restored_admin, "SELECT count(*) FROM app.owners")[0][0] == 0
+            for problem in (
+                "missing_entry",
+                "wrong_entry_kind",
+                "wrong_parent_kind",
+                "partial_original",
+                "wrong_account",
+                "wrong_source",
+                "wrong_owner",
+            ):
+                malformed = json.loads(Fernet(recovered_key).decrypt(recovered_object))
+                child = malformed["rows"]["credit_entry_values"][0]
+                parent = next(
+                    row
+                    for row in malformed["rows"]["credit_evidence_observations"]
+                    if row["kind"] == "entry"
+                    and row["id"] == child["observation_id"]
+                    and row["revision"] == child["revision"]
+                    and row["owner_id"] == child["owner_id"]
+                )
+                if problem == "missing_entry":
+                    malformed["rows"]["credit_entry_values"].pop()
+                elif problem == "wrong_entry_kind":
+                    child["kind"] = "current"
+                elif problem == "partial_original":
+                    child.update(
+                        original_currency=None, original_source="1.00", original_amount="1.00"
+                    )
+                elif problem == "wrong_parent_kind":
+                    parent["kind"] = "current"
+                elif problem == "wrong_account":
+                    parent["account_id"] = str(uuid4())
+                elif problem == "wrong_source":
+                    parent["source_id"] = str(uuid4())
+                else:
+                    child["owner_id"] = str(other if child["owner_id"] == str(own) else own)
+                with pytest.raises(DatabaseFailure, match="rolled back"):
+                    recovery.restore_snapshot(
+                        target_url,
+                        target.project,
+                        Fernet(recovered_key).encrypt(json.dumps(malformed).encode()),
+                        recovered_key,
+                        identifier_keys=recovered_identifiers,
+                    )
+                assert sql(restored_admin, "SELECT count(*) FROM app.owners")[0][0] == 0
             counts = recovery.restore_snapshot(
                 target_url,
                 target.project,
@@ -1129,7 +1225,8 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
             assert counts["credit_billing_accounts"] == 4
             assert counts["credit_source_handles"] == 10
             assert counts["credit_source_account_mappings"] == 12
-            assert counts["credit_evidence_observations"] == 12
+            assert counts["credit_evidence_observations"] == 20
+            assert counts["credit_entry_values"] == 8
             assert counts["credit_statement_values"] == counts["credit_current_values"] == 6
             assert counts["financial_accounts"] == counts["account_currencies"] == 6
             assert counts["source_accounts"] == 6 and counts["source_account_mappings"] == 8
@@ -1223,6 +1320,17 @@ def test_encrypted_restore_preserves_records_and_isolation_but_not_sessions(envi
                             assert (
                                 currents.history(root) == ()
                                 and currents.get(root, at_revision=1) is None
+                            )
+                        entries = CreditEntryTransaction(unit._unit)
+                        for root, history in credit_entry_baselines[owner].items():
+                            assert entries.history(root) == history
+                            for saved in history:
+                                assert entries.get(root, at_revision=saved.revision) == saved
+                            assert history[0] in entries.list(history[0].account_id)
+                        for root in credit_entry_baselines[other if owner == own else own]:
+                            assert (
+                                entries.history(root) == ()
+                                and entries.get(root, at_revision=1) is None
                             )
                         completed = CompletionTransaction(unit._unit, recovered_identifiers)
                         assert len(completed.list()) == 4

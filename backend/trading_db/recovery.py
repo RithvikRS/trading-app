@@ -15,8 +15,8 @@ from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 from trading_db.provider_keys import ProviderKeys
 
-HEAD = "0022_credit_current_evidence"
-FORMAT = 18
+HEAD = "0023_credit_entry_evidence"
+FORMAT = 19
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -492,6 +492,7 @@ COLUMNS.update(
             "kind",
             "statement_child_kind",
             "current_child_kind",
+            "entry_child_kind",
             "contract_version",
             "reason",
             "created_at",
@@ -532,6 +533,24 @@ COLUMNS["credit_current_values"] = (
         for role in ("outstanding", "unbilled", "credit_limit", "available_credit")
         for part in ("source", "amount", "missing")
     ),
+)
+
+COLUMNS["credit_entry_values"] = (
+    "owner_id",
+    "observation_id",
+    "revision",
+    "kind",
+    "role",
+    "treatment",
+    "transaction_date",
+    "posting_date",
+    "billing_source",
+    "billing_amount",
+    "billing_missing",
+    "original_source",
+    "original_amount",
+    "original_missing",
+    "original_currency",
 )
 
 OMITTED = ("auth_sessions", "auth_admissions", "indmoney_connections", "indmoney_attempts")
