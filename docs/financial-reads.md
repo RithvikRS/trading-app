@@ -1,6 +1,6 @@
 # Protected financial reads
 
-Step 4G.1 exposes owned account, source-mapping, instrument and position identities through the authenticated Python API. These records carry no inferred balances, holdings quantities or valuation totals. The protected frontend remains empty; connected views follow with their complete data flow in Stage 5.
+Step 4G.1 exposes owned account, source-mapping, instrument and position identities through the authenticated Python API. These records carry no inferred balances, holdings quantities or valuation totals. This read increment preceded connected frontend views; the protected workspace now implements [saved accounts](connected-accounts.md), [investment holdings/details](reviewed-snapshots.md), [lot evidence](lot-inspection.md) and [account-wide activity](account-activity-inspection.md).
 
 [Step 4G.2a](event-lot-reads.md) adds dated event/lot evidence and retained history. [Step 4G.2b](snapshot-market-reads.md) adds dated snapshot/market evidence, listings and selection history/resolution. [Step 4G.3a](import-review-reads.md) adds source/import/review inspection; [4G.3b](completion-receipt-reads.md) completes immutable receipt/comparison inspection and synthetic persistence acceptance. No financial mutation, upload, download from a provider, export or administrative route is introduced by these read increments.
 
@@ -46,7 +46,7 @@ Database/query failures return `503` with `financial_data_unavailable` and a gen
 
 Synthetic contract/browser tests cover canonical JSON UUIDs, strict pagination, preserved concrete response fields, ambiguous/nonfinite/deep JSON, all new route families, streamed bodies and the receive deadline. Real PostgreSQL/HTTP tests cover two-owner isolation, archived/unmapped states, distinct fund/position identities, complete keyset pages, missing and foreign parents, active MFA, recovery and revoked sessions, before/after-query validity checks, concurrent logout, application restart, connection cleanup and private-field omission. Query failure tests verify that a valid session can immediately read again.
 
-The existing separate-cluster encrypted recovery drill checks restored identity pages through a fresh authenticated session and denies pre-restore sessions. No migration, schema, privilege grant, recovery-format or dependency change is required for this read increment: the database stays at `0017_reconciled_completion`, recovery format 13, with 40 application tables and 38 durable tables.
+The existing separate-cluster encrypted recovery drill checks restored identity pages through a fresh authenticated session and denies pre-restore sessions. Step 4G.1 required no migration, schema, privilege grant, recovery-format or dependency change: at that milestone the database stayed at `0017_reconciled_completion`, recovery format 13, with 40 application tables and 38 durable tables. The [development runbook](development.md#local-postgresql) and [recovery runbook](local-packaging.md#encrypted-foundation-recovery) record the current head and manifest.
 
 Run the [shared verification groups](verification.md) and record their actual results in the increment's PR. Local synthetic reads do not verify hosted Supabase configuration, real source formats, Oracle capacity or financial-volume backup performance. No Supabase project or live source account is used.
 

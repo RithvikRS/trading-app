@@ -1,6 +1,6 @@
 # Step 3E.1: Supabase authentication and restricted enrollment
 
-The server-side authentication service now verifies a Supabase password sign-in, requires authenticator-app TOTP, and resolves only explicitly provisioned identities. It is exercised by local tests and an interactive development walkthrough. No Supabase project is configured, and no hosted smoke test has run. This document records the server-only Step 3E.1 service. [Step 3E.2](browser-sessions.md) now adds opt-in HTTP authentication, browser sessions, and recovery; the protected UI remains separate future work. An internal MFA result does not grant browser or workspace access.
+The server-side authentication service verifies a Supabase password sign-in, requires authenticator-app TOTP, and resolves only explicitly provisioned identities. It is exercised by local tests and an interactive development walkthrough. No Supabase project is configured, and no hosted smoke test has run. This document records the server-only Step 3E.1 service. [Step 3E.2](browser-sessions.md) subsequently adds opt-in HTTP authentication, browser sessions, and recovery; [Step 3F.1](protected-workspace.md) implements the protected frontend shell. An internal MFA result alone does not grant browser or workspace access.
 
 ## Integration decisions
 
@@ -52,7 +52,7 @@ python scripts/database.py status
 python scripts/checks.py all
 ```
 
-The Step 3E.1 revision is `0003_auth_identity_lookup`; the current head is `0008_import_staging`. Ordinary tests require no Supabase credentials, internet identity calls, paid service, real owner, or real MFA seed. Provider responses/signing keys stay in test modules; the database runner uses its guarded disposable cluster. The historical 3C/3D tests target their original revisions; new tests exercise the current head and both restricted roles.
+The Step 3E.1 revision is `0003_auth_identity_lookup`; [Step 4D.1](import-staging.md) later advanced the schema to `0008_import_staging`. These are historical milestone revisions; the [development runbook](development.md#local-postgresql) and [recovery runbook](local-packaging.md#encrypted-foundation-recovery) record the current head and recovery format. Ordinary tests require no Supabase credentials, internet identity calls, paid service, real owner, or real MFA seed. Provider responses/signing keys stay in test modules; the database runner uses its guarded disposable cluster. Historical 3C/3D tests target their original revisions; authentication integration tests exercise the configured head and both restricted roles.
 
 Upgrade preserves existing owner mappings and preferences. New enrollment markers default to false; no owners are seeded by migration. The local service adds its new credential only when the original set is complete. Failed migrations roll back DDL and version metadata together. Test-only downgrade removes auth grants and the marker; re-upgrade cannot reconstruct the old marker. Consequently downgrade is not a recovery method for used identities. Development recovery uses a forward migration, and shared migrations must not be rewritten.
 

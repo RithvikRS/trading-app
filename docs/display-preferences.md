@@ -16,7 +16,7 @@ The protected workspace saves appearance, display currency, and amount privacy t
 
 Settings do not poll across devices. They reload when the workspace reopens or after an explicit conflict reload. Routine session checks preserve the current draft and do not extend idle time. Preference reads and saves also leave the idle and absolute deadlines unchanged; **Keep session active** remains the only explicit idle-extension action.
 
-The protected workspace still has no financial records. Currency and masking are saved choices for future reporting, with the current choice shown in the empty workspace. They do not convert source records or authorize access. An unmasked account choice is applied only after successful authentication and loading. No preference, revision, identity, draft, provider token, or financial record goes into local/session storage, IndexedDB, a URL, or a service worker.
+The protected workspace now exposes [saved accounts](connected-accounts.md), [investment holdings/details](reviewed-snapshots.md), [lot evidence](lot-inspection.md) and [account-wide activity](account-activity-inspection.md). Currency and masking are saved display preferences; they do not change retained source records or authorize access. An unmasked account choice is applied only after successful authentication and loading. No preference, revision, identity, draft, provider token, or financial record goes into local/session storage, IndexedDB, a URL, or a service worker.
 
 ## API contract
 
