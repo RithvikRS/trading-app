@@ -59,3 +59,9 @@
 .wi-lots > h4 { margin: 20px 0 10px; line-height: 1.7; }
 .wi-lots .ws-text { text-align: left; }
 .wi-lots .ws-text svg { flex-shrink: 0; }
+
+.wi-activity h4, .wi-activity .ws-text { overflow-wrap: anywhere; min-width: 0; }
+.wi-activity > h4 { margin: 20px 0 10px; line-height: 1.7; }
+.wi-activity .ws-text { text-align: left; }
+.wi-activity .ws-text svg { flex-shrink: 0; }
+.wi-scope { font-size: 12px; line-height: 1.8; margin: 14px 0; color: var(--muted); overflow-wrap: anywhere; }
