@@ -54,3 +54,8 @@
   .wi-meta > div { grid-template-columns: 1fr; gap: 1px; }
   .wi-toolbar .ws-secondary { flex: 1; }
 }
+
+.wi-lots h4, .wi-lots .ws-text { overflow-wrap: anywhere; min-width: 0; }
+.wi-lots > h4 { margin: 20px 0 10px; line-height: 1.7; }
+.wi-lots .ws-text { text-align: left; }
+.wi-lots .ws-text svg { flex-shrink: 0; }

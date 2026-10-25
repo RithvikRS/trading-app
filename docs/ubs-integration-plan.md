@@ -2,6 +2,8 @@
 
 Research date: **25 October 2026**. This increment records public feasibility and delivery boundaries for the owner's Accenture employee-share account. It adds no connector, parser, credential, database change or financial record.
 
+[Step 7B.1](lot-inspection.md) now implements protected inspection of saved lot evidence and its retained history. This interface uses existing owned reads; it does not establish UBS account access or a supported export format.
+
 Prefer a supported, narrowly scoped API or data-download interface when UBS confirms that it covers this account and permits this client. Public evidence identifies possible routes, but **no personal Accenture-plan API, export layout or historical coverage has been verified**. Statements remain a fallback for demonstrated gaps.
 
 ## Public evidence
@@ -57,7 +59,7 @@ Each observation retains its own supplied period and coverage claim. Do not join
 | Increment | Work | Acceptance boundary and dependency |
 | --- | --- | --- |
 | **7A: public feasibility** | This evidence matrix and delivery plan | Public facts linked and dated; no asserted API/export compatibility, login or private data. Implemented by this document. |
-| **7B.1: lot evidence inspection** | Extend the protected investment detail view over existing owned lot/read contracts | Can proceed with synthetic saved evidence. Acquisition/remaining scopes, cost/discount/basis, missing values and correction history remain separate; no inferred balances, disposal method or return. Verify ownership, masking, stale-response disposal, keyboard access and both themes. |
+| **7B.1: lot evidence inspection** | [Implemented protected lot inspection](lot-inspection.md) over existing owned reads | Synthetic verification covers separate acquisition/remaining scopes, cost/discount/basis, missing values, correction history, exact parent/revision binding, masking, stale-response disposal, keyboard access and both themes. No provider access, inferred balances, disposal allocation or return. |
 | **7B.2: activity and coverage inspection** | Connect bounded existing event/history reads to investment detail | Can proceed with synthetic evidence after the detail-view contract is stable. Posted/pending/cancelled states and native cash/quantity remain explicit; source-limited history never claims completeness. Keep this increment separate from lot UI changes. |
 | **7C: account-specific acquisition contract** | Evaluate supported API/OFX access first; identify documents only for missing coverage | Provider-dependent. Establish custom-client eligibility, scopes, credential separation, permitted storage/use, fees, stable identities, history range, paging, renewal/revocation and all required activity types. An official specification and account-specific evidence are required before enabling network acquisition. If files are needed, identify one actual report/layout and its export options before writing a parser. |
 | **7D.1: bounded acquisition and staging** | Implement one verified interface/layout, with exact normalization and immutable source observations | Depends on 7C. Synthetic fixtures must follow the verified contract. Reject unknown versions, truncation, ambiguous identifiers/dates/currencies and unsupported economics. No financial posting or automatic completion. Apply existing sandboxed parser transport for files; use isolated encrypted server-side custody for a supported API. |
