@@ -1,0 +1,38 @@
+# Separately dated current credit evidence: Step 9B.5
+
+This increment retains only unselected source-reported outstanding, unbilled, credit-limit and available-credit evidence. Current names the source evidence kind; it does not establish a selected, recent or complete account liability. No entries, selections, imports, provider format, payment status, API or UI is included.
+
+## Acceptance contract recorded before implementation
+
+1. Fresh/repeated 0022 upgrade; populated 0021 statement upgrade preserves all existing values/history and new fixed fields; injected transition failure leaves an exact 0021 state.
+2. Empty 0022→0021→0022 round trip; statement-only, current-only and mixed populated downgrade denial leaves data/constraints/version unchanged. Restored 0021 rejects current kind, orphan statement child and parent without child.
+3. Direct SQL as bootstrap AND runtime rejects parent-only, child-only, wrong-kind/dual-child, discriminator NULL/default bypass, foreign owner, mismatched revision/source mapping/account, changed root source/account/kind and skipped predecessor. Valid statement/current pairs succeed. Bootstrap restore may insert parent and child in either order after their source/mapping/account dependencies exist; runtime child-first insertion must fail the admission lookup even though the structural FK is deferred.
+4. Current exact positive/negative/zero/missing fields; independent signs; missing instant; offset/fractional spelling; UTC day crossover; source-local date mismatch; minimum/maximum supported dates and UTC overflow; all malformed instant/value variants through Python and SQL.
+5. Nested counterfeit/date/instant/cache/Decimal mutation denial before SQL with no diagnostic values or serialization warnings. Safe reads reject malformed projections.
+6. Explicit same-target retry and later-correction historical retry; changed decimal or instant spelling conflicts even for equal numeric/UTC values; independent equal reports stay independent; wrong-kind root reuse never mutates.
+7. Forced active-owner RLS, narrow column grants, runtime ownership denial, read/insert isolation, immutable updates/deletes (also bootstrap), bounded list/history and closed-unit behavior; unknown/foreign/wrong-kind semantics agree.
+8. Direct runtime READ COMMITTED admission only on BOTH parent and current child; RR/SERIALIZABLE denial, including stale quota snapshot. Mixed-kind direct SQL last-slot race at 999 complete observations proves actual lock waits, one fixed-error loser and 1,000 bootstrap-visible complete pairs; owner B remains independent.
+9. Deterministic active-owner checks after parent/child advisory waits and target-account waits, using observed backend lock waits rather than sleeps. Retain direct-runtime deactivation boundary and owner-B controls. Archive-first rejects; evidence-first may commit before archive and remains historical.
+10. Concurrent corrections, identical retries, remapping/unlinking, child-insert failure, deferred failure, interruption and outer rollback leave exact retained histories without partial pairs. Statement service regression suite stays green.
+11. Separate-cluster mixed-kind two-owner restore including remap/archive; wrong-kind, orphan, source/account mismatch and missing-child tampered encrypted objects roll back entirely. Recheck original statements, new current evidence, constraints/grants and old-session denial.
+
+
+## Internal implementation
+
+The [current-evidence service](../backend/trading_db/credit_current.py) provides server-allocated retry identities and transaction-scoped record, exact-revision get, bounded account lists and revision history. A date is required; an optional instant retains its original offset and fractional precision. UTC conversion does not replace the source-local day. Outstanding, unbilled, credit limit and available credit remain separate INR reports, with exact decimal spelling, supplied zero or explicit missing reasons. Only credit limit is nonnegative; the service infers no equality, payment status or available cash.
+
+An explicit expected revision targets the next revision. After current owner/mapping/active-account authorization, an identical retained target returns its original evidence even if a later correction exists. Changed decimal or timestamp spelling conflicts. New roots are independent reports, including reports with identical amounts and dates. Same-root source, account and kind never change. Archived/remapped history remains readable but cannot authorize a retry under obsolete context.
+
+The [migration](../backend/migrations/versions/0022_credit_current_evidence.py) adds one current-value child. Plain stored discriminator columns and typed reciprocal deferred foreign keys require exactly one matching statement or current child for every observation. Statement inserts retain their original defaults. NULL discriminators cannot bypass the structural check; wrong-kind children and orphan pairs fail even under bootstrap restore. Runtime child-first insertion still fails its parent admission lookup.
+
+Both kinds share the existing observation root namespace and 1,000-revision owner quota, including history. Runtime INSERT guards require READ COMMITTED, fresh owner/context checks after shared owner-advisory and account-row waits, the exact current source mapping and an active account row lock held through commit. The current child repeats admission. These checks do not globally serialize arbitrary administrative owner deactivation with commit. Both value kinds remain immutable; no new UPDATE/DELETE or elevated identity grants are introduced.
+
+## Migration and recovery
+
+Head 0022 extends recovery format 18 to 49 application tables, 45 durable tables and the same four omitted live session/admission/connector tables. The manifest includes both parent discriminator fields, statement-child kind and all current-child fields. It preserves source-local instant strings and original decimal strings. The existing 4 MB plaintext and 1,000-rows-per-table recovery bounds remain.
+
+Existing 0021 statement records receive constant discriminator defaults without data UPDATEs. The migration is transactional. Populated statement, current or mixed evidence blocks downgrade; an empty downgrade restores the exact 0021 guard, constraints and grants without CASCADE. Complete deferred pairs can restore in either parent/child order after mapping dependencies exist. Missing or wrong-kind children, changed root identity and invalid mapping/account bindings fail the entire restore. Format 17 requires its matching repository/schema restore before forward upgrade; the format-18 reader rejects it.
+
+## Verification status
+
+Acceptance cases were recorded before implementation. The service, migration, recovery extension and focused test definitions are implemented. Focused unit checks passed 396 cases; strict service/recovery typing, lint/format for eight Python files, 1,036 documentation links and whitespace checks passed. All 264 focused PostgreSQL cases passed in 302.35 seconds, including 97 new current/migration cases, preserved statement behavior, mixed-owner encrypted recovery and existing ownership/source/connector regressions. The initial run found an invalid timestamp function in two archival test fixtures; both were corrected without changing the implementation or assertions, and the complete suite was rerun. Independent source/test-definition review and the fixture corrections were cleared. Both disposable projects were removed, with no remaining test credential contexts. The complete integrated local verification gate remains separate. No hosted, provider-format, UI or real-data verification is claimed.
