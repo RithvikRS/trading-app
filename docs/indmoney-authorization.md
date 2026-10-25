@@ -40,7 +40,7 @@ Disconnect clears encrypted local credentials and pending attempts before reques
 
 ## Encryption, database isolation and rotation
 
-Migration `0018_indmoney_authorization` adds three private tables, for 43 application tables in total:
+Migration `0018_indmoney_authorization` added three private tables, bringing the schema to 43 application tables at Step 6B. Later increments extend that inventory; the [current recovery runbook](local-packaging.md#encrypted-foundation-recovery) records the current head and complete manifest. The Step 6B tables are:
 
 | Table | Boundary |
 | --- | --- |
@@ -87,7 +87,7 @@ Only loopback HTTPS on port 8443 is supported for this connector. Hosted mode an
 
 ## Recovery and verification
 
-Recovery format 14 explicitly excludes both live connector tables alongside application sessions/admissions. It retains connector audit records and all existing financial evidence. Restoring requires fresh application authentication and explicit provider reconnection; it cannot silently revive a token or pending code. Old format objects require the corresponding repository/schema before a forward upgrade; the current reader rejects incompatible manifests. Separately retained client keys/registration do not reauthorize an owner's account. Provider-side cleanup after disaster recovery remains a separate operator action.
+Step 6B recovery format 14 explicitly excluded both live connector tables alongside application sessions/admissions. It retained connector audit records and the financial evidence present at that increment. The [current recovery runbook](local-packaging.md#encrypted-foundation-recovery) records subsequent schema/format changes and the complete durable-table inventory. Restoring requires fresh application authentication and explicit provider reconnection; it cannot silently revive a token or pending code. Old format objects require the corresponding repository/schema before a forward upgrade; the current reader rejects incompatible manifests. Separately retained client keys/registration do not reauthorize an owner's account. Provider-side cleanup after disaster recovery remains a separate operator action.
 
 Tests cover fixed permissions/destinations, strict callbacks and token responses, encryption context/tampering, ownership and grants, replay and replacement sessions, concurrent renewal, disconnect/logout/revoke-all during exchange, missing keys, durable admission, migration preservation and recovery with no live connector state. The full project checks use synthetic identities and provider doubles, never live INDmoney or Supabase credentials. Browser verification covers desktop/mobile light/dark modes, keyboard completion, contrast/accessibility, uncertain revocation feedback, no overflow/storage and clearing on lock.
 

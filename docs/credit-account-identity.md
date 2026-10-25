@@ -1,0 +1,37 @@
+# Credit billing-account identity: Step 9B.2
+
+The internal credit registry stores an owner's HDFC billing-account identities independently from bank and investment accounts. It adds no balances, card numbers, issuer references, source mappings, imports, routes or screens. Statement and balance value contracts remain separate from identity persistence.
+
+## Identity and lifecycle
+
+A record contains a server-generated internal UUID, server-scoped owner, fixed HDFC issuer and INR billing currency, a safe nickname, revision, creation/update timestamps and optional local archival timestamp. Nicknames contain bounded ASCII letters, spaces and the punctuation `.()-`; digits, control characters, arbitrary fields and unsupported issuers/currencies are rejected. Nicknames are not unique identities: two identical labels remain two billing accounts. Values and identifiers are omitted from the service objects' representations.
+
+The billing account represents one liability relationship. It does not identify a physical card. Primary, add-on and replacement cards will need separate internal identities with explicit revisioned membership; a replacement must not create another liability or duplicate a limit automatically. No last-four digits or source-reference namespace is introduced here. The existing `hdfc_statement` namespace still means a bank statement. Existing generic reference encryption is not a card-number minimization boundary.
+
+New records start at revision 1. Archival is the only mutation: it checks the expected revision, records a server timestamp and advances to revision 2 once. The identity, issuer, currency, label and creation timestamp are immutable; archived records remain readable. Local archival does not assert that the issuer closed the account, that a balance is zero or that a statement was paid. A later correction/reactivation model needs its own explicit contract.
+
+## Ownership and bounds
+
+`CreditAccountDatabase` uses the existing restricted workspace transaction. The caller must independently authenticate its owner UUID; the service does not accept ownership from a definition and does not create a public enrollment or mutation route. Active-owner checks, transaction-local identity and forced row policies apply to every operation. Unknown and foreign UUIDs both read as unavailable and cannot be archived; fixed errors omit input and SQL details. Constructed models are strictly revalidated with serialization warnings suppressed so rejected private input cannot escape through diagnostics.
+
+Reads use stable UUID ordering and keyset pages of 1–100 records. At most 1,000 records, including archived ones, are admitted per owner. Service writes take a dedicated owner advisory lock to serialize admission and archival; the database trigger also checks the admission limit for direct runtime INSERT statements. Runtime INSERT and UPDATE require read-committed isolation; repeatable-read and serializable writes are rejected with the same fixed error. This prevents a transaction from using an old admission count after obtaining the advisory lock. Trusted migration/bootstrap recovery behavior is unchanged. No external I/O occurs while the lock is held. Concurrent archival of the same revision has exactly one winner. Failed service writes use a savepoint, and failed outer transactions roll back their records.
+
+Runtime triggers recheck the active owner and transaction-local context after an INSERT advisory-lock wait and when archival reaches its trigger after a target-row wait. A deactivation committed during those waits rejects the write with the fixed unavailable error; an RLS-filtered zero count is not authorization. This is the direct-runtime/internal registry boundary: session revocation via `revoke_owner` does not change `owners.is_active`. These fresh checks do not globally serialize owner deactivation with transaction commit; no shared deactivation/commit locking contract is introduced.
+
+Migration `0019_credit_billing_accounts` adds `app.credit_billing_accounts`, owned by the migrator, with a composite `(owner_id, id)` primary key, an owner foreign key, finite timestamp and lifecycle constraints, and enabled/forced RLS. The runtime can SELECT, INSERT the five allowed identity fields and UPDATE only archival. It cannot rewrite ownership/identity/timestamps, delete, truncate or install triggers. Authentication and PUBLIC roles have no table access. The archival trigger rejects rewriting or clearing an archival timestamp. Migration code uses the existing guarded runner; a downgrade refuses to discard any credit record, including an archived one.
+
+## Recovery
+
+The schema now contains 44 application tables. Recovery format 15 enumerates all 40 durable tables and explicitly omits the four live session/admission/connector tables. Credit identities, nicknames, revisions and timestamps round-trip in the authenticated encrypted snapshot with their original owners. Restore still requires an empty, separately bootstrapped disposable cluster, verifies schema ownership/policies and writes fresh revocation cutoffs. Old sessions and provider authorization are not restored.
+
+Earlier recovery formats are incompatible with the new manifest; use their matching repository/schema before a forward migration. The existing 4 MB plaintext and 1,000-row-per-table recovery bounds remain in force, including when several owners have credit records. This is the bounded local foundation rehearsal, not a production backup solution.
+
+The financial completion baseline is unchanged because no card financial completion flow exists in this slice. Later statement/import completion must explicitly extend and version its protected input scope.
+
+## Verification and next boundaries
+
+Synthetic checks cover strict/private contracts, duplicate nicknames, stable pagination, archive conflicts, invalid/inactive owners, unknown-versus-foreign identities, direct SQL privilege/constraint denial, concurrent admission limits and archival, deterministic stale-snapshot quota attempts, isolation-level write denial, rollback and transaction lifetime. Deactivation regressions observe the exact blocked backend through PostgreSQL lock state, run an unaffected active-owner control, and check committed rows through the bootstrap role; synchronization does not rely on elapsed sleeps. Migration checks exercise interrupted upgrade, repeat application, empty downgrade/re-upgrade and populated downgrade denial. The separate-cluster recovery drill includes active and archived records for two owners and verifies restored isolation alongside existing session/revocation behavior.
+
+Statement/current observations, liability movements, physical-card membership, source identity minimization and import completion are later slices of the [HDFC credit-card plan](credit-cards-plan.md). No HDFC export layout, live connection, hosted identity or financial accounting behavior is verified by this identity registry.
+
+Local validation after the owner-deactivation fix passed 73 focused unit tests and 72 focused PostgreSQL tests, including migration, separate-cluster recovery and INDmoney compatibility. The two identity lock-wait regressions first demonstrated committed creation/archival after deactivation and now verify rejection with unchanged owner-A state and successful owner-B controls. Ruff, strict service/recovery typing and documentation-link checks passed. This local evidence does not establish provider or hosted compatibility.
