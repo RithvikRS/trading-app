@@ -5,16 +5,19 @@ import { coverageLabels, exactValue } from './investments'
 import type { Page, Position, SourceObservation } from './investments'
 import { activityCoveragePage, activityHistory, activityPage, eventIdentity, eventRoles } from './activity-evidence'
 import type { ActivityHistory, EventEvidence, EventIdentity } from './activity-evidence'
+import ReceiptInspection from './ReceiptInspection'
+import { receiptContext, receiptPage } from './receipt-evidence'
+import type { ReceiptContext, SavedReceipt } from './receipt-evidence'
 
 type SourceContext = { source_id: string; event_id: string; revision: number }
-type View = { kind: 'activity'; page: Page<EventEvidence>; after: string | null }
+type View = { kind: 'receipt'; context: ReceiptContext; page: Page<SavedReceipt> } | { kind: 'activity'; page: Page<EventEvidence>; after: string | null }
   | { kind: 'history'; root: EventIdentity; page: ActivityHistory; before: number | null }
   | { kind: 'coverage'; source: SourceContext; page: Page<SourceObservation>; after: string | null }
 const kinds = { buy: 'Purchase', sell: 'Sale', subscription: 'Fund subscription', redemption: 'Fund redemption', dividend: 'Dividend', fee: 'Fee', withholding: 'Withholding', cash_movement: 'Cash movement' }
 const reasons = { source_correction: 'Source correction', posting_update: 'Posting update', cancellation: 'Cancellation', reinstatement: 'Reinstatement' }
 const roles = { quantity: 'Quantity movement', net_cash: 'Net cash movement', gross_cash: 'Supplied gross cash', unit_price: 'Supplied unit price', fee: 'Supplied fee', withholding: 'Supplied withholding' }
 
-function Activity({ item, openedPosition, masked, disabled, onHistory, onCoverage }: { item: EventEvidence; openedPosition: string; masked: boolean; disabled: boolean; onHistory?: () => void; onCoverage: () => void }) {
+function Activity({ item, openedPosition, masked, disabled, onHistory, onCoverage, onReceipt }: { item: EventEvidence; openedPosition: string; masked: boolean; disabled: boolean; onHistory?: () => void; onCoverage: () => void; onReceipt: () => void }) {
   return <article className="wi-evidence">
     <div className="wi-line"><h4>{kinds[item.kind]}</h4><span className="ws-pill">{item.posting_state === 'posted' ? 'Posted' : 'Pending'} · {item.status === 'active' ? 'Active evidence' : 'Cancelled evidence'}</span></div>
     <p className="ws-hint">{item.is_current ? 'Latest retained revision' : 'Earlier retained revision'} {item.revision} · {item.correction_reason ? reasons[item.correction_reason] : 'Original evidence'} · {item.account_state === 'archived' ? 'Archived account' : 'Active account'}</p>
@@ -22,7 +25,7 @@ function Activity({ item, openedPosition, masked, disabled, onHistory, onCoverag
     <dl className="wi-meta"><div><dt>Trade date</dt><dd>{item.trade_date ?? 'Not supplied'}</dd></div><div><dt>Settlement date</dt><dd>{item.settlement_date ?? 'Not supplied'}</dd></div><div><dt>Booking date</dt><dd>{item.booking_date ?? 'Not supplied'}</dd></div><div><dt>Value date</dt><dd>{item.value_date ?? 'Not supplied'}</dd></div><div><dt>Cash date basis</dt><dd>{item.cash_date_basis ?? 'Not supplied'}</dd></div></dl>
     {item.status === 'cancelled' ? <p className="ws-notice">This revision withdraws the event evidence. It contains no financial components and creates no synthetic reversal or zero movement. Earlier values remain in revision history.</p>
       : <><dl className="wi-values">{eventRoles[item.kind].map(role => { const value = item.components.find(value => value.role === role); return <div key={role}><dt>{roles[role]}</dt><dd>{masked ? '••••' : value ? exactValue(value, false) : 'Not supplied by this revision'}</dd></div> })}</dl><p className="ws-hint">{item.posting_state === 'pending' ? 'Pending evidence is not a posted movement.' : 'Posted evidence remains limited to its supplied source and period.'} Components retain their source signs and native currencies; no balance, gain or cash-flow total is calculated.</p></>}
-    <details><summary>Source and coverage · {coverageLabels[item.coverage]}</summary><dl className="wi-meta"><div><dt>Event</dt><dd>{item.id}</dd></div><div><dt>Reported period</dt><dd>{item.period_start ? `${item.period_start} to ${item.period_end}` : 'Not supplied'}</dd></div><div><dt>Source</dt><dd>{item.source_id}</dd></div><div><dt>Source observation</dt><dd>{item.observation_id}</dd></div><div><dt>Source batch</dt><dd>{item.batch_id}</dd></div><div><dt>Source row</dt><dd>{item.source_row_id}</dd></div><div><dt>Source review revision</dt><dd>{item.source_review_revision}</dd></div></dl><p className="ws-hint">These fields belong to this revision. A later correction can supply a different source, period or dates. Coverage does not establish reconciled completion, lifetime history or tax basis.</p></details>
+    <details><summary>Source and coverage · {coverageLabels[item.coverage]}</summary><dl className="wi-meta"><div><dt>Event</dt><dd>{item.id}</dd></div><div><dt>Reported period</dt><dd>{item.period_start ? `${item.period_start} to ${item.period_end}` : 'Not supplied'}</dd></div><div><dt>Source</dt><dd>{item.source_id}</dd></div><div><dt>Source observation</dt><dd>{item.observation_id}</dd></div><div><dt>Source batch</dt><dd>{item.batch_id}</dd></div><div><dt>Source row</dt><dd>{item.source_row_id}</dd></div><div><dt>Source review revision</dt><dd>{item.source_review_revision}</dd></div></dl><p className="ws-hint">These fields belong to this revision. A later correction can supply a different source, period or dates. Coverage does not establish reconciled completion, lifetime history or tax basis.</p><button className="ws-text" disabled={disabled} onClick={onReceipt}>Inspect batch completion for event {item.id}, revision {item.revision}</button></details>
     <div className="wi-toolbar">{onHistory && <button className="ws-text" disabled={disabled} onClick={onHistory}>Inspect revisions for event {item.id}<History size={15} aria-hidden="true" /></button>}<button className="ws-text" disabled={disabled} onClick={onCoverage}>Inspect source coverage for event {item.id}, revision {item.revision}<ScanSearch size={15} aria-hidden="true" /></button></div>
   </article>
 }
@@ -53,7 +56,13 @@ export default function ActivityInspection({ auth, position, name, initial, mask
     const result = await auth.finance('/imports/observations/query', { source_id: source.source_id, limit: 25, after }, value => activityCoveragePage(value, source.source_id, after))
     return result && { kind: 'coverage', source, page: result, after }
   })
-  const item = (event: EventEvidence, historical = false) => <Activity key={`${event.id}-${event.revision}`} item={event} openedPosition={position.id} masked={masked} disabled={disabled} onHistory={historical ? undefined : () => void history(eventIdentity(event))} onCoverage={() => void coverage({ source_id: event.source_id, event_id: event.id, revision: event.revision })} />
+  const completion = (event: EventEvidence) => work(async () => {
+    const context = receiptContext('event', event)
+    const result = await auth.finance('/receipts/query', { batch_id: context.batch_id, limit: 25, after: null }, value => receiptPage(value, context))
+    return result && { kind: 'receipt', context, page: result }
+  })
+  const item = (event: EventEvidence, historical = false) => <Activity key={`${event.id}-${event.revision}`} item={event} openedPosition={position.id} masked={masked} disabled={disabled} onReceipt={() => void completion(event)} onHistory={historical ? undefined : () => void history(eventIdentity(event))} onCoverage={() => void coverage({ source_id: event.source_id, event_id: event.id, revision: event.revision })} />
+  if (view?.kind === 'receipt') return <ReceiptInspection auth={auth} context={view.context} initial={view.page} busy={busy} onBack={() => void activity()} />
   return <section className="wi-activity" aria-labelledby="activity-heading">
     <button className="ws-text" disabled={disabled} onClick={onBack}><ArrowLeft size={16} aria-hidden="true" />Back to positions</button>
     <div className="wi-detail-title"><span className="ws-eyebrow">Saved events and their sources</span><h3 id="activity-heading" tabIndex={-1} ref={heading}>Account activity</h3><p>Opened from {name}<br />Account {position.account_id}</p></div>

@@ -30,6 +30,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 7B.2](docs/account-activity-inspection.md) adds protected account-wide activity, retained event revisions and source-coverage inspection from investment details. Other positions and account-level cash remain visible. Bounded UUID pages are not chronological or lifetime history. Posted/pending, active/cancelled and current/historical states remain distinct; exact native values and independently supplied dates are preserved. Source claims do not establish reconciled completion. No provider acquisition, financial write or calculated balance is added.
 
+[Step 7B.3](docs/saved-receipt-inspection.md) adds protected inspection of saved batch completion receipts and historical row effects from event revisions and lot observations. Whole-batch records, links, corrections and exclusions remain distinct. Exact batch, coverage, receipt and originating-row bindings plus bounded traversal checks verify the retained evidence without acquiring data or performing a financial write. Native comparison equations and their frozen inputs remain separate UI work; a historical receipt does not establish current balances, tax basis or complete account history.
+
 [Step 9A](docs/credit-cards-prototype.md) adds a synthetic Credit Cards screen with one fictional HDFC billing account, shared primary/add-on activity, statement history, searchable activity and source inspection. Statement dues and separately dated outstanding remain distinct; missing values and payment status stay unknown. Both themes, INR/USD display and amount masking are supported. Financial records and selections are not persisted, and no real HDFC export format, upload or protected card screen is supported.
 
 [Step 9B.1](docs/credit-card-values.md) adds pure Python contracts for INR statements, separately dated current evidence, explicit entry roles and exact liability reconciliation. Missing values remain distinct from zero, and matching arithmetic does not prove coverage or payment. This increment introduces no database schema, API, UI, import support or persistence.
@@ -96,6 +98,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Lot evidence and corrections](docs/lot-evidence-corrections.md) | Implemented Step 4D.3 separate acquisition/remaining observations and immutable correction histories |
 | [Protected lot inspection](docs/lot-inspection.md) | Saved lot identities, native evidence, source coverage and retained correction history |
 | [Protected account activity](docs/account-activity-inspection.md) | Account-wide event pages, native evidence, retained revisions and source-coverage claims |
+| [Saved completion inspection](docs/saved-receipt-inspection.md) | Historical batch receipts and whole-batch record/link/correction/exclusion effects |
 | [Snapshot evidence and selection](docs/snapshot-evidence.md) | Implemented Step 4E.1 dated position/cash evidence, source conflicts and retained selection history |
 | [Financial events](docs/financial-events.md) | Implemented Step 4D.2 source-linked events, native movements, explicit posting state and recovery |
 | [Import staging](docs/import-staging.md) | Implemented Step 4D.1 immutable evidence, exact normalized rows and versioned review |

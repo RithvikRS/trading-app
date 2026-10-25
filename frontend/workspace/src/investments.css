@@ -65,3 +65,8 @@
 .wi-activity .ws-text { text-align: left; }
 .wi-activity .ws-text svg { flex-shrink: 0; }
 .wi-scope { font-size: 12px; line-height: 1.8; margin: 14px 0; color: var(--muted); overflow-wrap: anywhere; }
+
+.wi-receipts h4, .wi-receipts .ws-text { overflow-wrap: anywhere; min-width: 0; }
+.wi-receipts > h4 { margin: 20px 0 10px; line-height: 1.7; }
+.wi-receipts .ws-text { text-align: left; }
+.wi-receipts .ws-text svg { flex-shrink: 0; }
