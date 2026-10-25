@@ -130,7 +130,7 @@ def create_app(
 ) -> HTTPBoundary:
     config = load_settings() if settings is None else settings
     # Revalidate injected settings as well as process configuration at startup.
-    Settings.model_validate(config.model_dump())
+    Settings.model_validate(config.model_dump(warnings=False))
     if rehearsal and (
         config.auth_enabled or config.indmoney_enabled or not config.frontend_enabled
     ):

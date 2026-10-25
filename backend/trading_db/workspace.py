@@ -66,7 +66,7 @@ class WorkspaceTransaction:
     def save_preferences(self, preferences: Preferences) -> None:
         self._require_open()
         # Revalidate even a model assembled with model_construct/model_copy.
-        validated = Preferences.model_validate(preferences.model_dump())
+        validated = Preferences.model_validate(preferences.model_dump(warnings=False))
         self._connection.execute(
             text("""
                 INSERT INTO app.workspace_preferences
@@ -97,7 +97,7 @@ class WorkspaceTransaction:
 
     def compare_preferences(self, update: PreferenceUpdate) -> PreferenceSnapshot | None:
         self._require_open()
-        validated = PreferenceUpdate.model_validate(update.model_dump())
+        validated = PreferenceUpdate.model_validate(update.model_dump(warnings=False))
         parameters = {"owner": self._owner_id, **validated.model_dump()}
         if validated.revision == 0:
             query = """

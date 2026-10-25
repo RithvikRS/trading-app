@@ -43,6 +43,8 @@ The history scan covers all reachable fetched refs. The source scan copies track
 
 Scanner output is captured and suppressed, with redaction enabled as an additional control. No finding report or source snippet is uploaded. A failure names the check, not its matched contents. Investigate locally with the pinned tool and redaction enabled in a private terminal; never paste findings containing private records into a PR. Revoke exposed credentials before addressing history or exceptions. Changes to scanner policy, pins, or suppression rules need explicit technical review.
 
+[Private model diagnostics](private-model-diagnostics.md) adds 26 fabricated-marker regressions for copied and constructed account, instrument, market, preference, configuration and connector models. Tests capture warnings, logs, stdout/stderr and public exception text while asserting unchanged rejection before SQL or client creation where applicable. Existing valid-input tests remain in place; no global warning suppression or external-provider compatibility claim is added.
+
 ## Manual CI contract
 
 As of 25 October 2026, `.github/workflows/verification.yml` uses only `workflow_dispatch`. Pushes, PR updates, merges and branch synchronization do not start Actions. This avoids automatic usage while the monthly Actions allowance is exhausted. The setting remains explicit until a later workflow change; it does not automatically revert when quota resets. Local commands and their failure behavior remain unchanged.

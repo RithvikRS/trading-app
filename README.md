@@ -92,6 +92,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |
+| [Private model diagnostics](docs/private-model-diagnostics.md) | Scoped warning privacy at internal validation boundaries and regression evidence |
 | [Integrations](docs/integrations.md) | Provider options and verification |
 | [INDmoney integration](docs/indmoney-integration-plan.md) | Read-only portfolio route, public discovery evidence, authorization design, coverage and statement fallbacks |
 | [INDmoney compatibility](docs/indmoney-compatibility.md) | Observed custom-client registration/handoff, history limitations, renewal findings and remaining account tests |

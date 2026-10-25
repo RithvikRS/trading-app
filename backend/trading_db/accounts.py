@@ -173,7 +173,7 @@ class AccountTransaction:
         return tuple(self._account(row) for row in rows)
 
     def create(self, definition: AccountDefinition) -> Account:
-        valid = AccountDefinition.model_validate(definition.model_dump())
+        valid = AccountDefinition.model_validate(definition.model_dump(warnings=False))
         with self._write():
             self._budget("financial_accounts")
             account_id = uuid4()

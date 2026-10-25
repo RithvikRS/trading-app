@@ -116,6 +116,10 @@ The local UI prototype uses fictional data only. Before handling real data, veri
 
 Record evidence and remaining limitations with the relevant feature or deployment documentation. Passing checks reduces risk; it does not constitute a guarantee of security or a compliance certification. Public multi-user access and real trade execution require expanded threat models and a separate security review before activation.
 
+## Private model diagnostics
+
+[Private model diagnostics](private-model-diagnostics.md) suppress serializer warnings at internal account, instrument, market, preference, configuration and connector document boundaries before existing strict validation. Malformed copied or constructed models cannot disclose rejected values through those warnings. The change preserves validation and public errors, with no global warning filter. Current external inputs validate before these operations; this hardening is not evidence of a remote validation bypass or an observed disclosure of real records.
+
 ## Protected browser shell
 
 [Step 3F.1](protected-workspace.md) adds a separate build with no financial fixtures or browser persistence, strict bounded response validation, same-origin CSRF requests, and closed session gates. Locking/sign-out discards earlier requests; offline or uncertain verification hides the workspace. Static assets receive no-store and a CSP without inline scripts/styles. The prototype remains isolated. No financial data endpoint or stored preference is added, and local UI tests do not establish hosted provider or deployment security.

@@ -30,7 +30,7 @@ class PrivateModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True, hide_input_in_errors=True)
 
     def private_bytes(self) -> bytes:
-        values = self.model_dump(mode="json")
+        values = self.model_dump(mode="json", warnings=False)
         for key in type(self).model_fields:
             value = getattr(self, key)
             if isinstance(value, SecretStr):
