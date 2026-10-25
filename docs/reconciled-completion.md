@@ -2,7 +2,7 @@
 
 Step **4F.3.2c** extends [atomic completion](completion-receipts.md) to complete-activity statements. A `reconciled` request commits only when every supplied native cash or position scope has balanced source and combined-ledger equations. Its financial effects, explicit selections, receipt, exact compared inputs and rule version commit together. Failure rolls everything back.
 
-This is an internal persistence service. It adds no financial HTTP mutation, upload parser, provider connection or connected screen. The protected workspace remains empty until its data flow is implemented.
+This is an internal persistence service. It adds no financial HTTP mutation, upload parser, provider connection or connected screen. Subsequent [saved receipt](saved-receipt-inspection.md) and [native comparison](frozen-comparison-inspection.md) views inspect retained evidence; a protected activity-completion screen remains outstanding.
 
 ## What a balanced receipt establishes
 
