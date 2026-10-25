@@ -176,7 +176,7 @@ it('shows reconciled receipt scope limitations without fetching or inventing com
   override('/api/v1/finance/events/query', () => ({ items: [{ ...event, coverage: 'complete_activity' }], next_after: null }))
   override('/api/v1/finance/receipts/query', () => ({ items: [{ ...receipt(), mode: 'reconciled', coverage: 'complete_activity', scope_count: 2 }], next_after: null }))
   await openReceipts()
-  expect(screen.getByText('Reconciled at completion')).toBeTruthy(); expect(screen.getByText(/Equations and compared inputs are not inspected here/)).toBeTruthy()
+  expect(screen.getByText('Reconciled at completion')).toBeTruthy(); expect(screen.getByText(/Inspect native comparisons for the saved equations/)).toBeTruthy()
   expect(fetchMock.mock.calls.some(([path]) => String(path).includes('/scopes/'))).toBe(false)
 })
 it('paginates receipts without retaining the previous page or assuming time order', async () => {

@@ -1,0 +1,29 @@
+import { useEffect, useRef } from 'react'
+import { ArrowLeft, ArrowRight, RefreshCw } from 'lucide-react'
+import { exactValue } from './investments'
+import type { SavedReceipt } from './receipt-evidence'
+import type { ComparisonSide, NativeComparison, NativeScope, ScopePage } from './comparison-evidence'
+
+export type ComparisonView = { kind: 'scopes'; receipt: SavedReceipt; page: ScopePage; after: string | null; preceding: number }
+  | { kind: 'comparison'; receipt: SavedReceipt; selected: NativeScope; comparison: NativeComparison }
+const scopeTitle = (scope: NativeScope) => scope.kind === 'cash' ? `${scope.currency} cash` : 'Position units'
+function SourceDetails({ scope }: { scope: NativeScope }) {
+  return <details className="wi-comparison-source"><summary>Source details</summary><dl className="wi-meta"><div><dt>Comparison</dt><dd>{scope.id}</dd></div><div><dt>Receipt</dt><dd>{scope.receipt_id}</dd></div><div><dt>Account</dt><dd>{scope.account_id}</dd></div>{scope.position_id && <div><dt>Position</dt><dd>{scope.position_id}</dd></div>}<div><dt>Rule version</dt><dd>{scope.rule_version}</dd></div><div><dt>Retained inputs</dt><dd>{scope.input_count}</dd></div></dl></details>
+}
+function Summary({ scope }: { scope: NativeScope }) {
+  return <p className="ws-hint">{scope.period_start} to {scope.period_end} <span aria-hidden="true">·</span> {scope.date_basis} dates</p>
+}
+function Equation({ title, value, scope, masked }: { title: string; value: ComparisonSide; scope: NativeScope; masked: boolean }) {
+  const amount = (source: string) => exactValue({ role: scope.kind === 'cash' ? 'net_cash' : 'quantity', source, currency: scope.currency, missing_reason: null }, masked)
+  return <article className="wi-equation-card" aria-label={title}><h5>{title}</h5><div className="wi-equation" aria-label="Opening plus posted movement equals closing"><div><span>Opening</span><strong>{amount(value.opening)}</strong></div><span className="wi-equation-symbol" aria-hidden="true">+</span><div><span>Posted movement</span><strong>{amount(value.posted_total)}</strong></div><span className="wi-equation-symbol" aria-hidden="true">=</span><div><span>Closing</span><strong>{amount(value.closing)}</strong></div></div><dl className="wi-meta"><div><dt>Calculated closing</dt><dd>{amount(value.calculated_closing)}</dd></div><div><dt>Difference</dt><dd>{amount(value.difference)}</dd></div><div><dt>Posted entries</dt><dd>{value.posted_count}</dd></div><div><dt>Pending entries</dt><dd>{value.pending_count}</dd></div></dl><p className="ws-hint">Pending entries are excluded from the posted movement.</p></article>
+}
+export default function ComparisonInspection({ view, masked, disabled, onBack, onScopes, onInspect }: { view: ComparisonView; masked: boolean; disabled: boolean; onBack: () => void; onScopes: (after?: string | null, preceding?: number) => void; onInspect: (scope: NativeScope) => void }) {
+  const heading = useRef<HTMLHeadingElement>(null)
+  useEffect(() => { heading.current?.focus() }, [view])
+  return <div className="wi-comparisons"><button className="ws-text" disabled={disabled} onClick={view.kind === 'scopes' ? onBack : () => onScopes()}><ArrowLeft size={16} aria-hidden="true" />Back to {view.kind === 'scopes' ? 'receipts' : 'comparisons'}</button>
+    {view.kind === 'scopes' ? <><div className="wi-line"><h4 ref={heading} tabIndex={-1}>Native comparisons</h4><button className="ws-text" disabled={disabled} onClick={() => onScopes(view.after, view.preceding)}><RefreshCw size={14} aria-hidden="true" />Refresh comparisons</button></div><p className="ws-hint">{view.receipt.scope_count} saved comparisons across this batch. Cash currencies and position units stay separate. Pages use identity order, not date order.</p>
+      {view.page.items.map(scope => <article className="wi-evidence" key={scope.id} aria-label={`${scopeTitle(scope)} from ${scope.period_start} to ${scope.period_end}`}><div className="wi-line"><h5>{scopeTitle(scope)}</h5><span className="ws-pill">Historical scope</span></div><Summary scope={scope} /><SourceDetails scope={scope} /><button className="ws-text" disabled={disabled} onClick={() => onInspect(scope)}>Inspect comparison<ArrowRight size={14} aria-hidden="true" /></button></article>)}
+      <div className="wi-line"><button className="ws-text" disabled={disabled || view.after === null} onClick={() => onScopes()}>First comparisons</button><button className="ws-text" disabled={disabled || !view.page.next_after} onClick={() => onScopes(view.page.next_after, view.page.count)}>Next comparisons<ArrowRight size={14} aria-hidden="true" /></button></div></>
+      : <><div className="wi-line"><h4 ref={heading} tabIndex={-1}>{scopeTitle(view.selected)} comparison</h4><span className="ws-pill">Balanced at completion</span></div><Summary scope={view.selected} /><p className="ws-notice">This comparison preserves the evidence at completion. Later corrections or selections do not update it. It does not establish a current balance or complete account history.</p><div className="wi-equation-grid"><Equation title="Source report" value={view.comparison.source} scope={view.selected} masked={masked} /><Equation title="Combined saved evidence" value={view.comparison.combined} scope={view.selected} masked={masked} /></div><SourceDetails scope={view.selected} /><div className="wi-line"><p className="ws-hint">Values stay in their native currency or units. Input row inspection is not available in this view.</p><button className="ws-text" disabled={disabled} onClick={() => onInspect(view.selected)}><RefreshCw size={14} aria-hidden="true" />Refresh comparison</button></div></>}
+  </div>
+}

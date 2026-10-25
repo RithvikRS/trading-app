@@ -70,3 +70,15 @@
 .wi-receipts > h4 { margin: 20px 0 10px; line-height: 1.7; }
 .wi-receipts .ws-text { text-align: left; }
 .wi-receipts .ws-text svg { flex-shrink: 0; }
+.wi-comparisons h4, .wi-comparisons h5 { overflow-wrap: anywhere; margin: 16px 0 10px; line-height: 1.6; }
+.wi-comparisons h5 { font-size: 15px; }
+.wi-comparison-source { margin: 12px 0; }
+.wi-equation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 20px 0; }
+.wi-equation-card { border: 1px solid var(--border); border-radius: 14px; padding: 20px; min-width: 0; }
+.wi-equation-card > h5 { margin-top: 0; }
+.wi-equation { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 14px 0 20px; }
+.wi-equation div { min-width: 0; }
+.wi-equation div > span { display: block; font-size: 11px; color: var(--muted); line-height: 1.6; }
+.wi-equation strong { display: block; overflow-wrap: anywhere; font-size: 17px; font-variant-numeric: tabular-nums; line-height: 1.7; }
+.wi-equation-symbol { color: var(--accent-strong); font-size: 18px; line-height: 1; }
+@media (max-width: 900px) { .wi-equation-grid { grid-template-columns: 1fr; } }
