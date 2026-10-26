@@ -125,8 +125,8 @@
 @media (prefers-reduced-motion: reduce) { .ws-spin { animation: none; } }
 @media (max-width: 1000px) { .ws-story, .ws-auth { padding: 32px; } .ws-layout { grid-template-columns: 180px minmax(0, 1fr); } .ws-sidebar { padding: 30px 10px; } .ws-home-heading { align-items: flex-start; flex-direction: column; } }
 @media (max-width: 720px) {
-  .ws-mobile-nav { display: flex; gap: 6px; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
-  .ws-mobile-nav button { min-height: 44px; padding: 10px 16px; border-radius: 8px; font-size: 12px; color: var(--muted); }
+  .ws-mobile-nav { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .ws-mobile-nav button { min-height: 44px; padding: 10px 10px; border-radius: 8px; font-size: 12px; color: var(--muted); }
   .ws-mobile-nav button[aria-current="page"] { color: var(--accent-strong); background: var(--accent-soft); font-weight: 600; }
   .ws-accounts-intro { padding: 24px 18px; gap: 14px; } .ws-accounts-icon { width: 42px; height: 42px; border-radius: 12px; }
   .ws-accounts-intro h2 { font-size: 20px; } .ws-accounts-toolbar { padding: 14px 18px; flex-wrap: wrap; }

@@ -1,0 +1,36 @@
+.wb-workspace { border: 1px solid var(--border); border-radius: 20px; padding: 30px; background: var(--surface); }
+.wb-title, .wb-line { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.wb-workspace .ws-text { display: inline-flex; align-items: center; gap: 6px; }
+.wb-title { align-items: flex-start; margin-bottom: 24px; }
+.wb-title > svg { color: var(--accent-strong); flex-shrink: 0; }
+.wb-workspace h2, .wb-workspace h3, .wb-workspace h4, .wb-workspace p, .wb-workspace dd { overflow-wrap: anywhere; }
+.wb-title h2 { margin: 12px 0; font-size: 26px; letter-spacing: -.6px; }
+.wb-title p, .wb-workspace dt, .wb-workspace .ws-hint { color: var(--muted); }
+.wb-workspace h3 { font-size: 18px; margin: 22px 0 12px; }
+.wb-workspace h4, .wb-event h3 { font-size: 16px; margin: 6px 0; }
+.wb-workspace p { line-height: 1.65; }
+.wb-workspace .ws-hint { font-size: 12px; }
+.wb-message { border: 1px dashed var(--border); border-radius: 14px; padding: 28px; margin: 24px 0; color: var(--muted); }
+.wb-message h3, .wb-message strong { color: var(--text); }
+.wb-message .ws-primary { margin-top: 20px; }
+.wb-accounts { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.wb-accounts li, .wb-event { border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+.wb-accounts li p { color: var(--muted); font-size: 13px; margin: 14px 0 22px; }
+.wb-event { margin: 12px 0; padding: 16px; }
+.wb-event > .ws-hint { margin: 6px 0; }
+.wb-event .ws-notice { padding: 10px 12px; font-size: 12px; }
+.wb-values { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; padding: 10px 0; margin: 4px 0; }
+.wb-values dt, .wb-meta dt, .wb-dates dt { font-size: 12px; }
+.wb-values dd { margin: 4px 0 0; font-size: 17px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.wb-meta { display: grid; gap: 12px; }
+.wb-meta > div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; }
+.wb-meta dd { margin: 0; font-size: 13px; }
+.wb-dates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 6px 0; }
+.wb-dates dd { font-size: 13px; margin: 4px 0 0; }
+.wb-event-actions { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+.wb-event-actions details { flex: 1 1 130px; margin: 0; }
+.wb-event-actions details[open] { flex-basis: 100%; }
+.wb-event summary, .wb-about summary { color: var(--accent-strong); cursor: pointer; font-size: 12px; min-height: 44px; padding: 12px 0; }
+.wb-about { margin: 2px 0 8px; }
+.wb-native { color: var(--muted); background: var(--accent-soft); border-radius: 10px; padding: 14px 16px; font-size: 12px; }
+@media (max-width: 600px) { .wb-workspace { padding: 18px; } .wb-accounts { grid-template-columns: 1fr; } .wb-meta > div { grid-template-columns: 1fr; gap: 5px; } .wb-values { grid-template-columns: 1fr; } .wb-line { gap: 10px; } }

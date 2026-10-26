@@ -2,7 +2,9 @@
 
 Status: bank activity and transaction inspection (2C.1), transfer matching review (2C.2), and category corrections (2C.3) are merged into `main`. The investment screens through Step 2B.2 are also merged into `main`. See the [implementation notes](ui-prototype.md#banking-activity-and-inspection) for delivered behavior and evidence.
 
-The screen should make three things clear: what moved, whether a movement belongs to another tracked account, and which classifications need attention. Security and financial integrity take priority over automation. All records and review actions use fictional data in memory.
+The screen should make three things clear: what moved, whether a movement belongs to another tracked account, and which classifications need attention. Security and financial integrity take priority over automation. The Step 2C prototype records and review actions use fictional data in memory.
+
+The separate protected workspace now includes [Step 8A.1 saved bank activity](protected-bank-activity.md). Banking loads the first saved-account page, offers HDFC/SBI bank accounts including archived accounts, and explicitly opens account activity and revision history. Mixed directory pages preserve their original cursor, exact native values remain unconverted, and pending/cancelled evidence stays distinct. This read-only flow has no prototype fallback or classification inference; real acquisition, statement-format compatibility, balance calculations, transfer matching and category/budget persistence remain separate work.
 
 ## Delivery increments
 

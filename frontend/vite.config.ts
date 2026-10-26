@@ -32,5 +32,9 @@ export default defineConfig({
     headers: { ...headers, 'Content-Security-Policy': contentPolicy + "; frame-ancestors 'none'" },
   },
   build: { sourcemap: false },
-  test: { environment: 'jsdom', setupFiles: './src/test/setup.ts', restoreMocks: true, maxWorkers: 1 },
+  test: {
+    environment: 'jsdom', setupFiles: './src/test/setup.ts', restoreMocks: true,
+    pool: process.platform === 'win32' ? 'threads' : 'forks',
+    isolate: true, maxWorkers: 1,
+  },
 })
