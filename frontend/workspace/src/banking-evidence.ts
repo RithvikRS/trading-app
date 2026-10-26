@@ -16,7 +16,7 @@ export function bankAccountPage(value: unknown, after: string | null = null): Ac
   for (const account of result.items) if (account.kind === 'bank') bankAccount(account)
   return result
 }
-function bankEvent(item: EventEvidence, account: BankAccount): EventEvidence {
+export function bankEvent(item: EventEvidence, account: BankAccount): EventEvidence {
   if (item.account_id !== account.id || item.position_id !== null || item.instrument_id !== null || !['cash_movement', 'fee', 'withholding'].includes(item.kind)
     || item.components.some(value => value.currency !== null && !account.currencies.includes(value.currency))) invalid()
   return item

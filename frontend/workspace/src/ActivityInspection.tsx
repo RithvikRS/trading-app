@@ -62,7 +62,7 @@ export default function ActivityInspection({ auth, position, name, initial, mask
     return result && { kind: 'receipt', context, page: result }
   })
   const item = (event: EventEvidence, historical = false) => <Activity key={`${event.id}-${event.revision}`} item={event} openedPosition={position.id} masked={masked} disabled={disabled} onReceipt={() => void completion(event)} onHistory={historical ? undefined : () => void history(eventIdentity(event))} onCoverage={() => void coverage({ source_id: event.source_id, event_id: event.id, revision: event.revision })} />
-  if (view?.kind === 'receipt') return <ReceiptInspection auth={auth} masked={masked} context={view.context} initial={view.page} busy={busy} onBack={() => void activity()} />
+  if (view?.kind === 'receipt') return <ReceiptInspection navigation={{ mode: 'full' }} auth={auth} masked={masked} context={view.context} initial={view.page} busy={busy} onBack={() => void activity()} />
   return <section className="wi-activity" aria-labelledby="activity-heading">
     <button className="ws-text" disabled={disabled} onClick={onBack}><ArrowLeft size={16} aria-hidden="true" />Back to positions</button>
     <div className="wi-detail-title"><span className="ws-eyebrow">Saved events and their sources</span><h3 id="activity-heading" tabIndex={-1} ref={heading}>Account activity</h3><p>Opened from {name}<br />Account {position.account_id}</p></div>

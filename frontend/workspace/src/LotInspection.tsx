@@ -61,7 +61,7 @@ export default function LotInspection({ auth, position, initial, masked, busy, o
     const result = await auth.finance('/receipts/query', { batch_id: context.batch_id, limit: 25, after: null }, value => receiptPage(value, context))
     return result && { kind: 'receipt', lot, context, page: result }
   })
-  if (view?.kind === 'receipt') return <ReceiptInspection auth={auth} masked={masked} context={view.context} initial={view.page} busy={busy} onBack={() => void observations(view.lot)} />
+  if (view?.kind === 'receipt') return <ReceiptInspection navigation={{ mode: 'full' }} auth={auth} masked={masked} context={view.context} initial={view.page} busy={busy} onBack={() => void observations(view.lot)} />
   return <section className="wi-lots" aria-labelledby="lot-heading">
     <button className="ws-text" disabled={disabled} onClick={onBack}><ArrowLeft size={16} aria-hidden="true" />Back to positions</button>
     <div className="wi-detail-title"><span className="ws-eyebrow">Supplied acquisition evidence</span><h3 id="lot-heading" tabIndex={-1} ref={heading}>Lot evidence</h3><p>Position {position.id}</p></div>

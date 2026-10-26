@@ -6,6 +6,8 @@ The screen should make three things clear: what moved, whether a movement belong
 
 The separate protected workspace now includes [Step 8A.1 saved bank activity](protected-bank-activity.md). Banking loads the first saved-account page, offers HDFC/SBI bank accounts including archived accounts, and explicitly opens account activity and revision history. Mixed directory pages preserve their original cursor, exact native values remain unconverted, and pending/cancelled evidence stays distinct. This read-only flow has no prototype fallback or classification inference; real acquisition, statement-format compatibility, balance calculations, transfer matching and category/budget persistence remain separate work.
 
+[Step 8A.2](bank-record-provenance.md) adds source records and import details to latest or historical bank events. Source records bind the clicked observation without excluding other periods/accounts; completed receipt effects preserve the whole batch, including nonbank targets. Source coverage remains a claim, and saved completion effects do not assert current balances or complete bank history. Nested unavailable reads discard account/origin context and explicitly retry from the account directory. Bank comparison/input navigation is separate work; existing full investment inspection remains available.
+
 ## Delivery increments
 
 | Increment | Deliverable | Status | Conventional commit |

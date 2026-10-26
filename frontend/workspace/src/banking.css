@@ -34,3 +34,10 @@
 .wb-about { margin: 2px 0 8px; }
 .wb-native { color: var(--muted); background: var(--accent-soft); border-radius: 10px; padding: 14px 16px; font-size: 12px; }
 @media (max-width: 600px) { .wb-workspace { padding: 18px; } .wb-accounts { grid-template-columns: 1fr; } .wb-meta > div { grid-template-columns: 1fr; gap: 5px; } .wb-values { grid-template-columns: 1fr; } .wb-line { gap: 10px; } }
+
+.wb-provenance-actions { display: flex; flex-wrap: wrap; gap: 20px; }
+.wb-origin { font-size: 12px; color: var(--accent-strong); }
+.wb-workspace .wi-receipts .wi-evidence { padding: 16px; margin: 12px 0; }
+.wb-workspace .wi-receipts .wi-detail-title { margin: 12px 0; }
+.wb-workspace .wi-receipts .wi-detail-title h3 { font-size: 21px; margin: 8px 0; }
+.wb-workspace .wi-receipts .wb-about { margin: 0; }
