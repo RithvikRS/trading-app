@@ -1,4 +1,4 @@
-"""Protected identity/provenance reads; no credit financial payload or mutation."""
+"""Protected credit metadata and unselected evidence reads; no mutation."""
 
 from collections.abc import Callable
 
@@ -7,6 +7,15 @@ from sqlalchemy.exc import SQLAlchemyError
 from starlette.responses import Response
 
 from trading_api.authentication import CookiePolicy
+from trading_api.credit_evidence_contracts import (
+    CreditEvidenceHistoryPage,
+    CreditEvidenceHistoryQuery,
+    CreditEvidenceInspectQuery,
+    CreditEvidencePage,
+    CreditEvidenceQuery,
+    CreditEvidenceView,
+    evidence_model,
+)
 from trading_api.credit_read_contracts import (
     CreditAccountView,
     CreditMappingHistoryPage,
@@ -20,7 +29,7 @@ from trading_api.valuation_read_contracts import InspectQuery
 from trading_auth.browser import BrowserAuth
 from trading_auth.models import AuthenticationDenied
 from trading_db.connections import DatabaseFailure
-from trading_db.credit_reads import CreditReadTransaction
+from trading_db.credit_evidence_reads import CreditEvidenceReadTransaction
 from trading_db.financial_reads import FinancialReadUnavailable
 from trading_db.workspace import OwnerAccessDenied, WorkspaceDatabase
 
@@ -31,7 +40,9 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
     router = APIRouter(prefix="/api/v1/finance/credit")
 
     def execute[T: WireModel](
-        request: Request, model: type[T], operation: Callable[[CreditReadTransaction], T | None]
+        request: Request,
+        model: type[T],
+        operation: Callable[[CreditEvidenceReadTransaction], T | None],
     ) -> Response:
         unavailable = False
         content = None
@@ -43,7 +54,7 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
         ) as (owner, validate):
             try:
                 with database.transaction(owner, read_only=True) as unit:
-                    reads = CreditReadTransaction(unit)
+                    reads = CreditEvidenceReadTransaction(unit)
                     with reads.consistent():
                         result = operation(reads)
                         content = None if result is None else serialize_response(model, result)
@@ -76,5 +87,21 @@ def routes(browser: BrowserAuth, database: WorkspaceDatabase, policy: CookiePoli
     @router.post("/sources/mappings/history", response_model=CreditMappingHistoryPage)
     def mappings(body: CreditMappingHistoryQuery, request: Request) -> Response:
         return execute(request, CreditMappingHistoryPage, lambda reads: reads.mapping_history(body))
+
+    @router.post("/evidence/query", response_model=CreditEvidencePage)
+    def evidence(body: CreditEvidenceQuery, request: Request) -> Response:
+        return execute(request, CreditEvidencePage, lambda reads: reads.evidence_query(body))
+
+    @router.post("/evidence/history", response_model=CreditEvidenceHistoryPage)
+    def history(body: CreditEvidenceHistoryQuery, request: Request) -> Response:
+        return execute(
+            request, CreditEvidenceHistoryPage, lambda reads: reads.evidence_history(body)
+        )
+
+    @router.post("/evidence/inspect", response_model=CreditEvidenceView)
+    def inspect(body: CreditEvidenceInspectQuery, request: Request) -> Response:
+        return execute(
+            request, evidence_model(body.kind), lambda reads: reads.evidence_inspect(body)
+        )
 
     return router

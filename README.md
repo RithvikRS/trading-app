@@ -54,7 +54,9 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 9B.6.1](docs/credit-entry-evidence.md) adds immutable credit entry interpretations with explicit roles/treatment, independent transaction/posting dates, billed INR and optional original INR/USD evidence. Absent original cash, explicitly missing cash and zero remain distinct. Corrections, explicit retries and encrypted restore preserve exact values and source/mapping/account history under the shared three-kind namespace and quota. Unsupported corrections remain retained and listable. No statement allocation, financial movement, withdrawal, payment inference, import or connected screen is added.
 
-[Step 9B.7.1](docs/credit-identity-reads.md) adds four protected read-only JSON routes for owned billing identities, opaque source handles and retained mapping revisions. Never-mapped, unlinked and archived-target states remain explicit; current account lifecycle is distinct from historical target binding. Bounded pages and private response validation retain the existing active MFA/session boundary. These routes expose metadata only; financial evidence reads, connected card screens, imports, selection and payment status remain separate work.
+[Step 9B.7.1](docs/credit-identity-reads.md) adds four protected read-only JSON routes for owned billing identities, opaque source handles and retained mapping revisions. Never-mapped, unlinked and archived-target states remain explicit; current account lifecycle is distinct from historical target binding. Bounded pages and private response validation retain the existing active MFA/session boundary. These four routes expose metadata only.
+
+[Step 9B.7.2](docs/credit-evidence-reads.md) adds three protected typed reads for unselected statement, current-report and entry evidence. Bounded queries, retained history and exact-revision inspection bind account/kind/root and frozen mapping provenance. Original native decimal and source-local instant spelling, independent dates, and absent/missing/zero distinctions remain explicit. Newest stored interpretations do not establish selected liability, freshness, coverage or payment status. No financial mutation, provider acquisition or connected card screen is added.
 
 ## Run locally
 
@@ -84,7 +86,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 - Indian and US stocks, ETFs, and direct/regular mutual funds.
 - UBS Accenture ESPP lots, dividends, and cash movements.
 - HDFC/SBI transactions, categories, transfers, cash flow, and budgets.
-- [HDFC credit cards in Step 9](docs/credit-cards-plan.md): the synthetic section, durable unselected evidence and protected identity/provenance reads are implemented; financial evidence APIs, verified statement imports, connected card views and payment matching remain planned.
+- [HDFC credit cards in Step 9](docs/credit-cards-plan.md): the synthetic section, durable unselected evidence and protected identity/evidence reads are implemented; verified statement imports, connected card views and payment matching remain planned.
 - Supported automatic imports, statement fallbacks, and separate holdings/price freshness.
 - Python API with local PostgreSQL for development and Supabase PostgreSQL for deployment.
 - Likely Oracle Cloud AMD hosting; resource, swap protection, and recovery checks precede hosted use.
@@ -134,6 +136,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Current credit evidence](docs/credit-current-evidence.md) | Independently dated unselected INR reports, original source-local instants, typed history and recovery |
 | [Credit entry evidence](docs/credit-entry-evidence.md) | Immutable roles/treatment, billed and original native values, independent dates and retained correction history |
 | [Protected credit identity reads](docs/credit-identity-reads.md) | Four bounded billing/source/mapping metadata reads, observed lifecycle, strict private responses and session isolation |
+| [Protected credit evidence reads](docs/credit-evidence-reads.md) | Typed native statement/current/entry reads, exact retained revisions, frozen provenance and private bounded responses |
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |
