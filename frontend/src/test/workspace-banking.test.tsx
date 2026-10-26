@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import axe from 'axe-core'
@@ -177,8 +177,12 @@ it('clears a displayed bank view when an idle check observes a replaced session'
   await openActivity(); const previous = fetchMock.getMockImplementation()!; fetchMock.mockImplementation((path, options) => path === '/api/v1/auth/session' ? Promise.resolve(response({ ...session(), workspace_context: 'e'.repeat(64) })) : previous(path, options)); await act(async () => auth.check()); expect(auth.snapshot().screen).toMatchObject({ kind: 'blocked', reason: 'context' }); expect(document.querySelector('.wb-workspace')).toBeNull()
 })
 it('supports keyboard selection/history and a genuinely empty activity page', async () => {
-  await openBanking(); const user = userEvent.setup(); screen.getByRole('button', { name: 'View saved activity for HDFC Everyday account' }).focus(); await user.keyboard('{Enter}'); const heading = await screen.findByRole('heading', { name: 'Saved account activity' }); expect(document.activeElement).toBe(heading)
-  screen.getByRole('button', { name: `Revision history for event ${id(30)}` }).focus(); await user.keyboard('{Enter}'); expect(document.activeElement).toBe(await screen.findByRole('heading', { name: 'Event revision history' }))
+  await openBanking(); const user = userEvent.setup(); const activity = screen.getByRole('button', { name: 'View saved activity for HDFC Everyday account' })
+  await waitFor(() => expect((activity as HTMLButtonElement).disabled).toBe(false)); activity.focus(); expect(document.activeElement).toBe(activity); await user.keyboard('{Enter}')
+  const heading = await screen.findByRole('heading', { name: 'Saved account activity' }); expect(document.activeElement).toBe(heading)
+  const history = screen.getByRole('button', { name: `Revision history for event ${id(30)}` })
+  await waitFor(() => expect((history as HTMLButtonElement).disabled).toBe(false)); history.focus(); expect(document.activeElement).toBe(history); await user.keyboard('{Enter}')
+  expect(document.activeElement).toBe(await screen.findByRole('heading', { name: 'Event revision history' }))
   override('/api/v1/finance/events/query', () => ({ items: [], next_after: null })); fireEvent.click(screen.getByRole('button', { name: 'Back to saved activity' })); await screen.findByText(/No saved events on this page/); expect((screen.getByRole('button', { name: 'Next activity page' }) as HTMLButtonElement).disabled).toBe(true)
   expect(financeCalls().every(([path]) => ['/api/v1/finance/accounts/query', '/api/v1/finance/events/query', '/api/v1/finance/events/history'].includes(String(path)))).toBe(true)
 })

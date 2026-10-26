@@ -52,6 +52,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 9B.6.1](docs/credit-entry-evidence.md) adds immutable credit entry interpretations with explicit roles/treatment, independent transaction/posting dates, billed INR and optional original INR/USD evidence. Absent original cash, explicitly missing cash and zero remain distinct. Corrections, explicit retries and encrypted restore preserve exact values and source/mapping/account history under the shared three-kind namespace and quota. Unsupported corrections remain retained and listable. No statement allocation, financial movement, withdrawal, payment inference, import or connected screen is added.
 
+[Step 9B.7.1](docs/credit-identity-reads.md) adds four protected read-only JSON routes for owned billing identities, opaque source handles and retained mapping revisions. Never-mapped, unlinked and archived-target states remain explicit; current account lifecycle is distinct from historical target binding. Bounded pages and private response validation retain the existing active MFA/session boundary. These routes expose metadata only; financial evidence reads, connected card screens, imports, selection and payment status remain separate work.
+
 ## Run locally
 
 Use Node.js 22.22.2 or newer in the Node 22 release line, with npm 12. From the repository root:
@@ -80,7 +82,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 - Indian and US stocks, ETFs, and direct/regular mutual funds.
 - UBS Accenture ESPP lots, dividends, and cash movements.
 - HDFC/SBI transactions, categories, transfers, cash flow, and budgets.
-- [HDFC credit cards in Step 9](docs/credit-cards-plan.md): a synthetic section is implemented; statement imports, durable dues/activity and payment matching remain planned.
+- [HDFC credit cards in Step 9](docs/credit-cards-plan.md): the synthetic section, durable unselected evidence and protected identity/provenance reads are implemented; financial evidence APIs, verified statement imports, connected card views and payment matching remain planned.
 - Supported automatic imports, statement fallbacks, and separate holdings/price freshness.
 - Python API with local PostgreSQL for development and Supabase PostgreSQL for deployment.
 - Likely Oracle Cloud AMD hosting; resource, swap protection, and recovery checks precede hosted use.
@@ -128,6 +130,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Credit statement evidence](docs/credit-statement-evidence.md) | Immutable unselected INR checkpoints, frozen mapping provenance, explicit retries and recovery |
 | [Current credit evidence](docs/credit-current-evidence.md) | Independently dated unselected INR reports, original source-local instants, typed history and recovery |
 | [Credit entry evidence](docs/credit-entry-evidence.md) | Immutable roles/treatment, billed and original native values, independent dates and retained correction history |
+| [Protected credit identity reads](docs/credit-identity-reads.md) | Four bounded billing/source/mapping metadata reads, observed lifecycle, strict private responses and session isolation |
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |
