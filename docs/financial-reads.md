@@ -4,6 +4,8 @@ Step 4G.1 exposes owned account, source-mapping, instrument and position identit
 
 [Step 4G.2a](event-lot-reads.md) adds dated event/lot evidence and retained history. [Step 4G.2b](snapshot-market-reads.md) adds dated snapshot/market evidence, listings and selection history/resolution. [Step 4G.3a](import-review-reads.md) adds source/import/review inspection; [4G.3b](completion-receipt-reads.md) completes immutable receipt/comparison inspection and synthetic persistence acceptance. No financial mutation, upload, download from a provider, export or administrative route is introduced by these read increments.
 
+[Step 9B.7.1](credit-identity-reads.md) adds a separate four-route credit metadata boundary for owned HDFC/INR billing identities, opaque source handles and mapping history. It preserves active/archived, never-mapped and explicitly unlinked states, with historical target bindings distinct from account lifecycle observed by each query. It reuses the protected browser/session policy and READ ONLY transactions, while taking the credit owner lock and rejecting invalid response models before serialization. Credit financial values, evidence selection and connected card screens remain separate; the table below describes the earlier asset/bank identity routes.
+
 ## Request contract
 
 All identity queries use `POST` with `application/json` at the existing API origin. These operations read financial records. The JSON body keeps account filters and pagination references out of URLs, proxy access targets and browser history. Query strings remain forbidden across authentication, preferences and financial routes.
