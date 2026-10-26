@@ -78,9 +78,14 @@ export function eventEvidence(value: unknown, accountId: string): EventEvidence 
   }
   return result
 }
-export function activityPage(value: unknown, position: Position, after: string | null = null): Page<EventEvidence> {
+export function accountActivityPage(value: unknown, accountId: string, after: string | null = null): Page<EventEvidence> {
   keys(object(value), ['items', 'next_after'])
-  return page(value, value => { const item = eventEvidence(value, position.account_id); if (!item.is_current || item.position_id === position.id && item.instrument_id !== position.instrument_id) invalid(); return item }, after)
+  return page(value, value => { const item = eventEvidence(value, accountId); if (!item.is_current) invalid(); return item }, after)
+}
+export function activityPage(value: unknown, position: Position, after: string | null = null): Page<EventEvidence> {
+  const result = accountActivityPage(value, position.account_id, after)
+  if (result.items.some(item => item.position_id === position.id && item.instrument_id !== position.instrument_id)) invalid()
+  return result
 }
 export type ActivityHistory = { items: EventEvidence[]; next_before: number | null }
 export function activityHistory(value: unknown, root: EventIdentity, before: number | null = null): ActivityHistory {
