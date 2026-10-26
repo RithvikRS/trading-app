@@ -783,13 +783,10 @@ def test_account_lifecycle_is_observed_now_without_changing_mapping_history(envi
     )
 
 
-def test_no_credit_evidence_or_mutation_routes_are_mounted(environment, seeded):
+def test_no_credit_mutation_routes_are_mounted(environment, seeded):
     client, _, _, _, _ = environment
     headers = login(client)
     for path in (
-        "evidence/query",
-        "evidence/history",
-        "evidence/inspect",
         "accounts/create",
         "accounts/archive",
         "sources/create",

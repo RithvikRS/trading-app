@@ -93,7 +93,8 @@ class CreditMappingHistoryPage(WireModel):
 
 def private_payload(value: Any, *, depth: int = 0) -> Any:
     """Extract declared wire fields without invoking serializers on counterfeit models."""
-    if depth > 4:
+    # Evidence pages have one additional typed values/cash nesting level.
+    if depth > 5:
         raise ValueError("Credit response is unavailable.")
     if isinstance(value, WireModel):
         fields = set(type(value).model_fields)

@@ -1,4 +1,4 @@
-"""All four credit identity reads inherit the strict financial browser envelope."""
+"""All credit identity and evidence reads inherit the strict financial browser envelope."""
 
 import asyncio
 import secrets
@@ -12,7 +12,15 @@ from trading_api.authentication import BrowserBoundary, CookiePolicy
 
 PATHS = [
     "/api/v1/finance/credit/" + path
-    for path in ("accounts/query", "accounts/inspect", "sources/query", "sources/mappings/history")
+    for path in (
+        "accounts/query",
+        "accounts/inspect",
+        "sources/query",
+        "sources/mappings/history",
+        "evidence/query",
+        "evidence/history",
+        "evidence/inspect",
+    )
 ]
 
 
