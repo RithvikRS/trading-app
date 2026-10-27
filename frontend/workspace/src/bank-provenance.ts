@@ -9,12 +9,12 @@ import type { Page, SourceObservation } from './investments'
 function invalid(): never { throw new Error('Invalid saved bank source evidence') }
 export const MAX_SOURCE_PAGES = 100
 export const bankCoverageLabels = { snapshot: 'Snapshot evidence only', partial_activity: 'Partial activity reported', complete_activity: 'Source claims complete activity', unknown: 'Coverage unknown' } as const
-export type BankOrigin = ReceiptContext & Pick<EventEvidence, 'source_id' | 'observation_id' | 'period_start' | 'period_end'>
+export type BankOrigin = ReceiptContext & Pick<EventEvidence, 'source_id' | 'observation_id' | 'period_start' | 'period_end' | 'cash_date_basis' | 'status' | 'posting_state'> & { native_currency: 'INR' | 'USD' | null }
 export type BankProvenance = { account: BankAccount; origin: BankOrigin; back: { kind: 'activity' } | { kind: 'history'; root: EventIdentity } }
 export function bankProvenance(selected: BankAccount, value: EventEvidence, historyRoot?: EventIdentity): BankProvenance {
   const account = bankAccount(selected), item = bankEvent(eventEvidence(value, account.id), account), identity = eventIdentity(item)
   if (historyRoot && (historyRoot.id !== item.id || historyRoot.account_id !== account.id || historyRoot.position_id !== null || historyRoot.instrument_id !== null || historyRoot.kind !== item.kind || !Number.isSafeInteger(historyRoot.revision) || historyRoot.revision < 1)) invalid()
-  return { account, origin: { ...receiptContext('event', item), source_id: item.source_id, observation_id: item.observation_id, period_start: item.period_start, period_end: item.period_end }, back: historyRoot ? { kind: 'history', root: { ...identity, revision: Math.max(historyRoot.revision, item.revision) } } : { kind: 'activity' } }
+  return { account, origin: { ...receiptContext('event', item), source_id: item.source_id, observation_id: item.observation_id, period_start: item.period_start, period_end: item.period_end, cash_date_basis: item.cash_date_basis, status: item.status, posting_state: item.posting_state, native_currency: item.components.find(value => value.role === 'net_cash')?.currency ?? null }, back: historyRoot ? { kind: 'history', root: { ...identity, revision: Math.max(historyRoot.revision, item.revision) } } : { kind: 'activity' } }
 }
 export type SourceProgress = Readonly<{ pages: number; originSeen: boolean }>
 export type BankSourcePage = Page<SourceObservation> & { progress: SourceProgress }

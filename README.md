@@ -38,7 +38,9 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 8A.1](docs/protected-bank-activity.md) opens saved HDFC/SBI bank accounts directly from protected Banking. Account activity and revision history preserve exact native amounts, independent posting/cancellation states and source dates. Compact cards and expandable source details keep the view readable; masking and strict account/currency/history binding remain enforced. This increment adds saved-data inspection; bank acquisition, statement parsing, balances, transfer matching, categorization and budgets remain separate work.
 
-[Step 8A.2](docs/bank-record-provenance.md) opens source records and saved import-completion effects from the selected bank event revision. Source records remain source-wide, while receipt effects retain every row in the whole batch. Exact origin binding, historical return floors and fresh-directory recovery protect navigation. Bank comparison/input inspection, acquisition and the complete protected import flow remain separate work.
+[Step 8A.2](docs/bank-record-provenance.md) opens source records and saved import-completion effects from the selected bank event revision. Source records remain source-wide, while receipt effects retain every row in the whole batch. Exact origin binding, historical return floors and fresh-directory recovery protect navigation. Bank input inspection, acquisition and the complete protected import flow remain separate work.
+
+[Step 8A.3](docs/bank-cash-comparisons.md) opens saved native cash comparisons from reconciled bank receipts. Whole-batch scope pages retain other-account metadata while inspection binds the selected bank account, currency, period and date basis. Exact source/combined equations preserve pending counts and masking; they describe historical completion evidence and do not select a current balance. Frozen bank input rows, dated snapshots and acquisition remain separate work.
 
 [Step 9A](docs/credit-cards-prototype.md) adds a synthetic Credit Cards screen with one fictional HDFC billing account, shared primary/add-on activity, statement history, searchable activity and source inspection. Statement dues and separately dated outstanding remain distinct; missing values and payment status stay unknown. Both themes, INR/USD display and amount masking are supported. Financial records and selections are not persisted, and no real HDFC export format, upload or protected card screen is supported.
 
@@ -121,6 +123,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Frozen comparison inputs](docs/frozen-input-inspection.md) | Six source/combined input selections, exact native evidence and retained historical lineage |
 | [Protected bank activity](docs/protected-bank-activity.md) | Saved HDFC/SBI account selection, exact native activity and revision history |
 | [Bank record provenance](docs/bank-record-provenance.md) | Source-wide observations, exact clicked origins and whole-batch historical import effects |
+| [Bank cash comparisons](docs/bank-cash-comparisons.md) | Whole-batch scope pages and exact historical source/combined cash equations |
 | [Snapshot evidence and selection](docs/snapshot-evidence.md) | Implemented Step 4E.1 dated position/cash evidence, source conflicts and retained selection history |
 | [Financial events](docs/financial-events.md) | Implemented Step 4D.2 source-linked events, native movements, explicit posting state and recovery |
 | [Import staging](docs/import-staging.md) | Implemented Step 4D.1 immutable evidence, exact normalized rows and versioned review |
