@@ -1,0 +1,35 @@
+.wc-workspace { border: 1px solid var(--border); border-radius: 20px; padding: 28px; background: var(--surface); }
+.wc-title, .wc-toolbar, .wc-card-heading, .wc-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.wc-title { align-items: flex-start; margin-bottom: 18px; }
+.wc-title h2 { margin: 9px 0; font-size: 26px; letter-spacing: -.6px; }
+.wc-title > svg { color: var(--accent-strong); flex-shrink: 0; }
+.wc-workspace p { line-height: 1.65; }
+.wc-workspace p, .wc-workspace h2, .wc-workspace h3, .wc-workspace dd { overflow-wrap: anywhere; }
+.wc-title p, .wc-meta dt, .wc-workspace .ws-hint { color: var(--muted); }
+.wc-workspace .ws-hint { font-size: 12px; }
+.wc-workspace .ws-text { display: inline-flex; align-items: center; gap: 6px; }
+.wc-tabs { display: flex; gap: 8px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+.wc-tabs button { min-height: 44px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 15px; font-size: 13px; color: var(--muted); }
+.wc-tabs button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent-border); }
+.wc-toolbar { margin: 14px 0; }
+.wc-toolbar h3 { font-size: 17px; margin: 0; }
+.wc-list { display: grid; gap: 12px; list-style: none; padding: 0; margin: 16px 0; }
+.wc-accounts, .wc-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.wc-card { border: 1px solid var(--border); border-radius: 14px; padding: 18px; min-width: 0; }
+.wc-card h3 { margin: 8px 0; font-size: 17px; }
+.wc-card > p { margin: 8px 0; font-size: 13px; color: var(--muted); }
+.wc-card-mark { width: 42px; height: 42px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-strong); border-radius: 12px; }
+.wc-state { display: inline-flex; border: 1px solid var(--border); border-radius: 30px; padding: 5px 9px; font-size: 11px; color: var(--muted); background: var(--surface-soft); }
+.wc-actions { justify-content: flex-start; margin-top: 10px; }
+.wc-meta { display: grid; gap: 12px; margin: 14px 0; }
+.wc-meta > div { display: grid; grid-template-columns: 160px minmax(0,1fr); gap: 12px; }
+.wc-meta dt, .wc-meta dd { font-size: 13px; line-height: 1.6; }
+.wc-meta dd { margin: 0; }
+.wc-workspace summary { min-height: 44px; padding: 12px 0; color: var(--accent-strong); cursor: pointer; font-size: 12px; }
+.wc-note { background: var(--accent-soft); border-radius: 10px; padding: 12px 15px; font-size: 12px; color: var(--muted); }
+.wc-message { border: 1px dashed var(--border); border-radius: 14px; padding: 24px; margin: 18px 0; color: var(--muted); }
+.wc-message strong { color: var(--text); }
+.wc-history { counter-reset: none; }
+.wc-history .wc-card { border-left: 3px solid var(--accent-border); }
+.wc-workspace button { min-height: 44px; }
+@media (max-width: 600px) { .wc-title > svg { display: none; } .wc-workspace { padding: 18px; } .wc-accounts, .wc-sources { grid-template-columns: 1fr; } .wc-title h2 { font-size: 23px; } .wc-meta > div { grid-template-columns: 1fr; gap: 4px; } .wc-card { padding: 16px; } }

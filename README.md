@@ -42,7 +42,7 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 8A.3](docs/bank-cash-comparisons.md) opens saved native cash comparisons from reconciled bank receipts. Whole-batch scope pages retain other-account metadata while inspection binds the selected bank account, currency, period and date basis. Exact source/combined equations preserve pending counts and masking; they describe historical completion evidence and do not select a current balance. Frozen bank input rows, dated snapshots and acquisition remain separate work.
 
-[Step 9A](docs/credit-cards-prototype.md) adds a synthetic Credit Cards screen with one fictional HDFC billing account, shared primary/add-on activity, statement history, searchable activity and source inspection. Statement dues and separately dated outstanding remain distinct; missing values and payment status stay unknown. Both themes, INR/USD display and amount masking are supported. Financial records and selections are not persisted, and no real HDFC export format, upload or protected card screen is supported.
+[Step 9A](docs/credit-cards-prototype.md) adds a synthetic Credit Cards screen with one fictional HDFC billing account, shared primary/add-on activity, statement history, searchable activity and source inspection. Statement dues and separately dated outstanding remain distinct; missing values and payment status stay unknown. Both themes, INR/USD display and amount masking are supported. This synthetic walkthrough does not persist financial records or selections and supports no real HDFC export or upload. The protected identity/source views added in Step 9B.8.1 are separate.
 
 [Step 9B.1](docs/credit-card-values.md) adds pure Python contracts for INR statements, separately dated current evidence, explicit entry roles and exact liability reconciliation. Missing values remain distinct from zero, and matching arithmetic does not prove coverage or payment. This increment introduces no database schema, API, UI, import support or persistence.
 
@@ -59,6 +59,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 [Step 9B.7.1](docs/credit-identity-reads.md) adds four protected read-only JSON routes for owned billing identities, opaque source handles and retained mapping revisions. Never-mapped, unlinked and archived-target states remain explicit; current account lifecycle is distinct from historical target binding. Bounded pages and private response validation retain the existing active MFA/session boundary. These four routes expose metadata only.
 
 [Step 9B.7.2](docs/credit-evidence-reads.md) adds three protected typed reads for unselected statement, current-report and entry evidence. Bounded queries, retained history and exact-revision inspection bind account/kind/root and frozen mapping provenance. Original native decimal and source-local instant spelling, independent dates, and absent/missing/zero distinctions remain explicit. Newest stored interpretations do not establish selected liability, freshness, coverage or payment status. No financial mutation, provider acquisition or connected card screen is added.
+
+[Step 9B.8.1](docs/protected-credit-identities.md) adds protected Credit Cards navigation for saved HDFC billing identities and source-link history. Explicit inspection, separate owner-wide source pages and retained mapping revisions preserve archived, unlinked and never-linked states. These metadata views contain no balances, payment status, statement values or provider acquisition.
 
 ## Run locally
 
@@ -88,7 +90,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 - Indian and US stocks, ETFs, and direct/regular mutual funds.
 - UBS Accenture ESPP lots, dividends, and cash movements.
 - HDFC/SBI transactions, categories, transfers, cash flow, and budgets.
-- [HDFC credit cards in Step 9](docs/credit-cards-plan.md): the synthetic section, durable unselected evidence and protected identity/evidence reads are implemented; verified statement imports, connected card views and payment matching remain planned.
+- [HDFC credit cards in Step 9](docs/credit-cards-plan.md): the synthetic section, durable unselected evidence, protected read APIs and protected identity/source views are implemented; verified statement imports, financial evidence screens and payment matching remain planned.
 - Supported automatic imports, statement fallbacks, and separate holdings/price freshness.
 - Python API with local PostgreSQL for development and Supabase PostgreSQL for deployment.
 - Likely Oracle Cloud AMD hosting; resource, swap protection, and recovery checks precede hosted use.
@@ -140,6 +142,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Credit entry evidence](docs/credit-entry-evidence.md) | Immutable roles/treatment, billed and original native values, independent dates and retained correction history |
 | [Protected credit identity reads](docs/credit-identity-reads.md) | Four bounded billing/source/mapping metadata reads, observed lifecycle, strict private responses and session isolation |
 | [Protected credit evidence reads](docs/credit-evidence-reads.md) | Typed native statement/current/entry reads, exact retained revisions, frozen provenance and private bounded responses |
+| [Protected credit identities](docs/protected-credit-identities.md) | HDFC billing-account inspection and independent source-link history in the protected workspace |
 | [Foundation plan](docs/foundation-plan.md) | Step 3 increments, ownership/session contracts, and verification |
 | [Authentication options](docs/authentication-options.md) | Supabase Auth, Django/allauth, and Auth0 tradeoffs |
 | [Security](docs/security.md) | Threat model, controls, release gates |
