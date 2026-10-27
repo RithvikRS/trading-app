@@ -129,9 +129,9 @@ it('shows whole-batch effects including nonbank targets without exposing bank co
   await openActivity(); await openRows(); expect(screen.getByRole('heading',{name:'Import details'})).toBeTruthy(); expect(screen.getByText('Whole-batch records, including other accounts and positions.')).toBeTruthy(); expect(screen.getByText('Originating revision')).toBeTruthy(); expect(screen.getAllByText('Another batch row')).toHaveLength(4); expect(screen.getByText('Linked existing evidence')).toBeTruthy(); expect(screen.getByText('Excluded')).toBeTruthy(); expect(screen.getByText('Lot observation '+id(904))).toBeTruthy()
   expect(document.querySelector('.wb-workspace')!.innerHTML).not.toMatch(/1,500|1500\.00|0\.00000000/); expect(screen.queryByRole('button',{name:'Inspect native comparisons'})).toBeNull()
 })
-it('keeps true complete-activity receipt metadata without advertising deferred comparison navigation', async () => {
+it('keeps true complete-activity metadata with explicit comparison entry and no automatic reads', async () => {
   const complete = { ...event(), coverage: 'complete_activity' }; override('/api/v1/finance/events/query', () => ({ items: [complete], next_after: null })); override('/api/v1/finance/receipts/query', () => ({ items: [receipt(complete)], next_after: null }))
-  await openActivity(); await action('Batch receipts'); expect(screen.getByText('Reconciled at completion')).toBeTruthy(); expect(screen.queryByRole('button',{name:'Inspect native comparisons'})).toBeNull(); expect(document.querySelector('.wi-receipts')!.innerHTML).not.toMatch(/Inspect native comparisons|Original input rows are available/)
+  await openActivity(); await action('Batch receipts'); expect(screen.getByText('Reconciled at completion')).toBeTruthy(); expect(screen.getByRole('button',{name:'Saved comparisons'})).toBeTruthy(); expect(screen.queryByRole('button',{name:'Inspect native comparisons'})).toBeNull(); expect(document.querySelector('.wi-receipts')!.innerHTML).not.toMatch(/Inspect native comparisons|Original input rows are available/)
   expect(calls().every(([path]) => !String(path).includes('/receipts/scopes/') && !String(path).includes('/receipts/inputs/'))).toBe(true)
 })
 it('allows empty receipt evidence without treating it as a zero balance', async () => {
