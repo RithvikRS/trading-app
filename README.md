@@ -44,9 +44,11 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 8A.2](docs/bank-record-provenance.md) opens source records and saved import-completion effects from the selected bank event revision. Source records remain source-wide, while receipt effects retain every row in the whole batch. Exact origin binding, historical return floors and fresh-directory recovery protect navigation. Acquisition and the complete protected import flow remain separate work.
 
-[Step 8A.3](docs/bank-cash-comparisons.md) opens saved native cash comparisons from reconciled bank receipts. Whole-batch scope pages retain other-account metadata while inspection binds the selected bank account, currency, period and date basis. Exact source/combined equations preserve pending counts and masking; they describe historical completion evidence and do not select a current balance. Dated snapshots and acquisition remain separate work.
+[Step 8A.3](docs/bank-cash-comparisons.md) opens saved native cash comparisons from reconciled bank receipts. Whole-batch scope pages retain other-account metadata while inspection binds the selected bank account, currency, period and date basis. Exact source/combined equations preserve pending counts and masking; they describe historical completion evidence and do not select a current balance. [Selected dated bank cash](docs/selected-bank-cash.md) is inspected separately; acquisition remains future work.
 
 [Step 8A.4](docs/bank-frozen-inputs.md) exposes each source/combined opening, activity and closing input group for the selected bank cash scope. Exact native values, posting states, reference revisions and bounded traversal remain tied to the frozen comparison. History navigation separately retains its highest accepted revision without changing selected historical facts. No balance selection, acquisition or financial write is added.
+
+[Step 8C.1](docs/selected-bank-cash.md) opens one selected native bank cash snapshot, its original source date, retained choice history and exact pinned revisions. Only a valid selected resolution supplies the main amount; stale, cleared, cancelled, archived and conflicting states remain explicit. Historical amounts are labelled and masked, with no currency conversion, live balance calculation or selection write.
 
 [Step 9A](docs/credit-cards-prototype.md) adds a synthetic Credit Cards screen with one fictional HDFC billing account, shared primary/add-on activity, statement history, searchable activity and source inspection. Statement dues and separately dated outstanding remain distinct; missing values and payment status stay unknown. Both themes, INR/USD display and amount masking are supported. This synthetic walkthrough does not persist financial records or selections and supports no real HDFC export or upload. The protected identity/source views added in Step 9B.8.1 and unselected financial evidence inspection added in Step 9B.8.2 are separate.
 
@@ -137,6 +139,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Bank record provenance](docs/bank-record-provenance.md) | Source-wide observations, exact clicked origins and whole-batch historical import effects |
 | [Bank cash comparisons](docs/bank-cash-comparisons.md) | Whole-batch scope pages and exact historical source/combined cash equations |
 | [Frozen bank inputs](docs/bank-frozen-inputs.md) | Explicit source/combined input groups, exact native historical values and retained bank-history floors |
+| [Selected bank cash](docs/selected-bank-cash.md) | Dated native cash choices, exact pinned revisions and retained selection history |
 | [Snapshot evidence and selection](docs/snapshot-evidence.md) | Implemented Step 4E.1 dated position/cash evidence, source conflicts and retained selection history |
 | [Financial events](docs/financial-events.md) | Implemented Step 4D.2 source-linked events, native movements, explicit posting state and recovery |
 | [Import staging](docs/import-staging.md) | Implemented Step 4D.1 immutable evidence, exact normalized rows and versioned review |
