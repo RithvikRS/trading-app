@@ -1,0 +1,27 @@
+# Bounded public NAV reader
+
+Step 5F.1 adds an internal, explicit read of the fixed AMFI current NAV text report. It returns the existing [exact report contracts](amfi-nav-contracts.md); it does not select a price, infer a fund identity or update a portfolio. No route, application setting, scheduled job, database write or dependency change activates acquisition.
+
+## Source and activation boundary
+
+The previously verified [official download page](https://www.amfiindia.com/net-asset-value/nav-download) identifies the [current report](https://portal.amfiindia.com/spages/NAVAll.txt). A bounded header probe on 26 October 2026 returned HTTP 200, `text/plain`, no content encoding, and the exact existing eight-column header. Its declared size was 1,525,245 bytes. Only an initial chunk was inspected; no full live report was acquired or retained. The 26 October reread of the download page timed out. A page-only recheck on 28 October found the official download page accessible and the same relevant terms restrictions; no live NAV report was fetched during that recheck. The header probe establishes the observed endpoint/header, not every row's current compatibility or service availability.
+
+AMFI's [terms of use](https://www.amfiindia.com/terms-of-use), checked the same day, allow personal noncommercial access and restrict substantial electronic storage and broader reuse. The intended scope of ongoing acquisition, retained price history and later redistribution remains unresolved. Application activation requires verified permitted use or a suitable alternative source. The internal reader and synthetic tests do not establish that entitlement.
+
+## Network and resource contract
+
+`read_current_nav()` makes one explicit HTTPS GET to `https://portal.amfiindia.com/spages/NAVAll.txt`. The caller cannot supply a URL, query, headers, credentials or client. TLS verification is explicit; ambient proxies and certificate environment settings are disabled, redirects are not followed, and a fresh client carries no session cookie, authorization or referer. A trusted transport override exists for internal synthetic testing. No source-provided URL is executed.
+
+One process-wide acquisition slot rejects overlapping requests without queuing. Network I/O has a 20-second total deadline, three-second per-operation timeouts, one connection and no retained keepalive pool. The reader accepts at most 64 response headers and 16 KiB of aggregate header names/values, requests identity encoding and accepts unambiguous plain-text metadata. The installed transport receives headers before these reader-level acceptance checks. Compressed responses, duplicate relevant headers, range responses, unsupported transfer encodings, ambiguous length/transfer combinations and non-200 responses fail closed. At most 4 MiB of raw body bytes is accumulated in bounded chunks; a declared length must agree with the completed body. Detected transport failures, declared-length mismatches and malformed or truncated rows fail closed. A syntactically valid shorter report can still parse when no authoritative expected total is available; successful transport and parsing do not prove report-wide completeness.
+
+HTTP 429 and 503 establish a local backoff without consuming their response bodies. A bounded `Retry-After` delay or dated value is clamped to 1 to 3,600 seconds; missing or malformed values use 60 seconds. Backoff uses a monotonic deadline. There is no automatic retry, fallback URL, periodic polling or cached report. This process-local control is not a distributed scheduler or rate-limit guarantee.
+
+The existing parser independently enforces byte, line, row, field, date and financial-value limits. Parsing is synchronous and bounded by those input limits; the network deadline is not a hard CPU-preemption guarantee. Cancellation closes network contexts and releases the slot. Failure exposes only fixed error text and an allowlisted reason; provider bodies, headers and raw exceptions are not logged or returned as diagnostics.
+
+## Evidence and financial meaning
+
+The returned `NavReport` preserves the digest of the exact source bytes, original row occurrences and line positions, numeric spelling, identifier roles and observation dates. It has no download-time freshness claim. Missing, zero, negative, unsupported or ambiguous evidence remains governed by the existing parser and explicit matcher. No observed report value enters market storage, selection history or valuation in this increment. Original occurrences above the existing persistence limit still require a separate provenance/schema change before storage.
+
+## Verification
+
+The final focused run passed 134 synthetic reader/parser cases in 5.66 seconds. Ruff lint/format and strict typing also passed. Tests cover the fixed destination and client controls, exact parser evidence, aggregate/per-field header and body limits, length mismatch, compressed/error/redirect responses, cancellation, deadline and transport failures, single-attempt capacity and bounded backoff. An initial traceback-canary assertion was corrected because its own executed source line contained the fixture literal; the final test still rejects provider exception-text disclosure. All payloads are fabricated. Final integrated verification remains separate from these focused checks; no live full-report acquisition, hosted behavior, permitted-use clearance or scheduled operation is claimed.

@@ -2,6 +2,8 @@
 
 Step 5A implements a pure parser and explicit target matcher for the current AMFI complete NAV text layout. It is the first source contract in the [investment flow](investment-flow-plan.md). It adds no downloader, schedule, price persistence, automatic instrument creation or portfolio valuation endpoint.
 
+[Step 5F.1](amfi-nav-reader.md) separately implements an internal fixed-destination reader around this unchanged parser. The reader is not connected to application routes, configuration or jobs; source-use entitlement, retained prices and valuation remain separate boundaries.
+
 ## Input and exact evidence
 
 The [official download page](https://www.amfiindia.com/net-asset-value/nav-download) links the [current report](https://portal.amfiindia.com/spages/NAVAll.txt). Its observed eight-column header includes scheme code, payout/growth ISIN, reinvestment ISIN, scheme name, plan, option, NAV and date. The old six-column layout is rejected. This is a checked layout, not a provider compatibility guarantee for future changes.
@@ -26,6 +28,6 @@ Results distinguish usable, missing, ambiguous, identity conflict, unsupported i
 
 Fabricated tests cover source precision/order, BOM/CRLF, numeric AMC headings, direct/regular and both ISIN roles, missing/zero/negative values, duplicates/conflicts, invalid identities, future/stale dates, malformed text, strict inputs and every resource boundary. They contain no customer statements or real portfolio data.
 
-A separate bounded read of the public report on 24 October 2026 parsed 14,412 rows from 1,525,087 bytes. The temporary source copy was removed after research; only counts and its digest remain locally. It is not a committed fixture, CI dependency, portfolio seed or source-account connection. The report contains unsupported identity/variant evidence; successful parsing does not mean every row is eligible for valuation. Live reports can change. AMFI's [terms](https://www.amfiindia.com/terms-of-use) restrict significant electronic storage and broader reuse; acquisition/history permissions remain unresolved and no fetcher is enabled.
+A separate bounded read of the public report on 24 October 2026 parsed 14,412 rows from 1,525,087 bytes. The temporary source copy was removed after research; only counts and its digest remain locally. It is not a committed fixture, CI dependency, portfolio seed or source-account connection. The report contains unsupported identity/variant evidence; successful parsing does not mean every row is eligible for valuation. Live reports can change. AMFI's [terms](https://www.amfiindia.com/terms-of-use) restrict significant electronic storage and broader reuse; acquisition/history permissions remain unresolved and application acquisition remains inactive.
 
 Original occurrences above 1,000 remain intact. Persisting them needs a deliberate extension to the current market provenance contract and database constraint; renumbering selected rows would lose source meaning. The parser itself performs no network or database operation, and its output cannot change financial records. Any future worker response or HTTP payload must cross its own strict validation and ownership boundary.
