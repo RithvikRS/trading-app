@@ -7,6 +7,7 @@ import type { AccountNavigation, AccountsState } from './accounts'
 import type { DisplayPreferences, PreferenceSnapshot, PreferenceStatus } from './preferences'
 import type { FinancePath } from './investments'
 import type { BankSetupPath } from './bank-setup'
+import type { BankMappingPath } from './bank-mappings'
 export type Session = { status: 'authenticated'; workspace_context: string; expires_at: string; idle_expires_at: string; fresh_until: string; factors: string[]; unverified_factors: string[] }
 export type Pending = { status: 'mfa_required'; factors: string[]; setup_key?: string }
 export type Screen =
@@ -249,7 +250,7 @@ export class AuthController {
       }
     })
   }
-  finance = async <T,>(path: FinancePath | BankSetupPath, body: Json, parse: (value: unknown) => T): Promise<T | undefined> => {
+  finance = async <T,>(path: FinancePath | BankSetupPath | BankMappingPath, body: Json, parse: (value: unknown) => T): Promise<T | undefined> => {
     const previous = this.state.screen
     if (previous.kind !== 'workspace' || this.state.busy) return undefined
     let result: T | undefined, failure: FinancialRequestError | undefined

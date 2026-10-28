@@ -1,0 +1,56 @@
+.bm-assignments { border-bottom: 1px solid var(--border); }
+.bm-entry, .bm-title, .bm-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+.bm-entry { padding: 18px 30px; background: var(--surface-soft); }
+.bm-entry > div { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); }
+.bm-entry svg, .bm-title > svg { color: var(--accent-strong); flex-shrink: 0; }
+.bm-panel { padding: 26px 30px; background: linear-gradient(140deg, var(--hero), var(--surface) 56%); }
+.bm-title { flex-wrap: nowrap; }
+.bm-title h3 { margin: 7px 0 0; font-size: 23px; font-weight: 550; letter-spacing: -.5px; }
+.bm-title h3:focus { outline: none; }
+.bm-panel h4 { font-size: 14px; font-weight: 600; margin: 10px 0; }
+.bm-panel p { font-size: 12px; line-height: 1.8; }
+.bm-status { display: flex; align-items: flex-start; gap: 10px; color: var(--muted); margin: 20px 0; }
+.bm-status svg { flex-shrink: 0; margin-top: 3px; }
+.bm-status p { margin: 10px 0; }
+.bm-sources { list-style: none; padding: 0; margin: 18px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.bm-sources li, .bm-current, .bm-pending { background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: 12px; }
+.bm-sources li p { margin: 10px 0; color: var(--muted); }
+.bm-identifier, .bm-source-name span, .bm-result dd { overflow-wrap: anywhere; font-family: ui-monospace, monospace; }
+.bm-source-name { margin: 14px 0; }
+.bm-current { margin: 18px 0; }
+.bm-current p { margin: 9px 0; }
+.bm-result { margin: 18px 0; padding: 16px 18px; border: 1px solid var(--accent-border); border-radius: 12px; background: var(--surface); }
+.bm-result p { color: var(--muted); }
+.bm-result dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 16px 0 0; font-size: 11px; }
+.bm-result dt { margin-bottom: 5px; color: var(--muted); }
+.bm-result dd { margin: 0; line-height: 1.8; }
+.bm-history { margin: 22px 0; }
+.bm-history h4 { display: flex; gap: 8px; align-items: center; }
+.bm-history ol { list-style: none; padding: 0; margin: 14px 0; display: grid; gap: 10px; }
+.bm-history li { display: grid; gap: 7px; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; font-size: 11px; line-height: 1.7; }
+.bm-history li span { color: var(--muted); }
+.bm-panel .bm-choice-title { margin-top: 24px; }
+.bm-panel .bm-targets { border: 0; padding: 0; margin: 14px 0; display: grid; gap: 10px; }
+.bm-targets legend { font-size: 12px; margin-bottom: 10px; }
+.bm-panel .bm-targets label, .bm-panel .bm-confirm { display: flex; align-items: center; gap: 12px; margin: 0; min-height: 44px; padding: 12px 14px; border: 1px solid var(--border); background: var(--surface); border-radius: 9px; font-size: 12px; line-height: 1.7; cursor: pointer; }
+.bm-panel .bm-targets input, .bm-panel .bm-confirm input { width: 18px; height: 18px; min-height: 18px; padding: 0; margin: 0; flex-shrink: 0; accent-color: var(--accent-strong); }
+.bm-targets label span { min-width: 0; overflow-wrap: anywhere; }
+.bm-targets strong, .bm-targets small { display: block; }
+.bm-targets small { font-size: 11px; color: var(--muted); margin-top: 5px; }
+.bm-panel .ws-primary { width: auto; margin-top: 14px; }
+.bm-actions { justify-content: flex-start; }
+.bm-actions .ws-primary { margin-top: 0; }
+.bm-panel button, .bm-entry button { min-height: 44px; }
+.bm-pending { display: grid; gap: 10px; margin: 14px 0; font-size: 12px; }
+.bm-scope { border-top: 1px solid var(--border); margin-top: 24px; padding-top: 16px; color: var(--muted); font-size: 11px !important; }
+@media (max-width: 640px) {
+  .bm-entry, .bm-panel { padding: 18px; }
+  .bm-entry { align-items: stretch; }
+  .bm-entry > div { line-height: 1.7; }
+  .bm-entry button, .bm-panel form .ws-primary { width: 100%; }
+  .bm-sources, .bm-result dl { grid-template-columns: 1fr; }
+  .bm-title h3 { font-size: 21px; }
+  .bm-result { padding: 14px; }
+  .bm-actions { align-items: stretch; }
+  .bm-actions button { flex: 1 1 150px; }
+}

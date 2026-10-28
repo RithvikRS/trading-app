@@ -84,3 +84,5 @@ The local development database was migrated to `0006_accounts_sources` on 24 Oct
 ## Protected identity inspection
 
 [Step 4G.1](financial-reads.md) exposes safe account and current source-mapping projections through active MFA sessions. Archived and unmapped states remain explicit; private external references, ciphertext, keyed fingerprints and key versions are excluded. Reads require no financial-identifier decryption key and expose no account mutation route.
+
+[Step 8B.2](bank-source-mappings.md) adds protected existing HDFC/SBI source history and explicit state-changing assignments. Exact predecessor/target replay returns historical transitions before current target and quota admission; it does not attribute a browser request or rewrite earlier financial records. Source registration and private-reference custody remain separate.

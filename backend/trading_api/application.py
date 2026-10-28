@@ -185,6 +185,7 @@ def create_app(
     if browser is not None:
         api.include_router(routes(browser, policy))
         if workspace is not None:
+            from trading_api.bank_mappings import routes as bank_mapping_routes
             from trading_api.bank_setup import routes as bank_setup_routes
             from trading_api.credit_reads import routes as credit_routes
             from trading_api.financial_reads import routes as financial_routes
@@ -195,6 +196,7 @@ def create_app(
             api.include_router(financial_routes(browser, workspace, policy))
             api.include_router(credit_routes(browser, workspace, policy))
             api.include_router(bank_setup_routes(browser, workspace, policy))
+            api.include_router(bank_mapping_routes(browser, workspace, policy))
             api.include_router(snapshot_review_routes(browser, workspace, policy))
     if indmoney is not None:
         from trading_api.indmoney import routes as indmoney_routes
