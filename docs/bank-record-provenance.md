@@ -18,7 +18,7 @@ Receipt pages bind to the exact clicked batch and coverage. Empty pages remain v
 
 ## Navigation, privacy and failures
 
-The clicked origin and the return destination are separate. A historical origin keeps its own source and record revisions, while returning to history preserves the stronger of the earlier known revision floor and the clicked revision. Back navigation refetches and validates records instead of restoring stale amounts.
+The clicked origin and the return destination are separate. A historical origin keeps its own source and record revisions. [Step 8A.4](bank-frozen-inputs.md) retains a separate highest-seen history revision through source, receipt, comparison and input navigation, preserving the original clicked identity. Returning to history rejects a head below that floor. Back navigation refetches and validates records instead of restoring stale amounts.
 
 Loading removes prior amounts. Unavailable provenance reads, including nested receipt/effect refreshes, remove account and origin context and return to the generic Banking failure state. Explicit retry starts with a fresh account-directory read. Protocol mismatches fail closed through the existing authenticated response boundary. Generation/unmount and session-context checks discard late navigation, lock, sign-out and replacement-session responses.
 
