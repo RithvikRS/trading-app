@@ -1,5 +1,7 @@
 # Accounts and source mappings: Step 4B
 
+[Step 8B.1](bank-account-setup.md) connects the protected Accounts page to explicit HDFC/SBI identity creation. Durable owner-scoped intents bind the original expected setup revision and exact declaration; matching retries return the historical receipt before current-head and quota checks. Equal names remain distinct under separate deliberate requests. Existing source mapping and identifier custody are unchanged.
+
 Implemented in [trading_db.accounts](../backend/trading_db/accounts.py), [identifier custody](../backend/trading_db/account_keys.py), and migration [0006_accounts_sources](../backend/migrations/versions/0006_accounts_sources.py). These are internal services using the existing trusted owner transaction boundary. No financial route, statement parser, provider connection, real-data seed, or frontend flow is introduced. Subsequent [account-directory](connected-accounts.md) and [investment review/view](reviewed-snapshots.md) increments expose saved evidence through the protected workspace.
 
 ## Account identity

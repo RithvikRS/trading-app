@@ -15,8 +15,8 @@ from trading_db.account_keys import ReferenceKeys, ReferenceUnavailable
 from trading_db.connections import DatabaseFailure, engine_for, require_disposable, verify_server
 from trading_db.provider_keys import ProviderKeys
 
-HEAD = "0023_credit_entry_evidence"
-FORMAT = 19
+HEAD = "0024_bank_account_setup"
+FORMAT = 20
 LIMIT = 4_000_000
 MAX_ROWS = 1000
 COLUMNS = {
@@ -551,6 +551,18 @@ COLUMNS["credit_entry_values"] = (
     "original_amount",
     "original_missing",
     "original_currency",
+)
+
+COLUMNS["bank_account_setups"] = (
+    "owner_id",
+    "id",
+    "revision",
+    "previous_revision",
+    "account_id",
+    "institution",
+    "label",
+    "currency_set",
+    "created_at",
 )
 
 OMITTED = ("auth_sessions", "auth_admissions", "indmoney_connections", "indmoney_attempts")

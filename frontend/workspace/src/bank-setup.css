@@ -1,0 +1,41 @@
+.bs-setup { border-bottom: 1px solid var(--border); }
+.bs-entry { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 30px; background: var(--surface-soft); }
+.bs-entry > div { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+.bs-entry svg, .bs-title > svg { color: var(--accent-strong); flex-shrink: 0; }
+.bs-panel { margin: 0; padding: 26px 30px; background: linear-gradient(140deg, var(--hero), var(--surface) 56%); }
+.bs-title { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.bs-title h3 { margin: 7px 0 0; font-size: 23px; font-weight: 550; letter-spacing: -.5px; }
+.bs-title h3:focus { outline: none; }
+.bs-intro, .bs-status { color: var(--muted); font-size: 12px; line-height: 1.8; margin: 18px 0; }
+.bs-status { display: flex; align-items: flex-start; gap: 10px; }
+.bs-status svg { flex-shrink: 0; margin-top: 3px; }
+.bs-status p { margin: 10px 0; }
+.bs-fields { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr); gap: 18px; }
+.bs-form .bs-currencies { display: flex; flex-wrap: wrap; gap: 12px; padding: 0; margin: 15px 0 0; border: 0; }
+.bs-currencies legend { font-size: 12px; font-weight: 550; margin-bottom: 10px; }
+.bs-form .bs-currencies label, .bs-review { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 0; padding: 10px 14px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); font-size: 12px; line-height: 1.6; cursor: pointer; }
+.bs-form .bs-currencies input, .bs-review input { width: 18px; height: 18px; margin: 0; padding: 0; min-height: 18px; flex-shrink: 0; accent-color: var(--accent-strong); }
+.bs-form .ws-primary, .bs-panel > .ws-primary { width: auto; min-height: 44px; margin-top: 14px; }
+.bs-panel button, .bs-panel select, .bs-panel input:not([type="checkbox"]), .bs-entry button { min-height: 44px; }
+.bs-receipt { margin: 18px 0; padding: 16px 18px; border: 1px solid var(--accent-border); background: var(--surface); border-radius: 12px; }
+.bs-receipt h4 { font-size: 15px; font-weight: 550; margin: 10px 0 8px; overflow-wrap: anywhere; }
+.bs-receipt p { font-size: 12px; color: var(--muted); line-height: 1.7; }
+.bs-receipt summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; color: var(--accent-strong); font-size: 11px; }
+.bs-receipt dl { display: grid; gap: 10px; margin: 0 0 10px; font-size: 11px; }
+.bs-receipt dt { color: var(--muted); margin-bottom: 4px; }
+.bs-receipt dd { margin: 0; overflow-wrap: anywhere; font-family: ui-monospace, monospace; }
+.bs-frozen { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); font-size: 13px; overflow-wrap: anywhere; }
+.bs-frozen span { font-size: 12px; color: var(--muted); }
+.bs-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 18px; }
+.bs-actions .ws-primary { width: auto; margin: 0; }
+.bs-review { margin: 18px 0; }
+.bs-scope { color: var(--muted); font-size: 11px; line-height: 1.8; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 24px; }
+@media (max-width: 640px) {
+  .bs-entry, .bs-panel { padding: 18px; }
+  .bs-entry { align-items: stretch; }
+  .bs-entry > div { line-height: 1.7; }
+  .bs-entry button, .bs-form .ws-primary, .bs-actions button { width: 100%; }
+  .bs-fields { grid-template-columns: 1fr; gap: 0; }
+  .bs-title h3 { font-size: 21px; }
+  .bs-receipt { padding: 14px; }
+}
