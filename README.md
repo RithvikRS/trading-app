@@ -18,6 +18,8 @@ Investment samples distinguish positions, activity, cash, and remaining lots. Sa
 
 [Step 8B.1](docs/bank-account-setup.md) adds protected HDFC/SBI bank identity setup with explicit directory review, native currencies and durable exact-request replay. Account creation and its historical receipt commit together behind the existing ownership, MFA, CSRF and session boundary. It does not connect to a bank or create balances or imported records.
 
+[Step 8B.2](docs/bank-source-mappings.md) adds protected inspection and explicit link, correction and unlink actions for existing HDFC/SBI statement sources. Exact transition replay preserves the original predecessor and target, with bounded immutable history and fresh target/ownership checks. Source registration, bank connection and import remain separate work.
+
 [Step 6B](docs/indmoney-authorization.md) adds opt-in INDmoney authorization controls, a browser-bound callback, encrypted credential custody, explicit renewal and local-first disconnect. It requires separately configured local HTTPS and MFA. Tests and screenshots use synthetic responses; no live account has been authorized, and financial imports remain disabled.
 
 [Step 6C](docs/indmoney-reader.md) implements a bounded read-only portfolio engine with exact values, strict protocol/schema checks, explicit incomplete coverage and cancellation/access-loss handling. It is tested with a fabricated contract. Live reads remain disabled until authenticated INDmoney schemas and coverage semantics are verified; no production adapter or import route is enabled.

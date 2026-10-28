@@ -153,7 +153,7 @@ it('retains genuine empty combined activity without creating a zero record', () 
 })
 it.each(selections)('opens only the explicitly selected $side $part input page', async chosen => {
   await openInputs(chosen)
-  expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Frozen inputs' }))
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Frozen inputs' })))
   expect((screen.getByLabelText('Evidence side') as HTMLSelectElement).value).toBe(chosen.side)
   expect((screen.getByLabelText('Input group') as HTMLSelectElement).value).toBe(chosen.part)
   const requests = calls().filter(([path]) => String(path).includes('/receipts/inputs/'))

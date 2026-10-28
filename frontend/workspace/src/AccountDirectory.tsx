@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { ArrowLeft, ArrowRight, Building2, CircleHelp, Landmark, LoaderCircle, RefreshCw, ShieldCheck } from 'lucide-react'
 import type { AuthController } from './auth'
 import BankAccountSetup from './BankAccountSetup'
+import BankSourceAssignments from './BankSourceAssignments'
 import { MAX_ACCOUNT_PAGES } from './accounts'
 import type { AccountsState } from './accounts'
 
@@ -17,6 +18,7 @@ export default function Accounts({ auth, state, busy }: { auth: AuthController; 
     <div className="ws-accounts-intro"><div className="ws-accounts-icon"><Landmark size={25} aria-hidden="true" /></div><div><span className="ws-eyebrow">Your account directory</span><h2 id="accounts-heading">A place for every account.</h2><p>Saved accounts, their institutions and native currencies. Account status describes this workspace; it does not confirm a live provider connection.</p></div></div>
     <div className="ws-accounts-toolbar"><span><ShieldCheck size={15} aria-hidden="true" />Saved account information</span><button className="ws-secondary" disabled={busy || loading} onClick={() => void auth.loadAccounts('refresh')}><RefreshCw size={15} aria-hidden="true" />Refresh accounts</button></div>
     <BankAccountSetup auth={auth} busy={busy || loading} />
+    <BankSourceAssignments auth={auth} busy={busy || loading} />
     {loading && <div className="ws-accounts-message" role="status"><LoaderCircle className="ws-spin" size={25} aria-hidden="true" /><h3>Loading your accounts…</h3><p>Checking access and reading saved account information.</p></div>}
     {state.kind === 'failed' && <div className="ws-accounts-message"><CircleHelp size={25} aria-hidden="true" /><h3 role="alert">{state.limited ? 'Account requests are temporarily limited.' : 'Accounts are unavailable right now.'}</h3><p>{state.limited ? 'Wait a moment, then refresh your accounts.' : 'Refresh to try again. The previous page is hidden while its contents cannot be verified.'}</p></div>}
     {page && page.items.length === 0 && <div className="ws-accounts-message"><Building2 size={28} aria-hidden="true" /><h3>{cursor?.after ? 'There are no accounts on this page.' : 'No accounts saved yet.'}</h3><p>{cursor?.after ? 'The directory may have changed. Return to the first page to check it again.' : 'Saved accounts appear here. Add an HDFC or SBI bank account to start your directory.'}</p></div>}

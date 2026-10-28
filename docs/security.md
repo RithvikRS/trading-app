@@ -134,6 +134,8 @@ The bounded encrypted foundation export omits sessions/provider state and recons
 
 [Step 4B](accounts-source-mappings.md) adds forced owner policies and composite ownership references for account/currency/source/mapping rows. Source matching uses owner/provider-scoped HMACs; AES-GCM retains references under independent versioned identifier keys with bound context. Missing keys fail closed, rotation is transactional, and encrypted recovery validates separately recovered keys before writes. Mapping revisions are append-only and account archive preserves history. These internal services add no HTTP exposure; hosted key custody and general financial backups remain separate work.
 
+[Protected bank source assignments](bank-source-mappings.md) expose only existing owned HDFC/SBI sources. New targets are locked FOR SHARE and ownership/target state is rechecked after waits, including no-row results. Exact historical successor replay precedes current-head, target-active and quota admission; final authorization precedes successful commit outside data-error handlers. Routes do not decrypt source references or handle identifier keys.
+
 ## Instrument identity persistence
 
 [Step 4C](instrument-identities.md) extends forced owner policies and composite references to securities, fund variants, listings, provider mappings and account positions. SQL constraints enforce check digits and explicit variant/currency relationships; provider corrections retain revision history. Security identifiers must come from supported source evidence, not name/ticker similarity. All six tables are included in encrypted recovery with reconstructed grants/policies; no financial route or real catalog seed is added.
