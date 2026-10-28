@@ -78,7 +78,7 @@ const calls = () => fetchMock.mock.calls.filter(([path]) => String(path).include
 it('keeps immutable origin metadata without financial components and preserves the stronger return floor', () => {
   const current = context(); expect(current.origin).not.toHaveProperty('components'); expect(current.origin).not.toHaveProperty('booking_date'); expect(current.back).toEqual({ kind: 'activity' })
   const root = eventIdentity(parsed()), old = bankProvenance(bankAccount(hdfc), eventEvidence(older(), hdfc.id), root), fresh = bankProvenance(bankAccount(hdfc), eventEvidence(newer(), hdfc.id), root)
-  expect(old.origin.revision).toBe(1); expect(old.origin.batch_id).toBe(id(3)); expect(old.back).toMatchObject({ root: { revision: 2 } }); expect(fresh.back).toMatchObject({ root: { revision: 3 } })
+  expect(old.origin.revision).toBe(1); expect(old.origin.batch_id).toBe(id(3)); expect(old.back).toMatchObject({ root: { revision: 2 }, highestSeenRevision: 2 }); expect(fresh.back).toMatchObject({ root: { revision: 2 }, highestSeenRevision: 3 })
 })
 it.each([{ id: id(999) }, { account_id: sbi.id }, { position_id: id(999) }, { instrument_id: id(999) }, { kind: 'fee' }, { revision: 0 }, { revision: 1.5 }])('rejects inconsistent historical return identity %#', change => expect(() => bankProvenance(bankAccount(hdfc), parsed(), { ...eventIdentity(parsed()), ...change } as ReturnType<typeof eventIdentity>)).toThrow())
 it.each([{ account_id: sbi.id }, { position_id: id(5), instrument_id: id(6) }, { components: [cash('1.00','EUR')] }])('rejects inconsistent bank origin %#', change => expect(() => bankProvenance(bankAccount(hdfc), { ...parsed(), ...change } as ReturnType<typeof parsed>)).toThrow())

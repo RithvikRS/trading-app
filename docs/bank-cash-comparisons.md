@@ -16,7 +16,7 @@ The shared strict comparison projection verifies original decimal strings with e
 
 The source activity count plus two distinct checkpoints cannot exceed the receipt's source-row count. The complete input count must equal the four source/combined checkpoints plus both sides' activity counts. The originating currency's source posted or pending count must include at least the clicked source occurrence's posting state. That lower bound does not imply individual input lineage or combined-side inclusion. A different native currency does not inherit the origin's activity-count lower bound.
 
-Bank comparison mode is distinct from full investment inspection and from row-effects-only mode. It exposes only the existing scope query and comparison inspection routes. Bank frozen-input rows and standalone dated snapshot/selection inspection remain separate work. Full investment and lot comparison/input navigation stays available.
+Bank comparison mode is distinct from full investment inspection and from row-effects-only mode. Step 8A.3 adds the existing scope query and comparison inspection routes. [Step 8A.4](bank-frozen-inputs.md) subsequently adds explicit frozen-input inspection for the selected bank cash scope; standalone dated snapshot/selection inspection remains separate work. Full investment and lot comparison/input navigation stays available.
 
 ## Privacy and recovery
 

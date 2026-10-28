@@ -25,10 +25,11 @@ export function bankActivityPage(value: unknown, selected: BankAccount, after: s
   const account = bankAccount(selected), result = accountActivityPage(value, account.id, after)
   return { ...result, items: result.items.map(item => bankEvent(item, account)) }
 }
-export function bankHistory(value: unknown, selected: BankAccount, root: EventIdentity, before: number | null = null): ActivityHistory {
+export function bankHistory(value: unknown, selected: BankAccount, root: EventIdentity, before: number | null = null, highestSeenRevision = root.revision): ActivityHistory {
   const account = bankAccount(selected)
-  if (root.account_id !== account.id || root.position_id !== null || root.instrument_id !== null) invalid()
+  if (root.account_id !== account.id || root.position_id !== null || root.instrument_id !== null
+    || !Number.isSafeInteger(highestSeenRevision) || highestSeenRevision < root.revision) invalid()
   const result = activityHistory(value, root, before)
-  if (before === null && !result.items.length) invalid()
+  if (before === null && (!result.items.length || result.items[0]!.revision < highestSeenRevision)) invalid()
   return { ...result, items: result.items.map(item => bankEvent(item, account)) }
 }
