@@ -1,5 +1,7 @@
 # Protected credit identities: Step 9B.8.1
 
+The separate [Step 9B.8.2 evidence views](protected-credit-evidence.md) extend account inspection with explicitly chosen statement, dated-current-report and entry reads. Those views preserve native unselected evidence; the metadata contract described here remains distinct from financial selection, acquisition and payment status.
+
 The protected **Credit Cards** section opens saved HDFC billing-account identities, explicitly inspects an account, and shows the separate directory of saved credit source handles and their retained link decisions. It uses the four [credit identity and provenance reads](credit-identity-reads.md). No financial values, imports, provider access, account mutations, statement allocation or physical-card membership are added.
 
 ## Acceptance contract recorded before implementation
