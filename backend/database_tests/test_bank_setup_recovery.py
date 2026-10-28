@@ -85,7 +85,7 @@ def test_recovery_preserves_historical_declaration_and_replay_with_reordered_rec
     encrypted = recovery.export_snapshot(url("bootstrap"), project, key)
     assert body["label"].encode() not in encrypted and body["intent_id"].encode() not in encrypted
     payload = json.loads(Fernet(key).decrypt(encrypted))
-    assert payload["format"] == 20
+    assert payload["format"] == recovery.FORMAT
     assert "auth_sessions" not in payload["rows"]
     payload["rows"]["bank_account_setups"].reverse()
     with disposable() as target:

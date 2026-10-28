@@ -47,6 +47,7 @@ def payload():
         lambda value: value.update(format=17),
         lambda value: value.update(format=18),
         lambda value: value.update(format=19),
+        lambda value: value.update(format=20),
         lambda value: value["rows"].pop("bank_account_setups"),
         lambda value: value["rows"].update(bank_account_setups=[{}]),
         lambda value: value["rows"].pop("credit_entry_values"),

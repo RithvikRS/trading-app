@@ -8,6 +8,34 @@ from pydantic import Field, field_validator, model_validator
 from trading_api.finance import FinancialDate, FinancialInstant, MissingReason, ReportedMarketValue
 from trading_db.instruments import Definition
 
+MAX_LEGACY_OCCURRENCE = 1000
+MAX_AMFI_NAV_OCCURRENCE = 25_000
+
+
+def validate_market_occurrence(
+    kind: object, namespace: object, contract_version: object, occurrence: object
+) -> None:
+    """Validate source-position semantics before storage can coerce primitive types."""
+    sources = {"quote": "exchange_quote_report", "nav": "amfi_nav_report", "fx": "fx_rate_report"}
+    if (
+        type(kind) is not str
+        or kind not in sources
+        or type(namespace) is not str
+        or namespace not in {"manual_evidence", sources[kind]}
+        or type(contract_version) is not int
+        or contract_version not in {1, 2}
+        or type(occurrence) is not int
+    ):
+        raise ValueError("Market source occurrence is unsupported.")
+    if contract_version == 2:
+        if kind != "nav" or namespace != "amfi_nav_report":
+            raise ValueError("Market source occurrence is unsupported.")
+        maximum = MAX_AMFI_NAV_OCCURRENCE
+    else:
+        maximum = MAX_LEGACY_OCCURRENCE
+    if not 1 <= occurrence <= maximum:
+        raise ValueError("Market source occurrence is unsupported.")
+
 
 class MarketTarget(Definition):
     kind: Literal["quote", "nav", "fx"]
@@ -59,10 +87,10 @@ class MarketDefinition(MarketTarget):
     ]
     digest_algorithm: Literal["sha256"] = "sha256"
     digest: str = Field(pattern=r"^[0-9a-f]{64}$", min_length=64, max_length=64, repr=False)
-    occurrence: int = Field(ge=1, le=1000)
+    occurrence: int = Field(ge=1, le=MAX_AMFI_NAV_OCCURRENCE)
     normalizer: str = Field(pattern=r"^[a-z][a-z0-9_]{0,47}$", min_length=1, max_length=48)
     normalizer_version: int = Field(ge=1, le=9007199254740991)
-    contract_version: Literal[1] = 1
+    contract_version: Literal[1, 2] = 1
     observed_on: str = Field(repr=False)
     observed_at: str | None = Field(default=None, repr=False)
     source: str | None = Field(repr=False)
@@ -81,16 +109,9 @@ class MarketDefinition(MarketTarget):
             raise ValueError("Correction identity is unavailable.")
         if (self.kind == "quote") != (self.adjustment is not None):
             raise ValueError("Only quote evidence requires an adjustment basis.")
-        if (
-            self.namespace != "manual_evidence"
-            and self.namespace
-            != {
-                "quote": "exchange_quote_report",
-                "nav": "amfi_nav_report",
-                "fx": "fx_rate_report",
-            }[self.kind]
-        ):
-            raise ValueError("Evidence source does not support this market kind.")
+        validate_market_occurrence(
+            self.kind, self.namespace, self.contract_version, self.occurrence
+        )
         FinancialDate(self.observed_on)
         if self.observed_at is not None:
             FinancialInstant(self.observed_at)
