@@ -1,5 +1,7 @@
 # Repeatable verification
 
+[Step 8B.1](bank-account-setup.md) adds exact bank setup command/replay, owner-lock, rollback, forced-RLS, migration/recovery and protected form regressions. The focused feature document records executed checks separately from pending acceptance; no live bank access is involved.
+
 [Step 5F.1](amfi-nav-reader.md) passed 134 focused synthetic reader/parser cases plus Ruff lint/format and strict typing. Coverage includes fixed HTTPS/client controls, exact source bytes/dates/occurrences, response header/body budgets, ambiguity and truncation, compression/error/redirect rejection, safe failures, cancellation, non-queued capacity and bounded 429/503 backoff. The initial traceback-canary fixture was corrected without weakening exception-text checks; final results include aggregate-header boundary regressions. A separate bounded public header probe confirmed the existing endpoint/header, not full-report or scheduled compatibility. No live full-report body was retained, and no application route, acquisition job, persistence or price selection is enabled. Final integrated checks remain required before merge.
 
 [Step 6C](indmoney-reader.md) adds synthetic bounded-reader tests for exact values, fixed destinations/calls, JSON/SSE framing, schema compatibility, pagination completeness, resource limits, access loss and cancellation. No live provider adapter, route or database publication is enabled; synthetic tests do not close authenticated compatibility checks.
