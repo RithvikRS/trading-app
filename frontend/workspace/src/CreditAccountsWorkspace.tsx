@@ -3,11 +3,15 @@ import { ArrowLeft, ArrowRight, CreditCard, History, Link2, RefreshCw } from 'lu
 import type { AuthController, Screen } from './auth'
 import { CREDIT_MAX_PAGES, CREDIT_PAGE_SIZE, creditAccountInspection, creditAccounts, creditMappingHistory, creditSources, creditSourceState } from './credit-identities'
 import type { CreditAccount, CreditCursor, CreditHistory, CreditMapping, CreditPage, CreditSource } from './credit-identities'
+import CreditEvidenceWorkspace from './CreditEvidenceWorkspace'
+import type { CreditKind } from './credit-evidence'
 import './credit-workspace.css'
+import './credit-evidence.css'
 
 type View =
   | { kind: 'accounts'; page: CreditPage<CreditAccount>; cursor: CreditCursor }
   | { kind: 'account'; account: CreditAccount }
+  | { kind: 'evidence'; account: CreditAccount; reportKind: CreditKind }
   | { kind: 'sources'; page: CreditPage<CreditSource>; cursor: CreditCursor }
   | { kind: 'history'; source: CreditSource; page: CreditHistory; before: number | null; minimumRevision: number | null }
 const firstPage = (): CreditCursor => ({ after: null, previous: [] })
@@ -17,15 +21,15 @@ function Paging({ cursor, next, count, label, disabled, load }: { cursor: Credit
   const reachedLimit = cursor.previous.length >= CREDIT_MAX_PAGES - 1
   return <><p className="ws-hint" role="status">{label} page {cursor.previous.length + 1} · {count} shown</p><div className="wc-toolbar"><button className="ws-text" disabled={disabled || !cursor.previous.length} onClick={() => load({ after: cursor.previous.at(-1)!, previous: cursor.previous.slice(0, -1) })}><ArrowLeft size={15} aria-hidden="true" />Previous {label.toLowerCase()} page</button><button className="ws-text" disabled={disabled || !next || reachedLimit} onClick={() => load({ after: next, previous: [...cursor.previous, cursor.after] })}>Next {label.toLowerCase()} page<ArrowRight size={15} aria-hidden="true" /></button></div>{cursor.after && <button className="ws-text" disabled={disabled} onClick={() => load(firstPage())}>First {label.toLowerCase()} page</button>}{next && reachedLimit && <p className="ws-notice">This view reached its page limit. More records may be saved.</p>}</>
 }
-export default function CreditAccountsWorkspace({ auth, busy }: { auth: AuthController; screen: Extract<Screen, { kind: 'workspace' }>; busy: boolean }) {
-  const [view, setView] = useState<View>(), [loading, setLoading] = useState(true), [failed, setFailed] = useState(false)
+export default function CreditAccountsWorkspace({ auth, screen, busy }: { auth: AuthController; screen: Extract<Screen, { kind: 'workspace' }>; busy: boolean }) {
+  const [view, setView] = useState<View>(), [loading, setLoading] = useState(true), [failed, setFailed] = useState(false), [evidenceFailed, setEvidenceFailed] = useState(false)
   const started = useRef(false), mounted = useRef(true), generation = useRef(0), heading = useRef<HTMLHeadingElement>(null)
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; generation.current++ } }, [])
   useEffect(() => { heading.current?.focus() }, [view, loading, failed])
   const disabled = busy || loading
   const work = async (read: () => Promise<View | undefined>) => {
     const current = ++generation.current
-    setView(undefined); setLoading(true); setFailed(false)
+    setView(undefined); setLoading(true); setFailed(false); setEvidenceFailed(false)
     try { const next = await read(); if (mounted.current && generation.current === current) setView(next) }
     catch { if (mounted.current && generation.current === current) setFailed(true) }
     finally { if (mounted.current && generation.current === current) setLoading(false) }
@@ -52,13 +56,14 @@ export default function CreditAccountsWorkspace({ auth, busy }: { auth: AuthCont
     queueMicrotask(() => { if (cancelled || started.current || auth.snapshot().busy) return; started.current = true; void accounts() })
     return () => { cancelled = true }
   }, [auth, busy])
+  if (view?.kind === 'evidence') return <CreditEvidenceWorkspace auth={auth} screen={screen} busy={busy} account={view.account} kind={view.reportKind} onBack={() => void inspect(view.account)} onDirectory={() => void accounts()} onFailure={() => { setView(undefined); setFailed(true); setEvidenceFailed(true); setLoading(false) }} />
   const sourceView = view?.kind === 'sources' || view?.kind === 'history'
   const title = view?.kind === 'history' ? 'Source link history' : view?.kind === 'sources' ? 'Your credit sources' : view?.kind === 'account' ? view.account.label : 'Your credit accounts'
   return <section className="wc-workspace" aria-labelledby="credit-heading" aria-busy={loading}>
     <div className="wc-title"><div><span className="ws-eyebrow">Credit, with context</span><h2 id="credit-heading" ref={heading} tabIndex={-1}>{title}</h2><p>Saved HDFC billing identities and their source links.</p></div><CreditCard size={30} aria-hidden="true" /></div>
     <div className="wc-tabs" role="group" aria-label="Credit identity views"><button disabled={disabled} aria-pressed={!sourceView && !!view} onClick={() => void accounts()}>Billing accounts</button><button disabled={disabled} aria-pressed={sourceView} onClick={() => void sources()}>Source directory</button></div>
     {loading && <p className="wc-message" role="status">Checking saved credit identities…</p>}
-    {failed && <div className="wc-message" role="alert"><strong>Credit identities could not be verified.</strong><p>Previous account and source details have been cleared.</p><button className="ws-secondary" disabled={disabled} onClick={() => void accounts()}>Reload credit accounts</button></div>}
+    {failed && <div className="wc-message" role="alert"><strong>{evidenceFailed ? 'Credit evidence could not be verified.' : 'Credit identities could not be verified.'}</strong><p>{evidenceFailed ? 'Previous values, account and source context have been cleared.' : 'Previous account and source details have been cleared.'}</p><button className="ws-secondary" disabled={disabled} onClick={() => void accounts()}>Reload credit accounts</button></div>}
     {view?.kind === 'accounts' && <>
       <div className="wc-toolbar"><h3>Saved billing accounts</h3><button className="ws-text" disabled={disabled} onClick={() => void accounts(view.cursor)}><RefreshCw size={15} aria-hidden="true" />Refresh accounts</button></div>
       {!view.page.items.length && <p className="wc-message">No billing accounts on this page. This is not a balance or debt summary.</p>}
@@ -68,7 +73,9 @@ export default function CreditAccountsWorkspace({ auth, busy }: { auth: AuthCont
     {view?.kind === 'account' && <>
       <div className="wc-toolbar"><button className="ws-text" disabled={disabled} onClick={() => void accounts()}><ArrowLeft size={15} aria-hidden="true" />All billing accounts</button><button className="ws-text" disabled={disabled} onClick={() => void inspect(view.account)}><RefreshCw size={15} aria-hidden="true" />Refresh identity</button></div>
       <div className="wc-card"><div className="wc-card-heading"><h3>Billing account identity</h3><span className="wc-state">{lifecycle(view.account.state)}</span></div><dl className="wc-meta"><div><dt>Issuer</dt><dd>HDFC</dd></div><div><dt>Billing currency</dt><dd>INR</dd></div><div><dt>Identity revision</dt><dd>{view.account.revision}</dd></div></dl><details><summary>Saved identity reference</summary><dl className="wc-meta"><div><dt>Account reference</dt><dd>{view.account.id}</dd></div></dl><p className="ws-hint">This is an application reference, not a card number. A billing account may differ from an individual physical card.</p></details></div>
-      <p className="wc-note">This view does not show balances, payment status, limits or statements. An archived identity remains available for historical inspection.</p>
+      <h3>Inspect saved evidence</h3><p className="ws-hint">Choose the type of saved report to inspect. Values remain unselected source evidence.</p>
+      <div className="wce-types" role="group" aria-label="Choose credit report type">{([['statement', 'Statement evidence', 'Billing periods, liability checkpoints and source dues.'], ['current', 'Dated current reports', 'Separately dated outstanding and credit reports.'], ['entry', 'Entry evidence', 'Native amounts, dates and retained interpretations.']] as const).map(([reportKind, label, description]) => <button key={reportKind} disabled={disabled} onClick={() => setView({ kind: 'evidence', account: view.account, reportKind })}><strong>{label}</strong><span>{description}</span></button>)}</div>
+      <p className="wc-note">Saved reports do not establish current balances or payment status. An archived identity remains available for historical inspection.</p>
       <button className="ws-text" disabled={disabled} onClick={() => void sources()}><Link2 size={15} aria-hidden="true" />Browse all credit sources</button>
     </>}
     {view?.kind === 'sources' && <>

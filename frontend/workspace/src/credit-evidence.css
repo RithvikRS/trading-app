@@ -1,0 +1,23 @@
+.wce-native { padding: 10px 14px; border-left: 3px solid var(--accent-border); color: var(--muted); font-size: 12px; background: var(--surface-soft); border-radius: 0 9px 9px 0; }
+.wce-records { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 16px 0; }
+.wce-records:has(> :only-child) { grid-template-columns: 1fr; }
+.wce-record { min-width: 0; }
+.wce-record .wc-card-heading { align-items: flex-start; }
+.wce-record .wc-card-heading h3 { font-size: 16px; margin: 2px 0; }
+.wce-record .wc-state { font-size: 10px; }
+.wce-record .wce-period, .wce-record .wce-interpretation { font-size: 12px; margin: 10px 0; }
+.wce-values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 14px 0; }
+.wce-values dt { color: var(--muted); font-size: 11px; line-height: 1.6; }
+.wce-values dd { margin: 5px 0 0; font-size: 15px; font-weight: 650; line-height: 1.5; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.wce-dates > div { grid-template-columns: 130px minmax(0, 1fr); }
+.wce-dates dt, .wce-dates dd { font-size: 12px; }
+.wce-history .wce-record { border-left: 3px solid var(--accent-border); }
+.wce-inspected .wce-values { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.wce-inspected { margin-top: 16px; }
+.wce-types { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 16px 0; }
+.wce-types button { display: grid; justify-items: start; gap: 7px; text-align: left; border: 1px solid var(--border); border-radius: 12px; padding: 15px; min-width: 0; }
+.wce-types strong { font-size: 13px; color: var(--accent-strong); }
+.wce-types span { font-size: 12px; color: var(--muted); line-height: 1.6; }
+.wce-types button:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent-border); }
+@media (max-width: 900px) { .wce-records, .wce-types { grid-template-columns: 1fr; } .wce-inspected .wce-values { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .wce-dates > div { grid-template-columns: 1fr; gap: 4px; } .wce-values dd { font-size: 14px; } }
