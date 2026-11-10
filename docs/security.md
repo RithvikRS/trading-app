@@ -1,5 +1,7 @@
 # Security requirements
 
+The [Oracle/Authelia migration](oracle-authelia-migration.md) must preserve these controls. Current implementation evidence below remains PostgreSQL/Supabase-specific. Oracle policy/context cleanup, native OIDC assurance, application offboarding and encrypted restore require new negative tests on the selected platforms before activation.
+
 Security is the highest project priority. These requirements cover confidentiality, integrity, and availability of financial data. They are planned controls; completion must be demonstrated before the relevant feature is used with personal data.
 
 The [Step 6C portfolio reader](indmoney-reader.md) enforces a fixed resource/tool boundary, bounded exact parsing, pinned schema compatibility, explicit incomplete coverage and access/expiry rechecks. Its live adapter and application route remain disabled. Synthetic tests establish reader behavior; authenticated schema verification and an owned atomic publication boundary remain prerequisites to personal-data imports.
@@ -26,7 +28,7 @@ All investment action previews bind source and baseline evidence, revision, scop
 
 Protect bank and investment records, statements, identifiers, session tokens, integration credentials, encryption keys, backups, and financial calculation history. A broker token may permit trading even when this app only displays holdings; record the provider's actual permissions.
 
-Trust boundaries include the browser and API, public network and application host, host and Supabase, worker and financial providers, uploaded document and parser, administrator and runtime identities, and primary storage and backups. External statements, connector responses, descriptions, and imported links are untrusted input.
+Trust boundaries include the browser and API, public network and application host, host and database/identity services, worker and financial providers, uploaded document and parser, administrator and runtime identities, and primary storage and backups. External statements, connector responses, descriptions, and imported links are untrusted input.
 
 ## Threat model
 
@@ -49,7 +51,7 @@ Trust boundaries include the browser and API, public network and application hos
 
 ## Authentication and sessions
 
-The [foundation plan](foundation-plan.md) defines the required session and ownership contract. [Supabase Auth on Free with FastAPI](authentication-options.md) is selected, with password plus authenticator-app TOTP as the initial factor direction. [Step 3E.1](authentication-foundation.md) implements a server-only password/TOTP service, mandatory verified AAL2, closed-provider checks, explicit owner mapping, and a permanent MFA-enrollment marker. [Step 3E.2](browser-sessions.md) implements opaque cookies, AES-GCM server token custody, signed CSRF with exact Origin, durable limits, bounded expiry, serialized renewal, local-first revocation, recovery with existing MFA, backup TOTP, and append-only security events. Recovery email remains off until its template/sender is configured; losing every factor has no self-service bypass. Local tests use synthetic provider responses and real PostgreSQL; no hosted project has been configured or tested. Verify the maintained integration and actual provider entitlement before use. Require MFA for the owner and administrative cloud accounts, disable public registration for the personal version, and review enrollment and recovery as part of authentication. Do not build custom cryptography.
+The [foundation plan](foundation-plan.md) defines the required session and ownership contract. [Supabase Auth with FastAPI](authentication-options.md) is the current password/TOTP implementation; native Authelia OIDC is the replacement target. [Step 3E.1](authentication-foundation.md) implements a server-only password/TOTP service, mandatory verified AAL2, closed-provider checks, explicit owner mapping, and a permanent MFA-enrollment marker. [Step 3E.2](browser-sessions.md) implements opaque cookies, AES-GCM server token custody, signed CSRF with exact Origin, durable limits, bounded expiry, serialized renewal, local-first revocation, recovery with existing MFA, backup TOTP, and append-only security events. Recovery email remains off until its template/sender is configured; losing every factor has no self-service bypass. Local tests use synthetic provider responses and real PostgreSQL; no hosted project has been configured or tested. Verify the maintained integration and actual provider entitlement before use. Require MFA for the owner and administrative cloud accounts, disable public registration for the personal version, and review enrollment and recovery as part of authentication. Do not build custom cryptography.
 
 Use short-lived or bounded sessions with server-side revocation and secure, HttpOnly, appropriately SameSite cookies. Protect state-changing requests against CSRF and validate origins. Keep credentials and refresh tokens out of browser local storage, URLs, and frontend bundles. Use exact CORS allowlists, rate limits, generic authentication errors, and documented expiry behavior.
 

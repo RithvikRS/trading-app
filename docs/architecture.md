@@ -1,8 +1,10 @@
 # Architecture
 
-Planning baseline: 21 October 2026. Development uses local PostgreSQL; deployment uses Supabase PostgreSQL. The frontend prototype has locked dependency versions and remains independent. [Step 3C](database-foundation.md) provisions local PostgreSQL 17 and migrations; hosted Supabase is not provisioned. The [Step 3 foundation plan](foundation-plan.md) defines implementation increments and security contracts. [Supabase Auth on Free with FastAPI](authentication-options.md) is selected. The [Step 3A API scaffold](api-foundation.md) is implemented locally; identity/session integration and the Step 4 financial persistence services are implemented locally. [Saved investment review and connected views](reviewed-snapshots.md) are implemented. Hosted integration, live portfolio acquisition and current portfolio valuation remain outstanding.
+Implementation baseline: 21 October 2026. The current code and local checks use PostgreSQL and Supabase-specific authentication. The [5 November Oracle/Authelia decision](oracle-authelia-decisions.md) supersedes the hosted selection; the [migration plan](oracle-authelia-migration.md) separates target acceptance from current behavior. The frontend prototype has locked dependency versions and remains independent. [Step 3C](database-foundation.md) provisions local PostgreSQL 17 and migrations; hosted Supabase is not provisioned. The [Step 3 foundation plan](foundation-plan.md) defines implementation increments and security contracts. [Supabase Auth with FastAPI](authentication-options.md) is the currently implemented identity integration. The [Step 3A API scaffold](api-foundation.md) is implemented locally; identity/session integration and the Step 4 financial persistence services are implemented locally. [Saved investment review and connected views](reviewed-snapshots.md) are implemented. Hosted integration, live portfolio acquisition and current portfolio valuation remain outstanding.
 
 ## Components
+
+Persistence, sessions and the data-flow diagram below describe the implemented system. Rows explicitly marked as targets require the migration acceptance gates; they are not active integrations.
 
 | Component | Direction | Responsibility |
 | --- | --- | --- |
@@ -10,8 +12,10 @@ Planning baseline: 21 October 2026. Development uses local PostgreSQL; deploymen
 | API | Python, FastAPI | Authentication, authorization, validation, financial queries, and connector coordination |
 | Persistence | PostgreSQL, SQLAlchemy, Alembic | Exact stored values, constraints, transaction boundaries, and versioned migrations |
 | Background work | A small Python worker with durable job records | Imports, price refreshes, retries, and reconciliation |
-| Hosting | Oracle AMD VM, Docker Compose, HTTPS proxy; Nginx in the local rehearsal | Application services, HTTPS, and constrained runtime resources |
-| Hosted database | Supabase PostgreSQL | Managed database reached through restricted, verified TLS connections |
+| Local packaging | Loopback Docker Compose with Nginx | Existing synthetic rehearsal; not a hosted stack |
+| Target hosting | Ampere A1 worker, separate Swarm stack, Caddy ingress on AMD node 1 | Planned application release, HTTPS and bounded resources |
+| Target database | Oracle Autonomous Database, subject to free-service compatibility | Planned exact persistence with tested database isolation and verified TLS |
+| Target identity | Native Authelia OIDC with MFA | Planned verified issuer/subject identity; application retains authorization and opaque sessions |
 
 Keep domain modules for accounts, investments, banking, imports, valuations, and integrations within one application. This preserves clear boundaries without requiring separate services for each feature. No continuously running Node server is needed for the static frontend build. See [Vite deployment](https://vite.dev/guide/static-deploy.html) and [FastAPI](https://fastapi.tiangolo.com/).
 
@@ -41,13 +45,13 @@ The frontend accesses financial records through the API. It receives no database
 
 ## Environments and portability
 
-- Development uses a local PostgreSQL instance bound to local/private interfaces and synthetic fixtures. PostgreSQL 17 is selected with no additional extensions; verify the actual Supabase project before integration.
+- Development uses a local PostgreSQL instance bound to local/private interfaces and synthetic fixtures. The current PostgreSQL 17 implementation has no additional extensions; Oracle compatibility is evaluated separately through the migration gates.
 - Automated checks use an isolated database, separate credentials, and fabricated or irreversibly sanitized fixtures.
-- Hosted services use a dedicated Supabase project with the unused Data API disabled, source address restrictions, and certificate-verified TLS. See [security requirements](security.md).
-- Application tables, business rules, and migrations remain ordinary PostgreSQL and Python where practical. Keep provider-specific authentication and storage adapters behind explicit interfaces.
-- A future move between Supabase and self-hosted PostgreSQL requires a tested export, restore, roles/policies review, and cutover. It is not assumed to be only a connection-string change.
+- Oracle hosting requires a separate adapter, verified TLS, restricted network access and tested Oracle owner policies. The former Supabase checklist is retained as historical context; it is not the current deployment path. See [migration acceptance](oracle-authelia-migration.md) and [security requirements](security.md).
+- Current persistence and migration history remain PostgreSQL-specific. Preserve portable Python domain contracts and introduce a separate Oracle baseline with equivalent tested invariants. Keep provider-specific authentication and storage adapters behind explicit interfaces.
+- The selected cross-engine migration requires tested export/restore, equivalent database policies, identity preservation and deliberate cutover. PostgreSQL portability is not Oracle compatibility.
 
-Supabase Free is the initial candidate. Its current limits include 500 MB database storage and pausing after inactivity; capacity and backup needs must be checked before deployment. Supabase manages infrastructure, but application permissions, schema, and security configuration remain shared responsibilities. See [pricing](https://supabase.com/pricing) and [responsibility model](https://supabase.com/docs/guides/deployment/shared-responsibility-model).
+Under the superseded initial selection, Supabase Free was the candidate. Its current limits include 500 MB database storage and pausing after inactivity; capacity and backup needs must be checked before deployment. Supabase manages infrastructure, but application permissions, schema, and security configuration remain shared responsibilities. See [pricing](https://supabase.com/pricing) and [responsibility model](https://supabase.com/docs/guides/deployment/shared-responsibility-model).
 
 ## Financial records
 
@@ -78,7 +82,7 @@ Corrections must be auditable and reversible. Preserve the original imported eve
 
 ## Background processing and valuations
 
-Persist job status, attempts, last successful result, and next retry. Claim work with database locking or leases, make writes idempotent, and keep concurrent import execution low on the AMD VM. Avoid a separate scheduler in every API worker. Retry transient failures with bounded backoff; expired consent requires renewal, not indefinite retries.
+Persist job status, attempts, last successful result, and next retry. Claim work with database locking or leases, make writes idempotent, and keep concurrent import execution within measured application resource limits. Avoid a separate scheduler in every API worker. Retry transient failures with bounded backoff; expired consent requires renewal, not indefinite retries.
 
 Holdings synchronization and market-data refresh have separate schedules and freshness indicators. Respect trading calendars, NAV publication dates, exchange timezones, provider limits, and delayed data. Keep dated valuation snapshots; recompute derived reports after reconciled corrections without losing their audit history.
 
@@ -86,13 +90,13 @@ XIRR, realized/unrealized returns, and portfolio performance require documented 
 
 ## Database decision
 
-Local PostgreSQL supports reproducible development. Supabase moves database infrastructure off the small Oracle server while retaining PostgreSQL compatibility. Independent backups and explicit access controls remain mandatory.
+Oracle Autonomous Database is the selected target, with Always Free conditional on actual service capabilities and security requirements. This replaces the Supabase hosting decision. Local PostgreSQL remains operational while the Oracle foundation is developed; a connection-string change cannot port its row policies, transactional DDL, advisory locks or recovery semantics. Preserve the applied PostgreSQL migration history and introduce a deliberate Oracle baseline.
 
-Self-hosted PostgreSQL remains an alternative if managed-service constraints become unsuitable. Oracle Autonomous Always Free uses Oracle Database and has restrictions on private endpoints and built-in restore, so it is not the selected database. OCI managed PostgreSQL is a billed service. See [Oracle Autonomous restrictions](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and [OCI PostgreSQL billing](https://docs.oracle.com/en-us/iaas/Content/postgresql/billing.htm).
+The [compatibility inventory](oracle-authelia-migration.md#oracle-compatibility-inventory) records required replacements and unperformed probes. Independent encrypted backup/restore, bounded connections and restrictive network access remain mandatory. No paid service or automatic upgrade is part of this selection.
 
 ## Local packaging boundary
 
-[Step 3G](local-packaging.md) builds the protected static assets and Python runtime into a non-root image. A restricted loopback HTTPS gateway shares a network namespace with the loopback-only API. Authentication remains unavailable in this fixed rehearsal entry point; database and authenticated behavior are exercised separately. The encrypted recovery drill reconstructs a fresh disposable schema from migrations, restores the [current durable application-record manifest](local-packaging.md#encrypted-foundation-recovery), and invalidates sessions. A distinct hosted configuration/role procedure and [Supabase evidence](supabase-readiness.md) remain prerequisites for deployment.
+[Step 3G](local-packaging.md) builds the protected static assets and Python runtime into a non-root image. A restricted loopback HTTPS gateway shares a network namespace with the loopback-only API. Authentication remains unavailable in this fixed rehearsal entry point; database and authenticated behavior are exercised separately. The encrypted recovery drill reconstructs a fresh disposable schema from migrations, restores the [current durable application-record manifest](local-packaging.md#encrypted-foundation-recovery), and invalidates sessions. A distinct hosted configuration/role procedure and [Oracle/Authelia acceptance](oracle-authelia-migration.md) remain prerequisites for deployment.
 
 [Step 4F.3.2c](reconciled-completion.md) adds exact source-period comparisons to atomic import completion. Immutable scope/input tables preserve both source and effective-ledger evidence. Conditional Python arithmetic and independent PostgreSQL membership/economic checks must both pass; the API and protected frontend remain unchanged.
 

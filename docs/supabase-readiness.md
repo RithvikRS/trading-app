@@ -1,5 +1,7 @@
 # Supabase deployment readiness
 
+Historical checklist: the [Oracle/Authelia decision](oracle-authelia-decisions.md) supersedes this hosted direction. Retain these findings as evidence of the existing adapter limits; use the [Oracle/Authelia migration plan](oracle-authelia-migration.md) for new deployment work. No Supabase project is required for the selected target.
+
 Status on 24 October 2026: local packaging and synthetic recovery are implemented. **Hosted readiness is not established.** There is no dedicated Supabase test project, hosted database adapter, configured provider, Oracle deployment, or production secret. Use this checklist to collect evidence before hosted use; local success is not a substitute for these checks.
 
 ## Compatibility work before a connection
