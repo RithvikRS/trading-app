@@ -1,5 +1,7 @@
 # Development
 
+Current commands still run the PostgreSQL/Supabase implementation. The new [Oracle/Authelia target](oracle-authelia-decisions.md) follows the [migration sequence](oracle-authelia-migration.md#implementation-sequence). Keep the existing local guards and checks intact until a separate real-Oracle test environment exists; neither PostgreSQL nor SQLite tests prove Oracle behavior.
+
 Deliver one coherent feature at a time, with meaningful checks, updated documentation, and conventional commits on `dev`. Open or update its pull request into `main` using the [PR standard](pull-requests.md).
 
 ## Local frontend

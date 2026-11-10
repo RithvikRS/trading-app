@@ -6,11 +6,11 @@ Bank setup receipts retain the owner, intent, original expected revision, accoun
 
 [Step 6B](indmoney-authorization.md) introduced schema `0018_indmoney_authorization` and recovery format 14, covering 43 application tables at that increment. Connector audit events remain retained; live connector credentials/attempts remain deliberately omitted. Restore requires fresh authentication and explicit reconnection. Local versioned connector keys and encrypted application registration remain separate from database/backup custody. Hosted secrets, certificate identity, egress and provider-specific recovery remain unverified.
 
-The intended hosted topology is a Python application and static frontend on Oracle Cloud, with PostgreSQL hosted by Supabase. Deployment, accounts, secrets, and automation have not been provisioned. Hosted settings below remain requirements or provisional targets. [Step 3G](local-packaging.md) implements a locked local HTTPS package, resource measurements, and an encrypted synthetic restore exercise; Stage 11 remains the hosted rollout. The [Supabase checklist](supabase-readiness.md) records dedicated non-production checks separately from local tests. Those checks remain unperformed until the actual project/network/credentials are available.
+The selected hosted topology is a separate trading-app release on the Ampere worker, Caddy ingress on AMD node 1, Oracle Autonomous Database and native Authelia OIDC. The [migration plan](oracle-authelia-migration.md) records shared-infrastructure evidence and trading-specific acceptance. Current tests still exercise PostgreSQL/Supabase and the local HTTPS rehearsal. The older AMD/Supabase guidance below is retained as historical context, not a deployment procedure for the new target.
 
-The [Step 3A process](api-foundation.md) is local-only and explicitly rejects hosted environment names. It is not a deployment artifact; its limits have not been measured on Oracle. Supabase Auth on Free is selected, but no identity project or paid feature is enabled.
+The [Step 3A process](api-foundation.md) is local-only and explicitly rejects hosted environment names. It is not a deployment artifact; its limits have not been measured on Oracle. Supabase authentication is implemented locally; its planned Authelia replacement and trading-specific hosted integration remain unimplemented.
 
-## Oracle application host
+## Historical AMD application-host proposal
 
 Use the available AMD VM if resource checks support the workload. Oracle documents 1 GB RAM and burstable CPU for the Always Free AMD micro shape, so imports must be measured under realistic constraints. Build frontend assets and container images locally or in CI rather than on the production VM. See [Oracle Always Free resources](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm).
 
@@ -22,7 +22,7 @@ Keep service data on persistent protected storage. Use restricted SSH keys and p
 
 Always Free instances can be reclaimed under Oracle's inactivity policy. Recovery must not depend on the original VM remaining available. Store infrastructure configuration and application versions in Git, with secrets and personal data managed separately.
 
-## Supabase configuration
+## Historical Supabase configuration
 
 Use a dedicated production project and local PostgreSQL for development. Keep any provider integration-test project separate from production; a local application database does not automatically provide the selected managed identity service. Authentication service, recovery email, and account-session features must be budgeted separately according to the [authentication decision](authentication-options.md). Select a suitable region near the application host while considering data residency and provider availability. Confirm the actual plan and limits before creation.
 

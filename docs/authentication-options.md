@@ -1,6 +1,8 @@
 # Authentication options
 
-Research snapshot: 22 October 2026; selection and Free-plan availability checked 23 October 2026. **Selected: Supabase Auth with FastAPI**, using the Free plan's basic MFA capability. Local PostgreSQL remains the development database and Supabase PostgreSQL the hosted database. [Step 3E.1](authentication-foundation.md) now implements the server-only password/TOTP integration and controlled local enrollment. No identity project or hosted credentials are configured; [Step 3E.2](browser-sessions.md) implements opt-in browser sessions and recovery with local tests.
+The [5 November 2026 decision](oracle-authelia-decisions.md) selects native Authelia OIDC with FastAPI as the new target. The comparison below records the original choice and the currently implemented Supabase adapter. The [migration contract](oracle-authelia-migration.md#identity-and-session-contract) preserves explicit enrollment, internal ownership, MFA and application-controlled sessions; no Authelia integration is implemented yet.
+
+Research snapshot: 22 October 2026; selection and Free-plan availability checked 23 October 2026. **Original selection: Supabase Auth with FastAPI**, using the Free plan's basic MFA capability. In that original plan, local PostgreSQL was the development database and Supabase PostgreSQL the hosted target. [Step 3E.1](authentication-foundation.md) now implements the server-only password/TOTP integration and controlled local enrollment. No identity project or hosted credentials are configured; [Step 3E.2](browser-sessions.md) implements opt-in browser sessions and recovery with local tests.
 
 The initial factor direction is password plus authenticator-app TOTP. Application-controlled server sessions, expiry, revocation, and recovery are still required in Step 3E. The choice does not depend on paid provider session controls or phone MFA. Free-plan quotas, inactivity pausing, limited default email delivery, and separately supplied recovery email remain operational constraints; no paid plan or add-on is enabled. Verify current entitlements again before integration. [Supabase pricing](https://supabase.com/pricing).
 
@@ -48,8 +50,8 @@ Use hosted login with Authorization Code and PKCE through a maintained Python in
 
 Do not infer that Free passkey availability establishes the exact required mandatory-factor and recovery policy. Verify user verification, fallback paths, factor removal, and actual assurance evidence. Its current MFA pricing makes it a less economical starting point for one personal owner. Provider features never replace database ownership checks.
 
-## Selection and remaining design
+## Original selection and remaining design
 
-Supabase Auth is selected for its fit with FastAPI, managed credential verification, basic MFA on Free, and low VM overhead. This is an architectural judgment, not a claim that its free tier supplies every security control. The alternatives above remain comparison context; Django/allauth and Auth0 are not part of the implementation.
+Supabase Auth was selected for its fit with FastAPI, managed credential verification, basic MFA on Free, and low VM overhead. This is an architectural judgment, not a claim that its free tier supplies every security control. The alternatives above remain comparison context; Django/allauth and Auth0 are not part of the implementation.
 
-FastAPI, SQLAlchemy, Alembic, and Psycopg remain the application/database direction. Before Step 3E, settle secondary-factor recovery, SMTP, the maintained Python integration, local provider testing, the session implementation, and encryption-key custody. The [foundation plan](foundation-plan.md) defines these increments; the [API scaffold](api-foundation.md) records the implemented local boundary.
+FastAPI, SQLAlchemy, Alembic and Psycopg describe the current implementation, not the replacement database driver. The original pre-Step-3E design work covered secondary-factor recovery, SMTP, the maintained Python integration, local provider testing, sessions and encryption-key custody; hosted evidence remains outstanding. The [foundation plan](foundation-plan.md) defines these increments; the [API scaffold](api-foundation.md) records the implemented local boundary.
