@@ -174,6 +174,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [UBS integration plan](docs/ubs-integration-plan.md) | Step 7A public API/OFX and document candidates, ESPP evidence boundaries and incremental delivery |
 | [INDmoney reader](docs/indmoney-reader.md) | Bounded read-only engine, exact evidence, incomplete coverage and the live schema compatibility gate |
 | [Operations](docs/operations.md) | Hosting, backups, recovery, incident handling |
+| [Laptop handoff](docs/laptop-handoff.md) | Portable checkpoint, unfinished work, remaining roadmap and setup on another computer |
 | [Development](docs/development.md) | Local commands, validation, conventional commits |
 | [Pull requests](docs/pull-requests.md) | Scope, evidence, merge policy |
 
