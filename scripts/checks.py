@@ -131,6 +131,17 @@ def database() -> None:
     )
 
 
+def oracle() -> None:
+    uv = uv_command()
+    sync_backend(uv)
+    run(
+        "isolated Oracle connectivity and cleanup",
+        [uv, "run", "--locked", "--no-sync", "python", "-m", "trading_oracle", "check"],
+        ROOT / "backend",
+        timeout=1200,
+    )
+
+
 def operations() -> None:
     uv = uv_command()
     sync_backend(uv)
@@ -319,13 +330,15 @@ def repository() -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "scope", choices=["all", "backend", "frontend", "repository", "database", "operations"]
+        "scope",
+        choices=["all", "backend", "frontend", "repository", "database", "oracle", "operations"],
     )
     args = parser.parse_args()
     phases = {
         "repository": repository,
         "backend": backend,
         "database": database,
+        "oracle": oracle,
         "frontend": frontend,
         "operations": operations,
     }

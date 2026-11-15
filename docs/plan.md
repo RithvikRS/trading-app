@@ -1,6 +1,6 @@
 # Product plan
 
-Target updated 10 November 2026: the [Oracle/Authelia decision](oracle-authelia-decisions.md) supersedes the original hosted database and identity selection. [Migration increments OA1-OA7](oracle-authelia-migration.md#implementation-sequence) now take priority over new database-dependent features. Existing PostgreSQL/Supabase implementation and test results remain the behavioral baseline, not evidence of Oracle/Authelia compatibility.
+Target updated 10 November 2026: the [Oracle/Authelia decision](oracle-authelia-decisions.md) supersedes the original hosted database and identity selection. [Migration increments OA1-OA7](oracle-authelia-migration.md#implementation-sequence) now take priority over new database-dependent features. Existing PostgreSQL/Supabase implementation and test results remain the behavioral baseline, not evidence of Oracle/Authelia compatibility. [OA2.1](oracle-foundation.md) establishes the separate local Oracle verification boundary; protected runtime conversion follows independently.
 
 Planning baseline: 21 October 2026.
 

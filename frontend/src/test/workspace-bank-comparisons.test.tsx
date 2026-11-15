@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import axe from 'axe-core'
@@ -69,7 +69,30 @@ it('keeps a zero-bank first page navigable and uses preceding progress on refres
 it.each(['query','query refresh','inspect','inspect refresh','back'])('clears account/origin after unavailable %s and explicitly retries the directory',async failure=>{await openScopes();if(failure==='query'||failure==='query refresh'){override('/api/v1/finance/receipts/scopes/query',()=>({detail:'private'}),409);fireEvent.click(screen.getByRole('button',{name:'Refresh comparisons'}))}else{if(failure!=='inspect')await inspect();override(failure==='back'?'/api/v1/finance/receipts/scopes/query':'/api/v1/finance/receipts/scopes/inspect',()=>({detail:'private'}),409);if(failure==='inspect')fireEvent.click(screen.getAllByRole('button',{name:'Inspect comparison'})[0]!);else fireEvent.click(screen.getByRole('button',{name:failure==='back'?'Back to comparisons':'Refresh comparison'}))}await screen.findByRole('alert');expect(document.querySelector('.wi-receipts')).toBeNull();expect(document.querySelector('.wb-workspace')!.innerHTML).not.toMatch(/81000000|874\.50|1000\.00|Everyday account/);fireEvent.click(screen.getByRole('button',{name:'Reload saved bank accounts'}));await screen.findByRole('button',{name:'View saved activity for HDFC Everyday account'});expect(calls().at(-1)![0]).toBe('/api/v1/finance/accounts/query')})
 it.each(['period','basis','bank units','missing origin','inspection identity','source floor'])('blocks a malformed %s response and clears previous values',async failure=>{await openScopes();if(failure==='inspection identity'||failure==='source floor'){await inspect();override('/api/v1/finance/receipts/scopes/inspect',()=>failure==='inspection identity'?{...comparison(),scope:{...scope(),account_id:id(99)}}:counted(0,1,2,2));fireEvent.click(screen.getByRole('button',{name:'Refresh comparison'}))}else{const items=scopes();if(failure==='period')items[2]={...items[2]!,period_start:'2026-04-01'};if(failure==='basis')items[2]={...items[2]!,date_basis:'booking'};if(failure==='bank units')items[0]={...items[3]!,id:id(100),account_id:account.id};if(failure==='missing origin')items[0]={...items[0]!,account_id:id(99)};override('/api/v1/finance/receipts/scopes/query',()=>({items,next_after:null}));fireEvent.click(screen.getByRole('button',{name:'Refresh comparisons'}))}await screen.findByRole('heading',{name:'Unable to verify this response.'});expect(document.querySelector('.wb-workspace')).toBeNull();expect(document.body.innerHTML).not.toMatch(/874\.50|1000\.00|1,500/)})
 it.each(['navigate','logout','lock','session'])('discards a late bank equation after %s',async reason=>{await openScopes();let finish!:(r:Response)=>void;const previous=fetchMock.getMockImplementation()!;fetchMock.mockImplementation((path,options)=>path==='/api/v1/finance/receipts/scopes/inspect'?new Promise(resolve=>{finish=resolve}):previous(path,options));fireEvent.click(screen.getAllByRole('button',{name:'Inspect comparison'})[0]!);await screen.findByText('Checking saved completion evidence…');if(reason==='navigate')fireEvent.click(within(screen.getByRole('navigation',{name:'Workspace navigation'})).getByRole('button',{name:'Overview'}));else if(reason==='logout')fireEvent.click(screen.getByRole('button',{name:'Sign out here'}));else if(reason==='lock')await act(async()=>auth.lock());else{const old=fetchMock.getMockImplementation()!;fetchMock.mockImplementation((path,options)=>path==='/api/v1/auth/session'?Promise.resolve(response({...session(),workspace_context:'e'.repeat(64)})):old(path,options));await act(async()=>{auth.suspend();await auth.bootstrap()})}await act(async()=>finish(response(comparison())));expect(document.querySelector('.wb-workspace')).toBeNull();expect(document.body.innerHTML).not.toMatch(/874\.50|1000\.00/)})
-it.each(['light','dark'])('preserves masked native privacy, keyboard focus and accessible %s layout',async mode=>{theme=mode;masked=true;await openScopes();const user=userEvent.setup();screen.getAllByRole('button',{name:'Inspect comparison'})[0]!.focus();await user.keyboard('{Enter}');expect(document.activeElement).toBe(await screen.findByRole('heading',{name:'INR cash comparison'}));expect(screen.getAllByText('••••')).toHaveLength(10);expect(document.querySelector('.wb-workspace')!.innerHTML).not.toMatch(/1000\.00|874\.50|125\.50/);expect((await axe.run(document.querySelector('.wb-workspace')!,{rules:{'color-contrast':{enabled:false},region:{enabled:false}}})).violations).toEqual([]);const before=calls().length;fireEvent.change(screen.getByLabelText('Display currency'),{target:{value:'USD'}});fireEvent.click(screen.getByRole('button',{name:'Save preferences'}));await screen.findByText('Saved to your account');expect(calls()).toHaveLength(before);expect(screen.getByText('Amounts remain in INR. This is not a current balance.')).toBeTruthy()})
+it.each(['light', 'dark'])('preserves masked native privacy, keyboard focus and accessible %s layout', async mode => {
+ theme = mode; masked = true
+ await openScopes()
+ const scopesHeading = screen.getByRole('heading', { name: 'Saved comparisons' })
+ // Wait for navigation focus before moving to the keyboard activation target.
+ await waitFor(() => expect(document.activeElement).toBe(scopesHeading))
+ const inspectButton = screen.getAllByRole('button', { name: 'Inspect comparison' })[0]!
+ await waitFor(() => expect((inspectButton as HTMLButtonElement).disabled).toBe(false))
+ const user = userEvent.setup()
+ inspectButton.focus()
+ expect(document.activeElement).toBe(inspectButton)
+ await user.keyboard('{Enter}')
+ const comparisonHeading = await screen.findByRole('heading', { name: 'INR cash comparison' })
+ await waitFor(() => expect(document.activeElement).toBe(comparisonHeading))
+ expect(screen.getAllByText('••••')).toHaveLength(10)
+ expect(document.querySelector('.wb-workspace')!.innerHTML).not.toMatch(/1000\.00|874\.50|125\.50/)
+ expect((await axe.run(document.querySelector('.wb-workspace')!, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })).violations).toEqual([])
+ const before = calls().length
+ fireEvent.change(screen.getByLabelText('Display currency'), { target: { value: 'USD' } })
+ fireEvent.click(screen.getByRole('button', { name: 'Save preferences' }))
+ await screen.findByText('Saved to your account')
+ expect(calls()).toHaveLength(before)
+ expect(screen.getByText('Amounts remain in INR. This is not a current balance.')).toBeTruthy()
+})
 it('retains a changed historical source period and rejects regressed history after comparison navigation',async()=>{
  const old={...event(),revision:1,is_current:false,correction_reason:null,source_row_id:id(6),source_review_revision:1,source_id:id(4),observation_id:id(5),batch_id:id(3),period_start:'2026-04-01',period_end:'2026-04-30',cash_date_basis:'booking'}
  const historical={...scope(),receipt_id:id(81),period_start:'2026-04-01',period_end:'2026-04-30',date_basis:'booking' as const}

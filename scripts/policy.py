@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.package_context import validate_build_context  # noqa: E402
 from scripts.tooling import ROOT, CheckFailure  # noqa: E402
 
 PINS = {
@@ -38,7 +39,8 @@ def validate_workflow(document: dict) -> None:
     )
     require(document["permissions"] == {"contents": "read"}, "Workflow token must be read-only.")
     require(
-        set(document["jobs"]) == {"backend", "frontend", "repository", "database", "operations"},
+        set(document["jobs"])
+        == {"backend", "frontend", "repository", "database", "oracle", "operations"},
         "Every verification job must be present.",
     )
     for name, job in document["jobs"].items():
@@ -350,38 +352,7 @@ def validate_packaging(root: Path = ROOT) -> None:
         ),
         "Runtime identity/entrypoint changed.",
     )
-    allowed = {
-        "backend/",
-        "backend/pyproject.toml",
-        "backend/uv.lock",
-        "backend/trading_api/",
-        "backend/trading_api/*.py",
-        "backend/trading_auth/",
-        "backend/trading_auth/*.py",
-        "backend/trading_db/",
-        "backend/trading_db/*.py",
-        "frontend/",
-        "frontend/package.json",
-        "frontend/package-lock.json",
-        "frontend/workspace.config.ts",
-        "frontend/workspace-boundary.ts",
-        "frontend/src/",
-        "frontend/src/design.css",
-        "frontend/workspace/",
-        "frontend/workspace/index.html",
-        "frontend/workspace/src/",
-        "frontend/workspace/src/*.ts",
-        "frontend/workspace/src/*.tsx",
-        "frontend/workspace/src/*.css",
-        "infra/",
-        "infra/application/",
-        "infra/application/Dockerfile",
-    }
-    ignore = (root / ".dockerignore").read_text(encoding="utf-8").splitlines()
-    require(
-        ignore[0] == "**" and set(ignore[1:]) == {"!" + path for path in allowed},
-        "Build context must exclude credentials, demo, tests and local files.",
-    )
+    validate_build_context(root)
 
 
 if __name__ == "__main__":

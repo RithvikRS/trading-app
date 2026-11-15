@@ -7,7 +7,7 @@ import subprocess
 import tarfile
 import unittest
 import zipfile
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -47,6 +47,46 @@ class RunnerTests(unittest.TestCase):
         ):
             self.assertEqual(checks.main(), 1)
         frontend.assert_not_called()
+        self.assertNotIn("PASS:", output.getvalue())
+
+    def test_all_runs_oracle_between_postgres_and_frontend(self):
+        output = io.StringIO()
+        calls = []
+        phases = ["repository", "backend", "database", "oracle", "frontend", "operations"]
+        with ExitStack() as stack:
+            stack.enter_context(patch("sys.argv", ["checks.py", "all"]))
+            stack.enter_context(redirect_stdout(output))
+            for name in phases:
+                stack.enter_context(
+                    patch(
+                        f"scripts.checks.{name}", side_effect=lambda phase=name: calls.append(phase)
+                    )
+                )
+            self.assertEqual(checks.main(), 0)
+        self.assertEqual(calls, phases)
+        self.assertIn("PASS: all checks completed.", output.getvalue())
+
+    def test_all_stops_on_oracle_failure_before_later_groups(self):
+        output = io.StringIO()
+        with (
+            patch("sys.argv", ["checks.py", "all"]),
+            patch("scripts.checks.repository") as repository,
+            patch("scripts.checks.backend") as backend,
+            patch("scripts.checks.database") as database,
+            patch(
+                "scripts.checks.oracle", side_effect=CheckFailure("Oracle unavailable.")
+            ) as oracle,
+            patch("scripts.checks.frontend") as frontend,
+            patch("scripts.checks.operations") as operations,
+            redirect_stdout(output),
+            redirect_stderr(output),
+        ):
+            self.assertEqual(checks.main(), 1)
+        for phase in [repository, backend, database, oracle]:
+            phase.assert_called_once_with()
+        frontend.assert_not_called()
+        operations.assert_not_called()
+        self.assertIn("FAILED: Oracle unavailable.", output.getvalue())
         self.assertNotIn("PASS:", output.getvalue())
 
     def test_source_snapshot_includes_untracked_but_rejects_path_escape(self):
@@ -96,6 +136,60 @@ class DatabaseInvocationTests(unittest.TestCase):
                     ROOT / "backend",
                     timeout=timeout,
                 )
+
+
+class OracleInvocationTests(unittest.TestCase):
+    def test_oracle_command_has_locked_dependencies_and_fixed_deadline(self):
+        for platform, environment in [
+            ("nt", {}),
+            ("posix", {}),
+            ("nt", {"CI": "true"}),
+            ("nt", {"CI": ""}),
+            ("nt", {"GITHUB_ACTIONS": "true"}),
+            ("nt", {"GITHUB_ACTIONS": ""}),
+            ("posix", {"CI": "true", "GITHUB_ACTIONS": "true"}),
+        ]:
+            with (
+                self.subTest(platform=platform, environment=environment),
+                patch("scripts.checks.os", SimpleNamespace(name=platform, environ=environment)),
+                patch("scripts.checks.uv_command", return_value="uv"),
+                patch("scripts.checks.sync_backend") as sync,
+                patch("scripts.checks.run") as run,
+            ):
+                checks.oracle()
+                sync.assert_called_once_with("uv")
+                run.assert_called_once_with(
+                    "isolated Oracle connectivity and cleanup",
+                    [
+                        "uv",
+                        "run",
+                        "--locked",
+                        "--no-sync",
+                        "python",
+                        "-m",
+                        "trading_oracle",
+                        "check",
+                    ],
+                    ROOT / "backend",
+                    timeout=1200,
+                )
+
+    def test_failed_oracle_check_is_not_skipped_or_reported_as_pass(self):
+        output = io.StringIO()
+        result = subprocess.CompletedProcess([], 1, "synthetic-sensitive", "Docker unavailable")
+        with (
+            patch("sys.argv", ["checks.py", "oracle"]),
+            patch("scripts.checks.uv_command", return_value="uv"),
+            patch("scripts.checks.sync_backend"),
+            patch("scripts.checks.subprocess.run", return_value=result) as run,
+            redirect_stdout(output),
+            redirect_stderr(output),
+        ):
+            self.assertEqual(checks.main(), 1)
+        run.assert_called_once()
+        self.assertIn("FAILED: isolated Oracle connectivity and cleanup failed", output.getvalue())
+        self.assertNotIn("PASS:", output.getvalue())
+        self.assertNotIn("synthetic-sensitive", output.getvalue())
 
 
 class FrontendInvocationTests(unittest.TestCase):
@@ -232,6 +326,15 @@ class WorkflowPolicyTests(unittest.TestCase):
             lambda d: d["jobs"]["frontend"]["steps"][-1].update({"continue-on-error": "true"}),
             lambda d: d["jobs"].pop("frontend"),
             lambda d: d["jobs"].pop("database"),
+            lambda d: d["jobs"].pop("oracle"),
+            lambda d: d["jobs"]["oracle"].update({"if": "false"}),
+            lambda d: d["jobs"]["oracle"].update({"timeout-minutes": "30"}),
+            lambda d: d["jobs"]["oracle"]["steps"][-1].update(run="echo skipped"),
+            lambda d: d["jobs"]["oracle"]["steps"][-1].update({"continue-on-error": "true"}),
+            lambda d: d["jobs"]["oracle"]["steps"][0]["with"].update(
+                {"persist-credentials": "true"}
+            ),
+            lambda d: d["jobs"]["oracle"]["steps"][1]["with"].update({"enable-cache": "true"}),
             lambda d: d["jobs"].pop("operations"),
             lambda d: d["jobs"]["database"].update({"services": {"database": "hosted"}}),
             lambda d: d["jobs"]["database"]["steps"][-1].update(run="echo skipped"),

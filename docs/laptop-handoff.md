@@ -1,6 +1,6 @@
 # Laptop handoff
 
-Snapshot: 10 November 2026. Implementation is paused. This document and the private transfer package preserve the work needed to continue on another computer.
+Transfer snapshot: 10 November 2026. Work resumed on 15 November without changes during the trip. This dated guide and the original private package preserve that transfer state; follow the current [migration sequence](oracle-authelia-migration.md) for subsequent implementation status.
 
 ## Start here
 
@@ -52,7 +52,7 @@ These paths are inside `repo-cache` in the package and become `.cache/...` after
 
 | Increment | Current snapshot and restore layout | Status and work left |
 | --- | --- | --- |
-| **OA2.1 Oracle verifier** | `oracle-conversion-pause-20261110/oracle/manifest.json`; each file lives at its manifest-relative path | 20 source/config/doc files. 78 focused tests, Ruff and strict mypy passed before the final IPv4/IPv6 guard edit; Ruff passed afterward. Three smoke attempts failed before Oracle container creation. Diagnose the actual network profile, rerun affected checks, pass the real smoke and obtain final source review. |
+| **OA2.1 Oracle verifier** | `oracle-conversion-pause-20261110/oracle/manifest.json`; each file lives at its manifest-relative path | 20 source/config/doc files. 78 focused tests, Ruff and strict mypy passed before the final IPv4/IPv6 guard edit; Ruff passed afterward. No real smoke had passed at the pause: attempt 1 reached container startup and failed listener validation; attempts 2 and 3 failed earlier network-profile validation. Diagnose the actual network profile, rerun affected checks, pass the real smoke and obtain final source review. |
 | **OA3.1 OIDC contracts** | `oracle-conversion-pause-20261110/oidc/.cache/oidc-contracts/handoff.json`; six source paths relative to the enclosing `oidc` directory | 128 pure tests and independent source review passed. Integrate separately with central typing/docs updates and full checks. No routes, durable callback consumption or session authority. |
 | **OA3.2 offline ID-token verifier** | `oracle-conversion-pause-20261110/oidc/.cache/oidc-verification/handoff.json`; three additional source paths relative to `oidc` | 148 additional cases; 276 combined tests, Ruff and strict mypy passed. Independent review and integration remain. Authlib `1.9.5` and joserfc `1.8.0` exist only in the old scratch environment; project pins are still pending. |
 | **8B.3 bank account archival** | `bank-account-archive-checkpoint/paused-20261029/manifest.json`; `source/<path>`, `prerequisites/<path>`, `canonical-preimages/<path>`, `evidence/<path>` | 15 feature files. Earlier 110 pure/29 database cases passed; latest HTTP/database batch passed 18 after a preserved one-line fixture correction. Review that correction, adapt dependencies, finish frontend/build/browser and final checks. |
@@ -62,7 +62,7 @@ These paths are inside `repo-cache` in the package and become `.cache/...` after
 
 The six implementation drafts contain **81 source/config/doc file entries** across snapshots, including overlapping paths. This is not a count of remaining product steps. The package preserves preceding checkpoint phases, failed attempts, source preimages and the latest NAV design/review. Old bank-archive and credit-setup worktree directories are not authoritative; their saved backups are.
 
-The Oracle diagnostic run `453f59b087284dc357a147447f2c4f9e` has outcome `pending` because it inspected only a network. All four Oracle run manifests say `cleaned`; no verifier or run-owned container/network was left running at the pause. **No real Oracle smoke has passed.** Keep old run manifests as evidence inside the snapshot; do not install them as active lifecycle state on the laptop or run old cleanup commands against new resources.
+The Oracle diagnostic run `453f59b087284dc357a147447f2c4f9e` has outcome `pending` because it inspected only a network. All four Oracle run manifests say `cleaned`; no verifier or run-owned container/network was left running at the pause. **No real Oracle smoke had passed at the transfer snapshot.** A 15 November review corrected the original claim that all three attempts failed before container creation: attempt 1 reached the running-container listener guard. Its older manifest had no resource-ID fields; their absence was not evidence that no container existed. The original package remains unchanged. See [Oracle foundation](oracle-foundation.md) for subsequent verified results. Keep old run manifests as evidence inside the snapshot; do not install them as active lifecycle state on the laptop or run old cleanup commands against new resources.
 
 ## Resume order
 
