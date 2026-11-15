@@ -9,6 +9,7 @@ import secrets
 import shutil
 import socket
 import ssl
+import stat
 import subprocess
 import sys
 import tempfile
@@ -28,6 +29,7 @@ sys.path.insert(0, str(ROOT / "backend"))
 from trading_db.connections import DatabaseFailure  # noqa: E402
 from trading_db.local import local_context, private_directory  # noqa: E402
 
+from scripts.package_context import verify_build_context  # noqa: E402
 from scripts.policy import require, validate_package_ports, validate_packaging  # noqa: E402
 from scripts.tooling import CheckFailure  # noqa: E402
 
@@ -51,6 +53,37 @@ def command(args, *, environment=None, timeout=300):
         raise CheckFailure("Packaging command could not complete.") from None
     require(result.returncode == 0, "Packaging command failed; inspect Docker locally.")
     return result.stdout.strip()
+
+
+def build_environment(directory, ambient):
+    """Start from empty owned Buildx state instead of ambient named builders."""
+    try:
+        directory.resolve().relative_to(CACHE.resolve())
+        metadata = directory.lstat()
+        require(
+            stat.S_ISDIR(metadata.st_mode)
+            and not stat.S_ISLNK(metadata.st_mode)
+            and not (
+                getattr(metadata, "st_file_attributes", 0)
+                & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+            ),
+            "Buildx state requires the unlinked private run directory.",
+        )
+        buildx = directory / "buildx"
+        # Refuse reuse, even of an existing empty directory.
+        buildx.mkdir(mode=0o700)
+        private_directory(buildx)
+        require(next(buildx.iterdir(), None) is None, "Buildx state must start empty.")
+    except (OSError, ValueError):
+        raise CheckFailure("Fresh private Buildx state could not be created.") from None
+    environment = {
+        key: value
+        for key, value in ambient.items()
+        if not key.upper().startswith(("COMPOSE_", "TRADING_", "BUILDX_", "BUILDKIT_"))
+        and key.upper() != "DOCKER_BUILDKIT"
+    }
+    environment["BUILDX_CONFIG"] = str(buildx)
+    return environment
 
 
 def certificate(directory):
@@ -257,13 +290,9 @@ def main():
     private_directory(CACHE)
     directory = Path(tempfile.mkdtemp(prefix="run-", dir=CACHE))
     private_directory(directory)
+    environment = build_environment(directory, os.environ)
     context = certificate(directory)
     (directory / "compose.env").write_text("", encoding="utf-8")
-    environment = {
-        key: value
-        for key, value in os.environ.items()
-        if not key.upper().startswith(("COMPOSE_", "TRADING_"))
-    }
     environment.update(
         TRADING_REHEARSAL_CERT=str(directory / "certificate.pem"),
         TRADING_REHEARSAL_KEY=str(directory / "key.pem"),
@@ -283,18 +312,36 @@ def main():
         "-f",
         str(ROOT / "infra/application/compose.yaml"),
     ]
-    # Environment is supplied to compose only; no application secrets are accepted.
+    # Every Docker command shares isolated builder state and sanitized overrides.
     original_command = command
 
     def composed(args, **kwargs):
-        return original_command(
-            args, environment=environment if "compose" in args else None, **kwargs
-        )
+        return original_command(args, environment=environment, **kwargs)
 
     # Helpers receive closures rather than inheriting ambient Compose overrides.
     try:
+        print("Checking synthetic Docker build context...", flush=True)
+        verify_build_context(ROOT, directory, docker, composed)
         print("Building locked local package...", flush=True)
-        composed([*compose, "build", "--pull"], timeout=900)
+        # Invoke Buildx directly after the delegated Compose build rejected the context.
+        # validate_packaging pins this image, Dockerfile and repository context.
+        composed(
+            [
+                *docker,
+                "buildx",
+                "build",
+                "--builder",
+                context_name,
+                "--pull",
+                "--load",
+                "--file",
+                str(ROOT / "infra/application/Dockerfile"),
+                "--tag",
+                "trading-app:local-rehearsal",
+                str(ROOT),
+            ],
+            timeout=900,
+        )
         print("Checking HTTPS and container boundaries...", flush=True)
         composed([*compose, "up", "--detach", "--no-build"], timeout=300)
         assets = probe(context)

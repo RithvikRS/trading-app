@@ -1,6 +1,6 @@
 # Oracle and Authelia migration
 
-Review date: 10 November 2026. This implements the compatibility review and roadmap reconciliation for the [5 November decision](oracle-authelia-decisions.md). It does not implement an Oracle database adapter, OIDC login or hosted deployment.
+Review date: 10 November 2026. The [5 November decision](oracle-authelia-decisions.md) supplies the target and this document records the conversion sequence. [OA2.1](oracle-foundation.md) adds the isolated Oracle verification boundary; application database conversion, OIDC login and hosted deployment remain later increments.
 
 ## Current state and target
 
@@ -19,7 +19,7 @@ Local PostgreSQL remains usable while its replacement is developed. Keep applied
 
 ## Shared infrastructure prerequisites
 
-Read-only review of the separate portfolio repository at `52631d208b962f7208273cee35f9ce0f7549761b` found the following documented state. The reviewed paths are `deploy/STORAGE.md`, `deploy/MONITORING.md`, `deploy/BACKUPS.md`, `deploy/FAMILY-SERVICES.md`, `deploy/SERVICES-ROADMAP.md` and the public Authelia configuration. This is repository evidence, not a new live infrastructure inspection. An existing uncommitted backup-document addition was not changed or imported.
+Read-only review of the separate portfolio repository at `61d10b7ff10a3a63e0a73fdd67c4b10999d34d67` found the following documented state. The reviewed paths are `deploy/STORAGE.md`, `deploy/MONITORING.md`, `deploy/BACKUPS.md`, `deploy/FAMILY-SERVICES.md`, `deploy/SERVICES-ROADMAP.md` and the public Authelia configuration. This is repository evidence, not a new live infrastructure inspection. The backup-staging documentation is now merged in the portfolio repository. No portfolio files or private backup material were changed or imported.
 
 | Area | Repository evidence | Still required for trading |
 | --- | --- | --- |
@@ -31,7 +31,7 @@ Read-only review of the separate portfolio repository at `52631d208b962f7208273c
 
 Shared backup documentation explicitly says the local archives are ACL-protected but not password-encrypted. Do not describe them as the financial application's encrypted off-tenancy recovery solution. No private backup files or live credentials were inspected.
 
-Compatibility research can proceed now. The shared infrastructure, recovery, monitoring and identity prerequisites remain dependency gates before application migration implementation under the handoff's sequencing. A later source or runtime receipt can close a specific gate; another application's deployment does not establish trading readiness.
+The owner reports shared infrastructure work complete and local Oracle/Authelia conversion proceeds. The repository review does not independently establish runtime acceptance. Trading-specific hosted connectivity, MFA/offboarding, isolation, monitoring and restore evidence remain activation gates; unresolved environment choices are recorded for later resolution. They do not block local synthetic implementation.
 
 ## Oracle compatibility inventory
 
@@ -54,7 +54,7 @@ The current individual financial bound is 18 integer plus 12 fractional digits, 
 
 ### Environment and service decisions
 
-The driver candidate is a stable `python-oracledb` Thin release through SQLAlchemy's `oracle+oracledb` dialect. Thin avoids Oracle Client libraries. No dependency is selected or installed in this increment. Verify a locked, binary-only install against the repository's Python 3.14.9 constraint and Linux ARM64; preserve `uv no-build=true`. Documentation support is not wheel-installation or TLS evidence. [Driver installation](https://python-oracledb.readthedocs.io/en/stable/user_guide/installation.html).
+The driver candidate is a stable `python-oracledb` Thin release through SQLAlchemy's `oracle+oracledb` dialect. Thin avoids Oracle Client libraries. OA2.1 pins `oracledb==26.1.0` with the existing Python 3.14.9 constraint and `uv no-build=true`. Its focused implementation record distinguishes verified installation from Linux ARM64 and hosted acceptance; those require their own execution evidence. Documentation support is not wheel-installation or TLS evidence. [Driver installation](https://python-oracledb.readthedocs.io/en/stable/user_guide/installation.html).
 
 Use an isolated real Oracle environment for local integration checks, with a pinned official image/version/digest, synthetic users and disposable schemas. Verify host/CPU/resource requirements before starting it. Keep production credentials out of local checks and CI. Local Oracle Free establishes engine behavior for its tested version, not Autonomous grants or network behavior; separately prove those against a dedicated non-production service. [Local Free requirements](https://docs.oracle.com/en/database/oracle/oracle-database/26/xeinl/requirements.html).
 
@@ -86,7 +86,7 @@ These increments precede new database-dependent financial features. Each has its
 
 | Increment | Deliverable | Exit evidence |
 | --- | --- | --- |
-| OA1: Compatibility and design | This inventory, current/target documentation, shared prerequisite matrix; then resolve exact service/version, local environment, policy privileges, OIDC client/library, offboarding and recovery choices | Inventory delivered; environment/capability decisions and shared runtime evidence still open. No compatibility acceptance claimed. |
+| OA1: Compatibility and design | This inventory, current/target documentation, shared prerequisite matrix; then resolve exact service/version, local environment, policy privileges, OIDC client/library, offboarding and recovery choices | Inventory delivered; local conversion proceeds with the selected test image/driver. Hosted capability, identity and recovery evidence remain separate. |
 | OA2: Oracle foundation | Separate real-Oracle runner and baseline, restricted roles, trusted owner-context layer, pool cleanup and migration journal | Two synthetic owners; direct-SQL denial, no-context denial, success/error/cancel/reuse cleanup, interrupted DDL recovery, exact values and verified connectivity. Hosted service-specific probes remain separately identified. |
 | OA3: Authelia integration | Synthetic protocol integration, closed enrollment, MFA assurance and app sessions, then a pinned non-production Authelia rehearsal | Forged/replayed callbacks, unsupported assurance, unknown owner, outage, key rotation, disable/group changes, refresh/revoke races and recovery fail closed. No existing-session resurrection. |
 | OA4: Protected vertical slice | One authenticated preference/account flow through Oracle and the protected frontend | Two-user end-to-end isolation, revision conflicts, stale workspace context, masking and local revoke-all; exact source values remain unchanged. |
@@ -94,7 +94,7 @@ These increments precede new database-dependent financial features. Each has its
 | OA6: Hosted synthetic staging | ARM image and separate Swarm stack, Caddy/callback rules, migration identity, resource bounds and safe health/freshness signals | Prerequisites satisfied; synthetic-only connectivity/login, restart/outage, direct-access denial, monitored restore and key/file recovery evidence. |
 | OA7: Production readiness | Actual data/identity inventory, compatible migration/cutover and rollback runbook, backup schedule and operational limits | Staged restore/access tests and explicit cutover record; no real provider acquisition enabled by hosting alone. |
 
-The selected Oracle and Authelia releases/configurations must be pinned before their runtime acceptance. Do not weaken current checks or point the local tools at a hosted target. Code/configuration/schema changes require all five existing local groups plus the new Oracle/OIDC checks appropriate to the increment; adjust the verification runner in a separately reviewed change once those real environments exist.
+The selected Oracle and Authelia releases/configurations must be pinned before their runtime acceptance. Do not weaken current checks or point the local tools at a hosted target. Code/configuration/schema changes require all six local groups, including the separate real Oracle verifier introduced in OA2.1. The existing five groups remain required. Add OIDC runtime acceptance as its integrations become available; do not substitute a skipped check for unavailable infrastructure.
 
 ## Saved financial work
 
@@ -110,4 +110,4 @@ The manual NAV preview remains a reviewed design only. Keep its upload/cancellat
 
 ## Evidence and outstanding work
 
-This increment performs source inventory, official-documentation review, shared-repository prerequisite review and backup integrity checks. It changes documentation only. No Oracle instance/image/driver, dedicated Authelia client, live IdP operation, provider acquisition, production migration or hosted release was performed. Repository verification is recorded with the resulting PR; no Oracle or Authelia runtime result is implied.
+The initial OA1 increment performed source inventory, official-documentation review, shared-repository prerequisite review and backup integrity checks without runtime changes. OA2.1 records its separate local execution evidence in [Oracle foundation](oracle-foundation.md). No dedicated hosted Authelia client, live IdP operation, provider acquisition, production migration or hosted release is implied by local checks.

@@ -64,7 +64,11 @@ From `backend/` with the setup above:
 
 ## Repeatable local checks and CI
 
-Run `python scripts/checks.py all` from the repository root after the setup above and selecting Node 22.23.2/npm 12.0.2. The launcher also accepts `backend`, `frontend`, `repository`, `database`, or `operations`. Start a local Docker Engine 28+ with Compose before database, operations, or all checks. It performs locked installs and fails on incomplete checks. See [verification](verification.md) for tool pins, network/loopback requirements, secret-scan scope, and the matching five CI jobs.
+Run `python scripts/checks.py all` from the repository root after the setup above and selecting Node 22.23.2/npm 12.0.2. The launcher also accepts `backend`, `frontend`, `repository`, `database`, `oracle`, or `operations`. Start a local Docker Engine 28+ with Compose before database, Oracle, operations, or all checks. It performs locked installs and fails on incomplete checks. See [verification](verification.md) for tool pins, network/loopback requirements, secret-scan scope, and the matching six manual CI jobs.
+
+## Local Oracle verification
+
+[OA2.1](oracle-foundation.md) provides the separate `python scripts/checks.py oracle` verifier. It uses a pinned official Oracle Free image, generated local credentials and an isolated Thin-mode smoke process. This command does not migrate the application or connect to Oracle Cloud. Read its runbook for resource requirements and exact-run cleanup after interruption.
 
 ## Local PostgreSQL
 

@@ -4,7 +4,7 @@ Decision date: 5 November 2026.
 
 ## Status and scope
 
-The owner has selected Oracle Database and the existing Authelia identity service as the new target direction. Rewriting database and authentication integrations is acceptable. Implement the trading app after the shared infrastructure, recovery, monitoring, and identity work in the separate portfolio repository.
+The owner has selected Oracle Database and the existing Authelia identity service as the new target direction. Rewriting database and authentication integrations is acceptable. The owner reports the shared infrastructure work complete. Local synthetic conversion proceeds; trading-specific hosted identity, isolation, monitoring and recovery evidence remain release gates.
 
 This document changes the planned target, not the current implementation. Existing code and tests still use PostgreSQL and Supabase-specific authentication. No database conversion, identity migration, infrastructure provisioning, credential change, or production deployment accompanies this document.
 

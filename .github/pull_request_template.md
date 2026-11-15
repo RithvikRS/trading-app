@@ -17,7 +17,7 @@ Document checks actually performed; do not claim planned checks passed.
 ## Validation
 
 <!-- List checks run and results, including relevant edge cases. Identify checks not run and why. -->
-<!-- Record the locally checked commit/tree, commands and environment. Code/configuration changes require all five local groups; documentation-only changes may run repository checks with a rationale. GitHub Actions is manual and optional; distinguish actual runs from local evidence. -->
+<!-- Record the locally checked commit/tree, commands and environment. Code/configuration changes require all six local groups; documentation-only changes may run repository checks with a rationale. GitHub Actions is manual and optional; distinguish actual runs from local evidence. -->
 <!-- For UI changes, attach desktop/mobile screenshots using synthetic data and note relevant interaction checks. -->
 
 ## Security and financial integrity
