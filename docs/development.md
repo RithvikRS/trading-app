@@ -1,6 +1,6 @@
 # Development
 
-Current commands still run the PostgreSQL/Supabase implementation. The new [Oracle/Authelia target](oracle-authelia-decisions.md) follows the [migration sequence](oracle-authelia-migration.md#implementation-sequence). Keep the existing local guards and checks intact until a separate real-Oracle test environment exists; neither PostgreSQL nor SQLite tests prove Oracle behavior.
+Current commands still run the PostgreSQL/Supabase implementation. The new [Oracle/Authelia target](oracle-authelia-decisions.md) follows the [migration sequence](oracle-authelia-migration.md#implementation-sequence). [OA2.1](oracle-foundation.md) provides a separate real-Oracle test environment. Keep both database verification boundaries and their local guards intact; neither PostgreSQL nor SQLite tests prove Oracle behavior.
 
 Deliver one coherent feature at a time, with meaningful checks, updated documentation, and conventional commits on `dev`. Open or update its pull request into `main` using the [PR standard](pull-requests.md).
 
@@ -29,7 +29,7 @@ The separate [protected workspace](protected-workspace.md#separate-builds-and-lo
 
 ## Local Python API
 
-The [Step 3A scaffold](api-foundation.md) uses Python 3.14.9 and uv 0.13.5 with exact direct versions and `backend/uv.lock`. Supabase Auth with FastAPI is selected; the default liveness-only mode needs no authentication/database credentials. The frontend commands above remain valid independently.
+The [Step 3A scaffold](api-foundation.md) uses Python 3.14.9 and uv 0.13.5 with exact direct versions and `backend/uv.lock`. Supabase Auth with FastAPI is the currently implemented integration; the default liveness-only mode needs no authentication/database credentials. The frontend commands above remain valid independently.
 
 For a repository-local Windows setup, run from the repository root with an existing Python installation. This installs tooling into ignored directories and leaves the system Python and Windows registration unchanged:
 
@@ -69,6 +69,16 @@ Run `python scripts/checks.py all` from the repository root after the setup abov
 ## Local Oracle verification
 
 [OA2.1](oracle-foundation.md) provides the separate `python scripts/checks.py oracle` verifier. It uses a pinned official Oracle Free image, generated local credentials and an isolated Thin-mode smoke process. This command does not migrate the application or connect to Oracle Cloud. Read its runbook for resource requirements and exact-run cleanup after interruption.
+
+## Offline OIDC contracts
+
+[OA3.1](oidc-contracts.md) provides pure client/attempt values, code/query/S256 request construction and bounded callback parsing/correlation. It adds no provider calls, callback route, database state or browser session. From `backend/`, using the pinned uv setup above:
+
+```powershell
+& $uv run --locked pytest tests/test_oidc_contracts.py
+```
+
+The standard backend group discovers these tests and includes `trading_oidc` in strict typing. Runtime sign-in remains the existing Supabase integration; signed-token validation and durable callback/session integration follow separately.
 
 ## Local PostgreSQL
 

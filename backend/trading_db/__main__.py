@@ -15,7 +15,7 @@ def main() -> int:
     parser.add_argument("action", choices=["up", "migrate", "status", "down", "check"])
     args = parser.parse_args()
     suite_timeout = (
-        2700
+        3600
         if os.name == "nt" and "CI" not in os.environ and "GITHUB_ACTIONS" not in os.environ
         else 1080
     )

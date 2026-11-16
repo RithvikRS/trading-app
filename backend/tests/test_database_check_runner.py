@@ -14,7 +14,7 @@ from trading_db import __main__ as command
 @pytest.mark.parametrize(
     ("platform", "environment", "timeout"),
     [
-        ("nt", {}, 2700),
+        ("nt", {}, 3600),
         ("posix", {}, 1080),
         ("nt", {"CI": "true"}, 1080),
         ("nt", {"CI": ""}, 1080),

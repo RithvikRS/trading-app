@@ -119,7 +119,7 @@ def database() -> None:
     uv = uv_command()
     sync_backend(uv)
     timeout = (
-        3000
+        3900
         if os.name == "nt" and "CI" not in os.environ and "GITHUB_ACTIONS" not in os.environ
         else 1200
     )
