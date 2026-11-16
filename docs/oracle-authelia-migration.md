@@ -1,6 +1,6 @@
 # Oracle and Authelia migration
 
-Review date: 10 November 2026. The [5 November decision](oracle-authelia-decisions.md) supplies the target and this document records the conversion sequence. [OA2.1](oracle-foundation.md) adds the isolated Oracle verification boundary; application database conversion, OIDC login and hosted deployment remain later increments.
+Review date: 10 November 2026. The [5 November decision](oracle-authelia-decisions.md) supplies the target and this document records the conversion sequence. [OA2.1](oracle-foundation.md) adds the isolated Oracle verification boundary, and [OA3.1](oidc-contracts.md) adds inactive OIDC code-flow contracts. Application database conversion, OIDC login and hosted deployment remain later increments.
 
 ## Current state and target
 
@@ -110,4 +110,4 @@ The manual NAV preview remains a reviewed design only. Keep its upload/cancellat
 
 ## Evidence and outstanding work
 
-The initial OA1 increment performed source inventory, official-documentation review, shared-repository prerequisite review and backup integrity checks without runtime changes. OA2.1 records its separate local execution evidence in [Oracle foundation](oracle-foundation.md). No dedicated hosted Authelia client, live IdP operation, provider acquisition, production migration or hosted release is implied by local checks.
+The initial OA1 increment performed source inventory, official-documentation review, shared-repository prerequisite review and backup integrity checks without runtime changes. OA2.1 records its separate local execution evidence in [Oracle foundation](oracle-foundation.md). [OA3.1](oidc-contracts.md) records pure request/callback contracts and source verification; signature verification, durable one-use state, owner enrollment and sessions remain separate work. No dedicated hosted Authelia client, live IdP operation, provider acquisition, production migration or hosted release is implied by local checks.

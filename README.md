@@ -1,12 +1,14 @@
 # Trading app
 
-The [Oracle Database and Authelia decision](docs/oracle-authelia-decisions.md) is the current target: FastAPI/React on the Ampere worker, Oracle Autonomous Database, and native Authelia OIDC. The [migration plan](docs/oracle-authelia-migration.md) records compatibility work and deployment prerequisites. The implemented application still uses local PostgreSQL and Supabase-specific authentication; the replacement integrations are not implemented.
+The [Oracle Database and Authelia decision](docs/oracle-authelia-decisions.md) is the current target: FastAPI/React on the Ampere worker, Oracle Autonomous Database, and native Authelia OIDC. The [migration plan](docs/oracle-authelia-migration.md) records compatibility work and deployment prerequisites. The application still uses local PostgreSQL and Supabase-specific authentication. The isolated Oracle verifier and pure OIDC contracts support the conversion; application database and sign-in replacement remain separate integration work.
 
 A personal finance workspace for Indian and US investments, employee shares, and everyday banking. Security comes first, followed by financial accuracy, recoverability, and a clear interface.
 
 ## Current progress
 
 [OA2.1 Oracle foundation](docs/oracle-foundation.md) adds a separate disposable database verifier with pinned Thin driver/image, local credential custody, exact-number and transaction probes, and guarded cleanup. It is included in the six-group local checks. Application persistence and sign-in still use the current PostgreSQL/Supabase implementation; migration proceeds through the [Oracle/Authelia sequence](docs/oracle-authelia-migration.md).
+
+[OA3.1 OIDC code-flow contracts](docs/oidc-contracts.md) add trusted client configuration, separate random attempt values, a code/query/S256 request builder and bounded callback parsing/correlation. These pure helpers establish no authentication or replay guarantee; signed-token verification, durable state consumption, enrollment and sessions follow separately.
 
 The Overview and Investments prototype runs locally with fictional data. It includes responsive Indigo & Apricot light/dark themes, INR/USD display, amount masking, allocation, dated value history, expandable accounts, and activity. Investments adds 14 account-specific holdings with search, combined filters, sorting, reporting-currency prices/NAVs with labeled originals, portfolio weights, and separate source dates. Each holding opens a detail view with source information, selected sample activity, fund identity, and UBS ESPP lots where applicable. Screens handle loading, empty, partial/stale, and failed-load states.
 
@@ -106,7 +108,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 - HDFC/SBI transactions, categories, transfers, cash flow, and budgets.
 - [HDFC credit cards in Step 9](docs/credit-cards-plan.md): the synthetic section, durable unselected evidence, protected read APIs and protected identity/source views and unselected financial evidence screens are implemented; verified statement imports, report selection/completion and payment matching remain planned.
 - Supported automatic imports, statement fallbacks, and separate holdings/price freshness.
-- Python/FastAPI with Oracle Autonomous Database as the new hosted target; current local development remains PostgreSQL until the Oracle test foundation exists.
+- Python/FastAPI with Oracle Autonomous Database as the new hosted target; current application persistence remains PostgreSQL while the Oracle migration proceeds.
 - Ampere A1 application hosting in the shared Swarm, with Caddy HTTPS ingress on AMD node 1; resource and recovery checks precede hosted use.
 - Personal access first; multi-user access and trade execution are future extensions.
 
@@ -117,6 +119,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Product plan](docs/plan.md) | Scope and staged roadmap |
 | [Oracle and Authelia decision](docs/oracle-authelia-decisions.md) | Selected database, identity and hosting direction |
 | [Oracle and Authelia migration](docs/oracle-authelia-migration.md) | Compatibility inventory, prerequisites, increments and acceptance |
+| [OIDC code-flow contracts](docs/oidc-contracts.md) | Inactive client/attempt values, PKCE request construction and bounded callback correlation |
 | [Bounded public NAV reader](docs/amfi-nav-reader.md) | Internal fixed-destination acquisition, exact evidence and unperformed activation checks |
 | [Versioned NAV source positions](docs/amfi-market-provenance.md) | Original report positions, immutable replay, migration and strict encrypted recovery |
 | [UI prototype plan](docs/ui-prototype-plan.md) | Visual direction, increments, acceptance criteria |

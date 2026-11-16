@@ -363,8 +363,8 @@ def test_private_frozen_contracts_contain_no_identity_narration_or_payment_statu
     result = reconcile_card_statement(statement(), (entry(),), coverage="complete")
     for value in (statement(), current(), entry(), result):
         assert not hasattr(value, "__dict__")
-        assert "15000" not in repr(value) and "2026" not in repr(value)
-        assert "5000" not in repr(value) and "12400" not in repr(value)
+        # Object addresses can coincidentally contain amounts or date substrings.
+        assert repr(value) == object.__repr__(value)
         name = fields(value)[0].name
         with pytest.raises(FrozenInstanceError):
             setattr(value, name, "private-input")

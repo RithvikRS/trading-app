@@ -113,7 +113,7 @@ class RunnerTests(unittest.TestCase):
 class DatabaseInvocationTests(unittest.TestCase):
     def test_database_command_has_platform_specific_bounded_deadline(self):
         for platform, environment, timeout in [
-            ("nt", {}, 3000),
+            ("nt", {}, 3900),
             ("posix", {}, 1200),
             ("nt", {"CI": "true"}, 1200),
             ("nt", {"CI": ""}, 1200),
