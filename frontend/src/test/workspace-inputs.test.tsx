@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import axe from 'axe-core'
@@ -195,7 +195,7 @@ it('shows all six explicit side/part actions and requests only the selected inpu
   await openComparison()
   for (const side of ['Source report', 'Combined saved evidence']) for (const part of ['opening', 'activity', 'closing']) expect(screen.getByRole('button', { name: `${side}: ${part} inputs` })).toBeTruthy()
   expect(fetchMock.mock.calls.some(([path]) => String(path).includes('/inputs/'))).toBe(false)
-  fireEvent.click(screen.getByRole('button', { name: 'Source report: activity inputs' })); const heading = await screen.findByRole('heading', { name: 'Frozen inputs' }); expect(document.activeElement).toBe(heading)
+  fireEvent.click(screen.getByRole('button', { name: 'Source report: activity inputs' })); const heading = await screen.findByRole('heading', { name: 'Frozen inputs' }); await waitFor(() => expect(document.activeElement).toBe(heading))
   expect(screen.getByText('INR -125.50')).toBeTruthy(); expect(screen.getByText('INR 0.00')).toBeTruthy(); expect(screen.getByText('Date not supplied')).toBeTruthy()
   expect(screen.getAllByText('Source occurrence')).toHaveLength(3); expect([...document.querySelectorAll('.wi-inputs details')].every(element => !element.hasAttribute('open'))).toBe(true)
   const call = fetchMock.mock.calls.find(([path]) => path === '/api/v1/finance/receipts/inputs/query')!
@@ -265,7 +265,7 @@ it.each(['navigate', 'logout', 'lock', 'session'])('discards a late selected-inp
 })
 it('supports keyboard entry and puts focus on the input heading', async () => {
   await openComparison(); const user = userEvent.setup(); screen.getByRole('button', { name: 'Combined saved evidence: closing inputs' }).focus(); await user.keyboard('{Enter}')
-  const heading = await screen.findByRole('heading', { name: 'Frozen inputs' }); expect(document.activeElement).toBe(heading)
+  const heading = await screen.findByRole('heading', { name: 'Frozen inputs' }); await waitFor(() => expect(document.activeElement).toBe(heading))
   expect(screen.getByText('INR 874.5')).toBeTruthy(); fireEvent.click(screen.getByRole('button', { name: 'Back to comparison' })); await screen.findByRole('heading', { name: 'INR cash comparison' })
 })
 
