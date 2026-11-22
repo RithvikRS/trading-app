@@ -70,15 +70,15 @@ Run `python scripts/checks.py all` from the repository root after the setup abov
 
 [OA2.1](oracle-foundation.md) provides the separate `python scripts/checks.py oracle` verifier. [OA2.2](oracle-ownership.md) extends that group through `python -m trading_oracle.baseline`, retaining the original smoke before ownership, migration, identity, preference and connection-custody acceptance in the same disposable instance. The pinned image, generated local credentials, isolated Thin process, 1,200-second launcher deadline, 900-second acceptance-child deadline and exact cleanup remain unchanged. `oracle_tests` participates in strict typing; its real acceptance runs only through this owned verifier, outside ordinary pytest discovery. This command does not migrate application data or connect to Oracle Cloud. Application persistence and sign-in remain PostgreSQL/Supabase. Read both runbooks before running or recovering the verifier.
 
-## Offline OIDC contracts
+## Offline OIDC contracts and verification
 
-[OA3.1](oidc-contracts.md) provides pure client/attempt values, code/query/S256 request construction and bounded callback parsing/correlation. It adds no provider calls, callback route, database state or browser session. From `backend/`, using the pinned uv setup above:
+[OA3.1](oidc-contracts.md) provides pure client/attempt values, code/query/S256 request construction and bounded callback parsing/correlation. [OA3.2](oidc-verification.md) adds offline signature and claim verification using exact Authlib 1.9.6 and joserfc 1.8.0 pins. These helpers add no provider calls, callback route, database state or browser session. From `backend/`, using the pinned uv setup above:
 
 ```powershell
-& $uv run --locked pytest tests/test_oidc_contracts.py
+& $uv run --locked pytest tests/test_oidc_contracts.py tests/test_oidc_verification.py
 ```
 
-The standard backend group discovers these tests and includes `trading_oidc` in strict typing. Runtime sign-in remains the existing Supabase integration; signed-token validation and durable callback/session integration follow separately.
+The standard backend group discovers these tests and includes `trading_oidc` in strict typing. Runtime sign-in remains the existing Supabase integration. Signed-token evidence does not grant owner or session authority; issuer-bound key acquisition and durable callback/session integration remain separate work.
 
 ## Local PostgreSQL
 
