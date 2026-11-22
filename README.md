@@ -1,12 +1,14 @@
 # Trading app
 
-The [Oracle Database and Authelia decision](docs/oracle-authelia-decisions.md) is the current target: FastAPI/React on the Ampere worker, Oracle Autonomous Database, and native Authelia OIDC. The [migration plan](docs/oracle-authelia-migration.md) records compatibility work and deployment prerequisites. The application still uses local PostgreSQL and Supabase-specific authentication. The isolated Oracle verifier and pure OIDC contracts support the conversion; application database and sign-in replacement remain separate integration work.
+The [Oracle Database and Authelia decision](docs/oracle-authelia-decisions.md) is the current target: FastAPI/React on the Ampere worker, Oracle Autonomous Database, and native Authelia OIDC. The [migration plan](docs/oracle-authelia-migration.md) records compatibility work and deployment prerequisites. The application still uses local PostgreSQL and Supabase-specific authentication. The isolated Oracle verifier, local ownership baseline and pure OIDC contracts support the conversion; application database and sign-in replacement remain separate integration work.
 
 A personal finance workspace for Indian and US investments, employee shares, and everyday banking. Security comes first, followed by financial accuracy, recoverability, and a clear interface.
 
 ## Current progress
 
 [OA2.1 Oracle foundation](docs/oracle-foundation.md) adds a separate disposable database verifier with pinned Thin driver/image, local credential custody, exact-number and transaction probes, and guarded cleanup. It is included in the six-group local checks. Application persistence and sign-in still use the current PostgreSQL/Supabase implementation; migration proceeds through the [Oracle/Authelia sequence](docs/oracle-authelia-migration.md).
+
+[OA2.2 Oracle ownership](docs/oracle-ownership.md) adds separate restricted identities, owner-context policies, exact identity lookup, revisioned preferences, connection cleanup and a committing-DDL journal. Real local Oracle acceptance passed all twelve stages, including the retained smoke and 44 migration interruption/reconciliation points. Application routes still use PostgreSQL/Supabase; hosted compatibility and authenticated runtime conversion remain separate.
 
 [OA3.1 OIDC code-flow contracts](docs/oidc-contracts.md) add trusted client configuration, separate random attempt values, a code/query/S256 request builder and bounded callback parsing/correlation. These pure helpers establish no authentication or replay guarantee; signed-token verification, durable state consumption, enrollment and sessions follow separately.
 
@@ -119,6 +121,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Product plan](docs/plan.md) | Scope and staged roadmap |
 | [Oracle and Authelia decision](docs/oracle-authelia-decisions.md) | Selected database, identity and hosting direction |
 | [Oracle and Authelia migration](docs/oracle-authelia-migration.md) | Compatibility inventory, prerequisites, increments and acceptance |
+| [Local Oracle ownership](docs/oracle-ownership.md) | Restricted identities, direct-SQL isolation, migration journal and real local acceptance |
 | [OIDC code-flow contracts](docs/oidc-contracts.md) | Inactive client/attempt values, PKCE request construction and bounded callback correlation |
 | [Bounded public NAV reader](docs/amfi-nav-reader.md) | Internal fixed-destination acquisition, exact evidence and unperformed activation checks |
 | [Versioned NAV source positions](docs/amfi-market-provenance.md) | Original report positions, immutable replay, migration and strict encrypted recovery |

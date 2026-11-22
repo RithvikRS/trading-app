@@ -139,7 +139,7 @@ class DatabaseInvocationTests(unittest.TestCase):
 
 
 class OracleInvocationTests(unittest.TestCase):
-    def test_oracle_command_has_locked_dependencies_and_fixed_deadline(self):
+    def test_oracle_baseline_command_has_locked_dependencies_and_fixed_deadline(self):
         for platform, environment in [
             ("nt", {}),
             ("posix", {}),
@@ -159,7 +159,7 @@ class OracleInvocationTests(unittest.TestCase):
                 checks.oracle()
                 sync.assert_called_once_with("uv")
                 run.assert_called_once_with(
-                    "isolated Oracle connectivity and cleanup",
+                    "isolated Oracle smoke and ownership baseline",
                     [
                         "uv",
                         "run",
@@ -167,8 +167,7 @@ class OracleInvocationTests(unittest.TestCase):
                         "--no-sync",
                         "python",
                         "-m",
-                        "trading_oracle",
-                        "check",
+                        "trading_oracle.baseline",
                     ],
                     ROOT / "backend",
                     timeout=1200,
@@ -187,7 +186,9 @@ class OracleInvocationTests(unittest.TestCase):
         ):
             self.assertEqual(checks.main(), 1)
         run.assert_called_once()
-        self.assertIn("FAILED: isolated Oracle connectivity and cleanup failed", output.getvalue())
+        self.assertIn(
+            "FAILED: isolated Oracle smoke and ownership baseline failed", output.getvalue()
+        )
         self.assertNotIn("PASS:", output.getvalue())
         self.assertNotIn("synthetic-sensitive", output.getvalue())
 
