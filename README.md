@@ -1,6 +1,6 @@
 # Trading app
 
-The [Oracle Database and Authelia decision](docs/oracle-authelia-decisions.md) is the current target: FastAPI/React on the Ampere worker, Oracle Autonomous Database, and native Authelia OIDC. The [migration plan](docs/oracle-authelia-migration.md) records compatibility work and deployment prerequisites. The application still uses local PostgreSQL and Supabase-specific authentication. The isolated Oracle verifier, local ownership baseline, OIDC contracts and offline token verifier support the conversion; application database and sign-in replacement remain separate integration work.
+The [Oracle Database and Authelia decision](docs/oracle-authelia-decisions.md) is the current target: FastAPI/React on the Ampere worker, Oracle Autonomous Database, and native Authelia OIDC. The [migration plan](docs/oracle-authelia-migration.md) records compatibility work and deployment prerequisites. The application still uses local PostgreSQL and Supabase-specific authentication. Separate Oracle verification and ownership, OIDC contracts, offline token verification and bounded key retrieval support the conversion; application database and sign-in replacement remain separate integration work.
 
 A personal finance workspace for Indian and US investments, employee shares, and everyday banking. Security comes first, followed by financial accuracy, recoverability, and a clear interface.
 
@@ -13,6 +13,8 @@ A personal finance workspace for Indian and US investments, employee shares, and
 [OA3.1 OIDC code-flow contracts](docs/oidc-contracts.md) add trusted client configuration, separate random attempt values, a code/query/S256 request builder and bounded callback parsing/correlation. These pure helpers establish no authentication or replay guarantee; signed evidence is checked separately by OA3.2, while durable state consumption, enrollment and sessions remain integration work.
 
 [OA3.2 offline OIDC verification](docs/oidc-verification.md) verifies RS256 signatures and exact issuer, audience, nonce, authentication age and TOTP MFA evidence against a caller-supplied trusted key snapshot. It adds no key retrieval, durable replay protection, owner binding or browser session; runtime sign-in remains the existing Supabase integration.
+
+[OA3.3 issuer-fixed JWKS acquisition](docs/oidc-jwks.md) adds an internal HTTPS reader with exact client binding, bounded parsed responses and a maximum 60-second cache. A transport error, timeout or cancelled active fetch disables new JWKS requests until process restart. The reader remains disconnected from application sign-in; actual Authelia compatibility is still pending.
 
 The Overview and Investments prototype runs locally with fictional data. It includes responsive Indigo & Apricot light/dark themes, INR/USD display, amount masking, allocation, dated value history, expandable accounts, and activity. Investments adds 14 account-specific holdings with search, combined filters, sorting, reporting-currency prices/NAVs with labeled originals, portfolio weights, and separate source dates. Each holding opens a detail view with source information, selected sample activity, fund identity, and UBS ESPP lots where applicable. Screens handle loading, empty, partial/stale, and failed-load states.
 
@@ -126,6 +128,7 @@ The FX rate is fixed and fictional. The history shows asset values, including ca
 | [Local Oracle ownership](docs/oracle-ownership.md) | Restricted identities, direct-SQL isolation, migration journal and real local acceptance |
 | [OIDC code-flow contracts](docs/oidc-contracts.md) | Inactive client/attempt values, PKCE request construction and bounded callback correlation |
 | [Offline OIDC verification](docs/oidc-verification.md) | Bounded RS256 signatures, exact claims and freshness evidence without session authority |
+| [Issuer-fixed JWKS acquisition](docs/oidc-jwks.md) | Bounded public-key retrieval, short cache and explicit transport-failure availability limits |
 | [Bounded public NAV reader](docs/amfi-nav-reader.md) | Internal fixed-destination acquisition, exact evidence and unperformed activation checks |
 | [Versioned NAV source positions](docs/amfi-market-provenance.md) | Original report positions, immutable replay, migration and strict encrypted recovery |
 | [UI prototype plan](docs/ui-prototype-plan.md) | Visual direction, increments, acceptance criteria |

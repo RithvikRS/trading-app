@@ -4,11 +4,11 @@ OA3.2 adds signature and claim verification for a narrow, inactive OIDC profile.
 
 ## Trusted input and output
 
-`verify_id_token` receives a redacted compact token, a caller-supplied trusted JWKS snapshot, the original login attempt, an explicit current UTC epoch time, and an optional redacted access token for hash verification. The future acquisition layer must bind that key snapshot to the fixed issuer using verified HTTPS and bounded retrieval. Accepting arbitrary user-supplied JWKS would defeat signature trust; this offline function does not establish key provenance.
+`verify_id_token` receives a redacted compact token, a caller-supplied trusted JWKS snapshot, the original login attempt, an explicit current UTC epoch time, and an optional redacted access token for hash verification. Separate [issuer-fixed key acquisition](oidc-jwks.md) provides bounded HTTPS retrieval and a short-lived cache tied to the exact client configuration. Its fresh result must be passed directly to verification with the same attempt client; actual issuer compatibility remains pending. Accepting arbitrary user-supplied JWKS would defeat signature trust; this offline function does not establish key provenance.
 
 Only successful cryptographic and policy validation produces immutable, redacted evidence: exact issuer/opaque subject, client audience, issuance, expiry, authentication time and authentication methods. No token, nonce, provider-session identifier, key material or financial owner appears in that result. The public result type is a protocol, not a public evidence constructor. Like other internal Python results, it is not a security capability; application authorization still requires explicit owner mapping and live session checks.
 
-Malformed trusted key configuration raises generic authentication-unavailable errors. Invalid, unsupported or unauthorized tokens raise generic authentication-denied errors. Payloads, provider claims and key bytes are not copied into errors or logs. There is no network access, automatic key refresh, key cache or unknown-key retry.
+Malformed trusted key configuration raises generic authentication-unavailable errors. Invalid, unsupported or unauthorized tokens raise generic authentication-denied errors. Payloads, provider claims and key bytes are not copied into errors or logs. The offline verifier itself has no network access, automatic key refresh, key cache or unknown-key retry. The separate reader has a conservative process-restart requirement after transport failures, timeouts or active-fetch cancellation; it does not add unknown-key retries.
 
 ## Supported profile
 
