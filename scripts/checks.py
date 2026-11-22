@@ -135,8 +135,8 @@ def oracle() -> None:
     uv = uv_command()
     sync_backend(uv)
     run(
-        "isolated Oracle connectivity and cleanup",
-        [uv, "run", "--locked", "--no-sync", "python", "-m", "trading_oracle", "check"],
+        "isolated Oracle smoke and ownership baseline",
+        [uv, "run", "--locked", "--no-sync", "python", "-m", "trading_oracle.baseline"],
         ROOT / "backend",
         timeout=1200,
     )

@@ -10,7 +10,7 @@ Run from the repository root after installing the locked backend dependencies:
 python scripts/checks.py oracle
 ```
 
-The underlying command is `python -m trading_oracle check` from `backend`. After validating the local Docker context, it obtains the exact digest-pinned official image if missing, with a bounded 600-second download. It does not perform a registry login or fall back to another image; container creation itself forbids automatic pulls. The image is Oracle Database Free `23.26.3.0`, pinned to multi-platform digest `sha256:f988b0c04c4c386cd306a2a914c0d7a9702d83acc31b064a28ad8eb6278a8fba`. Registry metadata includes native Linux AMD64 and ARM64 manifests. Local execution evidence must identify the tested architecture; manifest availability is not an ARM runtime result.
+The shared Oracle group now invokes `python -m trading_oracle.baseline` from `backend`: [OA2.2](oracle-ownership.md) retains this original smoke and then runs the ownership/preferences baseline in the same owned instance. The original standalone smoke remains available as `python -m trading_oracle check`. The launcher keeps its 1,200-second deadline and the added isolated acceptance child has a 900-second deadline; all image, credential, resource and cleanup controls below are retained. After validating the local Docker context, it obtains the exact digest-pinned official image if missing, with a bounded 600-second download. It does not perform a registry login or fall back to another image; container creation itself forbids automatic pulls. The image is Oracle Database Free `23.26.3.0`, pinned to multi-platform digest `sha256:f988b0c04c4c386cd306a2a914c0d7a9702d83acc31b064a28ad8eb6278a8fba`. Registry metadata includes native Linux AMD64 and ARM64 manifests. Local execution evidence must identify the tested architecture; manifest availability is not an ARM runtime result.
 
 The runner requires Docker Engine 28 or newer, a local Linux daemon, and no Docker endpoint or Oracle connection-environment overrides. Each run has an unpredictable identifier, an exclusive process lock, a private ownership manifest and generated credentials below the ignored `.cache/oracle/runs` directory. Windows custody requires a current-user or SYSTEM-owned directory, atomically replaces its protected DACL with exactly those two FullControl grants, and verifies the result. Unrelated explicit grants are removed only inside the Oracle cache; administrative control of the local host remains trusted. POSIX directories are mode 0700. The bootstrap file alone is mode 0444 inside that private parent so the container's different `oracle` user can read the explicitly mounted file. The application probe credential stays mode 0600. These are synthetic disposable credentials, never provider or production secrets.
 
@@ -32,7 +32,7 @@ A fresh Python process with `-I -S` skips sitecustomize and .pth startup code, a
 - Native date round-trip and UTC session configuration.
 - Committed DML visible through a separate physical connection, with rolled-back DML absent.
 
-These checks do not establish Oracle VPD, multi-owner isolation, hosted TLS, Autonomous privileges, durable migrations, whole-domain precision or production recovery. Those remain later migration increments.
+These smoke checks alone do not establish Oracle VPD, multi-owner isolation, hosted TLS, Autonomous privileges, durable migrations, whole-domain precision or production recovery. [OA2.2](oracle-ownership.md) separately establishes local ownership/preferences isolation and interruption-aware baseline installation. Hosted compatibility, whole-domain precision and production recovery remain separate migration work.
 
 ## Interruption and cleanup
 
@@ -46,6 +46,8 @@ python -m trading_oracle cleanup <32-character-run-id>
 Cleanup revalidates the local daemon and immutable resource custody independently of the runtime resource profile, so a rejected runtime configuration can still be stopped safely. It removes only the run's container and network, verifies their absence, then removes its credential files and empty configuration directory. It never prunes Docker, drops an existing database/schema, recursively deletes a supplied path or touches the PostgreSQL development volume. Success retains a small manifest with the outcome and cleaned status. Paths containing symlinks, Windows junctions/reparse points or hardlinked credential files are refused.
 
 ## Verification evidence
+
+[OA2.2 local acceptance](oracle-ownership.md) extends the retained smoke with restricted role/owner policies, identity/preferences, migration interruption/reconciliation, synchronous pool custody and races. Its successful twelve-stage run and exact cleanup are recorded separately; the original smoke evidence below remains historical and unchanged.
 
 On 15 November 2026, 89 focused tests passed with Ruff, formatting and strict typing. Cases cover closed descriptors, forbidden environment overrides, malformed ownership manifests, path/resource substitutions, exact IPv4/IPv6 fields, bounded PDB readiness, actual cleanup after a rejected runtime profile, removal of unrelated Windows grants and permission failure before secret creation.
 

@@ -293,6 +293,7 @@ class BuildEnvironmentTests(unittest.TestCase):
                 ):
                     self.assertIsNotNone(environment)
                     environment = dict(environment)
+                    self.assertEqual(environment["PATH"], "synthetic-path")
                     configurations.append(Path(environment["BUILDX_CONFIG"]))
                     self.assertEqual(
                         {
@@ -336,7 +337,7 @@ class BuildEnvironmentTests(unittest.TestCase):
                         raise CheckFailure("Synthetic probe failure.")
 
                 with (
-                    patch.dict(operations.os.environ, self.ambient(), clear=True),
+                    patch("scripts.operations.os", SimpleNamespace(environ=self.ambient())),
                     patch("scripts.operations.validate_packaging"),
                     patch("scripts.operations.local_context", return_value="synthetic-local"),
                     patch("scripts.operations.certificate", side_effect=certificate),

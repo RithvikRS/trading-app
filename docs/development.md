@@ -68,7 +68,7 @@ Run `python scripts/checks.py all` from the repository root after the setup abov
 
 ## Local Oracle verification
 
-[OA2.1](oracle-foundation.md) provides the separate `python scripts/checks.py oracle` verifier. It uses a pinned official Oracle Free image, generated local credentials and an isolated Thin-mode smoke process. This command does not migrate the application or connect to Oracle Cloud. Read its runbook for resource requirements and exact-run cleanup after interruption.
+[OA2.1](oracle-foundation.md) provides the separate `python scripts/checks.py oracle` verifier. [OA2.2](oracle-ownership.md) extends that group through `python -m trading_oracle.baseline`, retaining the original smoke before ownership, migration, identity, preference and connection-custody acceptance in the same disposable instance. The pinned image, generated local credentials, isolated Thin process, 1,200-second launcher deadline, 900-second acceptance-child deadline and exact cleanup remain unchanged. `oracle_tests` participates in strict typing; its real acceptance runs only through this owned verifier, outside ordinary pytest discovery. This command does not migrate application data or connect to Oracle Cloud. Application persistence and sign-in remain PostgreSQL/Supabase. Read both runbooks before running or recovering the verifier.
 
 ## Offline OIDC contracts
 
